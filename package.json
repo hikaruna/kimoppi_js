@@ -7,18 +7,17 @@
     "clean": "rm -rf public/bundle.js*",
     "prebuild": "npm run clean",
     "build": "webpack -d",
-    "serve": "npm run build && open http://localhost:8080 && webpack-dev-server --content-base public/ --inline",
+    "serve": "npm run build && webpack-dev-server -d --content-base public/ --inline",
     "deploy": "npm run build && gh-pages -d public"
   },
   "author": "hikaruna",
   "license": "ISC",
   "devDependencies": {
+    "bower": "^1.7.9",
     "electron-prebuilt": "^0.37.8",
     "gh-pages": "^0.11.0",
     "webpack": "^1.13.0",
     "webpack-dev-server": "^1.14.1"
   },
-  "dependencies": {
-    "phina.js": "https://github.com/phi-jp/phina.js#v0.2.0"
-  }
+  "dependencies": {}
 }

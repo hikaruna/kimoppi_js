@@ -10,6 +10,12 @@ module.exports = {
     filename: 'bundle.js',
   },
   resolve: {
-    root: [ path.resolve('./src') ]
+    root: [
+      path.resolve('./src'),
+      path.resolve('./bower_components'),
+    ],
+    alias: {
+      "enchant.js": 'enchant.js-builds/build/enchant.js'
+    }
   }
 };

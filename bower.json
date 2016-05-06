@@ -1,0 +1,20 @@
+{
+  "name": "kimoppi",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "hikaruna"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/hikaruna/kimoppi_js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "enchant.js-builds": "^0.8.3"
+  }
+}
