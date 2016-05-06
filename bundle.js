@@ -47,13071 +47,7022 @@
   \*********************/
 /***/ function(module, exports, __webpack_require__) {
 
-	var phina = __webpack_require__(/*! phina.js */ 1);
-	phina.globalize();
-	__webpack_require__(/*! main_scene */ 2);
+	__webpack_require__(/*! enchant.js */ 1);
+	enchant();
 	
-	phina.main(function() {
-	  var app = GameApp({
-	    startLabel: 'main',
-	  });
-	  app.run();
-	});
+	window.onload = function() {
+	  var game = new Core();
+	  game.onload = function () {
+	    game.currentScene.backgroundColor = 'red';
+	  };
+	  game.start();
+	};
 
 
 /***/ },
 /* 1 */
-/*!***********************************!*\
-  !*** ./~/phina.js/build/phina.js ***!
-  \***********************************/
+/*!*************************************************************!*\
+  !*** ./bower_components/enchant.js-builds/build/enchant.js ***!
+  \*************************************************************/
 /***/ function(module, exports) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {/* 
-	 * phina.js 0.2.0
-	 * phina.js is a game library in javascript
-	 * MIT Licensed
-	 * 
-	 * Copyright (C) 2015 phi, http://phinajs.com
-	 */
-	
-	
-	'use strict';
-	
-	/*
+	/**
+	 * enchant.js v0.8.3
+	 * http://enchantjs.com
 	 *
+	 * Copyright Ubiquitous Entertainment Inc.
+	 * Released under the MIT license.
 	 */
 	
-	
-	;(function() {
-	  /**
-	   * @class global.Object
-	   * Objectの拡張
-	   */
-	
-	  
-	  /**
-	   * @method property
-	   * 変数を追加
-	   * @param   {String} key name
-	   * @param   {Object} param
-	   */
-	  // Object.defineProperty(Object.prototype, "property", {
-	  //   value: function(name, val) {
-	  //     Object.defineProperty(this, name, {
-	  //       value: val,
-	  //       enumerable: true,
-	  //       writable: true
-	  //     });
-	  //   }
-	  // });
-	
-	  /**
-	   * @method method
-	   * 関数を追加
-	   * @param   {String} key name
-	   * @param   {Function} function
-	   */
-	  Object.defineProperty(Object.prototype, "$method", {
-	    value: function(name, fn) {
-	      Object.defineProperty(this, name, {
-	        value: fn,
-	        enumerable: false,
-	        writable: true
-	      });
-	    }
-	  });
-	
-	
-	
-	  /**
-	   * @method setter
-	   * セッターを定義する
-	   */
-	  Object.prototype.$method("setter", function(name, fn){
-	    Object.defineProperty(this, name, {
-	      set: fn,
-	      enumerable: false,
-	      configurable: true,
-	    });
-	  });
-	
-	  /**
-	   * @method getter
-	   * ゲッターを定義する
-	   */
-	  Object.prototype.$method("getter", function(name, fn){
-	    Object.defineProperty(this, name, {
-	      get: fn,
-	      enumerable: false,
-	      configurable: true,
-	    });
-	  });
-	
-	  /**
-	   * @method accessor
-	   * アクセッサ(セッター/ゲッター)を定義する
-	   */
-	  Object.prototype.$method("accessor", function(name, param) {
-	    Object.defineProperty(this, name, {
-	      set: param["set"],
-	      get: param["get"],
-	      enumerable: false,
-	      configurable: true,
-	    });
-	  });
-	
-	
-	  /**
-	   * @method forIn
-	   * オブジェクト用ループ処理
-	   */
-	  Object.prototype.$method("forIn", function(fn, self) {
-	    self = self || this;
-	
-	    Object.keys(this).forEach(function(key, index) {
-	      var value = this[key];
-	
-	      fn.call(self, key, value, index);
-	    }, this);
-	
-	    return this;
-	  });
-	
-	  /**
-	   * @method  $get
-	   * パス指定で値を取得
-	   */
-	  Object.prototype.$method('$get', function(key) {
-	    return key.split('.').reduce(function(t, v) {
-	      return t && t[v];
-	    }, this);
-	  });
-	
-	  /**
-	   * @method  $set
-	   * パス指定で値を設定
-	   */
-	  Object.prototype.$method('$set', function(key, value) {
-	    key.split('.').reduce(function(t, v, i, arr) {
-	      if (i === (arr.length-1)) {
-	        t[v] = value;
-	      }
-	      else {
-	        if (!t[v]) t[v] = {};
-	        return t[v];
-	      }
-	    }, this);
-	  });
-	
-	  /**
-	   * @method  $has
-	   * そのプロパティを持っているかを判定する
-	   */
-	  Object.prototype.$method("$has", function(key) {
-	    return this.hasOwnProperty(key);
-	  });
-	
-	  /**
-	   * @method  $extend
-	   * 他のライブラリと競合しちゃうので extend -> $extend としました
-	   */
-	  Object.prototype.$method("$extend", function() {
-	    Array.prototype.forEach.call(arguments, function(source) {
-	      for (var property in source) {
-	        this[property] = source[property];
-	      }
-	    }, this);
-	    return this;
-	  });
-	
-	
-	  /**
-	   * @method  $safe
-	   * 安全拡張
-	   * 上書きしない
-	   */
-	  Object.prototype.$method("$safe", function(source) {
-	    Array.prototype.forEach.call(arguments, function(source) {
-	      for (var property in source) {
-	        if (this[property] === undefined) this[property] = source[property];
-	      }
-	    }, this);
-	    return this;
-	  });
-	  
-	  
-	  /**
-	   * @method  $strict
-	   * 厳格拡張
-	   * すでにあった場合は警告
-	   */
-	  Object.prototype.$method("$strict", function(source) {
-	    Array.prototype.forEach.call(arguments, function(source) {
-	      for (var property in source) {
-	        console.assert(!this[property], "tm error: {0} is Already".format(property));
-	        this[property] = source[property];
-	      }
-	    }, this);
-	    return this;
-	  });
-	
-	  /**
-	   * @method  $pick
-	   * ピック
-	   */
-	  Object.prototype.$method("$pick", function() {
-	    var temp = {};
-	
-	    Array.prototype.forEach.call(arguments, function(key) {
-	      if (key in this) temp[key] = this[key];
-	    }, this);
-	
-	    return temp;
-	  });
-	
-	  /**
-	   * @method  $omit
-	   * オミット
-	   */
-	  Object.prototype.$method("$omit", function() {
-	    var temp = {};
-	
-	    for (var key in this) {
-	      if (Array.prototype.indexOf.call(arguments, key) == -1) {
-	        temp[key] = this[key];
-	      }
-	    }
-	
-	    return temp;
-	  });
-	
-	  /**
-	   * @method  $omit
-	   * オミット
-	   */
-	  Object.prototype.$method("$toArray", function() {
-	    return Array.prototype.slice.call(this);
-	  });
-	
-	  Object.prototype.$method('$watch', function(key, callback) {
-	    var target = this;
-	    var descriptor = null;
-	
-	    while(target) {
-	      descriptor = Object.getOwnPropertyDescriptor(target, key);
-	      if (descriptor) {
-	        break;
-	      }
-	      target = Object.getPrototypeOf(target);
-	    }
-	
-	    // すでにアクセッサーとして存在する場合
-	    if (descriptor) {
-	      // データディスクリプタの場合
-	      if (descriptor.value !== undefined) {
-	        var tempKey = '__' + key;
-	        var tempValue = this[key];
-	
-	        this[tempKey] = tempValue;
-	
-	        this.accessor(key, {
-	          get: function() {
-	            return this[tempKey];
-	          },
-	          set: function(v) {
-	            var old = this[tempKey];
-	            this[tempKey] = v;
-	            callback.call(this, v, old);
-	          },
-	        });
-	      }
-	      // アクセサディスクリプタの場合
-	      else {
-	        this.accessor(key, {
-	          get: function() {
-	            return descriptor.get.call(this);
-	          },
-	          set: function(v) {
-	            var old = descriptor.get.call(this);
-	            descriptor.set.call(this, v);
-	            callback.call(this, v, old);
-	          },
-	        });
-	      }
-	    }
-	    else {
-	      var accesskey = '__' + key;
-	
-	      this.accessor(key, {
-	        get: function() {
-	          return this[accesskey];
-	        },
-	        set: function(v) {
-	          var old = this[accesskey];
-	          this[accesskey] = v;
-	          callback.call(this, v, old);
-	        },
-	      });
-	    }
-	  });
-	
-	  if (!Object.observe) {
-	    Object.$method('observe', function(obj, callback) {
-	      var keys = Object.keys(obj);
-	      keys.forEach(function(key) {
-	        var tempKey = '__' + key;
-	        var tempValue = obj[key];
-	        obj[tempKey] = tempValue;
-	        
-	        obj.accessor(key, {
-	          get: function() {
-	            return this[tempKey];
-	          },
-	          set: function(v) {
-	            this[tempKey] = v;
-	            callback();
-	          },
-	        });
-	      });
-	    });
-	  }
-	
-	  if (!Object.unobserve) {
-	    Object.$method('unobserve', function(obj, callback) {
-	      console.assert(false);
-	    });
-	  }
-	
-	})();
-	
-	
-	
-	/*
-	 *
-	 */
-	
-	
-	;(function() {
-	  /**
-	   * @class global.Number
-	   * Numberの拡張
-	   */
-	
-	  /**
-	   * @method  round
-	   * 四捨五入
-	   * 桁数指定版
-	   */
-	  Number.prototype.$method("round", function(figure) {
-	    figure = figure || 0;
-	    var base = Math.pow(10, figure);
-	    var temp = this * base;
-	    temp = Math.round(temp);
-	    return temp/base;
-	  });
-	  
-	  /**
-	   * @method  ceil
-	   * 切り上げ.
-	   * 桁数指定版
-	   */
-	  Number.prototype.$method("ceil",  function(figure) {
-	    figure = figure || 0;
-	    var base = Math.pow(10, figure);
-	    var temp = this * base;
-	    temp = Math.ceil(temp);
-	    return temp/base;
-	  });
-	  /**
-	   * @method  floor
-	   * 切り捨て
-	   * 桁数指定版
-	   */
-	  Number.prototype.$method("floor",  function(figure) {
-	    figure = figure || 0;
-	    var base = Math.pow(10, figure);
-	    var temp = this * base;
-	    temp = Math.floor(temp);
-	    
-	    // ~~this
-	    // this|0
-	    
-	    return temp/base;
-	  });
-	  
-	  /**
-	   * @method  toInt
-	   * integer 型に変換する
-	   */
-	  Number.prototype.$method("toInt",  function() {
-	    return (this | 0);
-	  });
-	  
-	  /**
-	   * @method  toHex
-	   * 16進数化
-	   */
-	  Number.prototype.$method("toHex",  function() {
-	    return this.toString(16);
-	  });
-	  
-	  /**
-	   * @method  toBin
-	   * 2進数化
-	   */
-	  Number.prototype.$method("toBin",  function() {
-	    return this.toString(2);
-	  });
-	  
-	  
-	  /**
-	   * @method  toUnsigned
-	   * unsigned 型に変換する
-	   */
-	  Number.prototype.$method("toUnsigned",  function() {
-	    return this >>> 0;
-	  });
-	  
-	  /**
-	   * @method  padding
-	   * 文字埋め
-	   */
-	  Number.prototype.$method("padding",  function(n, ch) {
-	    var str = this+'';
-	    n  = n-str.length;
-	    ch = (ch || '0')[0];
-	    
-	    while(n-- > 0) { str = ch + str; }
-	    
-	    if (str.indexOf("-") >= 0) {
-	      str = "-" + str.replace("-", "");
-	    }
-	
-	    return str;
-	  });
-	
-	
-	  /**
-	   * @method  times
-	   * 数値分繰り返す
-	   */
-	  Number.prototype.$method("times",  function(fn, self) {
-	    self = self || this;
-	    for (var i=0; i<this; ++i) {
-	      fn.call(self, i, this);
-	    }
-	    return this;
-	  });
-	
-	  /**
-	   * @method  upto
-	   * インクリメント繰り返し
-	   */
-	  Number.prototype.$method("upto",  function(t, fn, self) {
-	    self = self || this;
-	    for (var i=+this; i<=t; ++i) {
-	      fn.call(self, i, this);
-	    }
-	    return this;
-	  });
-	  
-	  /**
-	   * @method  downto
-	   * デクリメント繰り返し
-	   */
-	  Number.prototype.$method("downto",  function(t, fn, self) {
-	    self = self || this;
-	    for (var i=+this; i>=t; --i) {
-	      fn.call(self, i, this);
-	    }
-	    return this;
-	  });
-	
-	  /**
-	   * @method step
-	   * ステップ繰り返し(float対応)
-	   */
-	  Number.prototype.$method("step",  function(limit, step, fn, self) {
-	    self = self || this;
-	    if (this < limit && step > 0 || this > limit && step < 0) {
-	      for (var i=+this; i<=limit; i+=step) {
-	        fn.call(self, i, this);
-	      }
-	    }
-	    return this;
-	  });
-	
-	  /**
-	   * @method  map
-	   * return で返された値の配列を作る
-	   */
-	  Number.prototype.$method("map",  function(fn, self) {
-	    self = self || this;
-	
-	    var results = [];
-	    for (var i=0; i<this; ++i) {
-	      var r = fn.call(self, i);
-	      results.push(r);
-	    }
-	    return results;
-	  });
-	
-	  /**
-	   * @method abs
-	   * 絶対値
-	   */
-	  Number.prototype.$method("abs", function() { return Math.abs(this) });
-	
-	  /**
-	   * @method acos
-	   * アークコサイン
-	   */
-	  Number.prototype.$method("acos", function() { return Math.acos(this) });
-	
-	  /**
-	   * @method asin
-	   * アークサイン
-	   */
-	  Number.prototype.$method("asin", function() { return Math.asin(this) });
-	
-	  /**
-	   * @method atan
-	   * アークタンジェント
-	   */
-	  Number.prototype.$method("atan", function() { return Math.atan(this) });
-	
-	  /**
-	   * @method cos
-	   * コサイン
-	   */
-	  Number.prototype.$method("cos", function() { return Math.cos(this) });
-	
-	  /**
-	   * @method exp
-	   * E^num
-	   */
-	  Number.prototype.$method("exp", function() { return Math.exp(this) });
-	
-	  /**
-	   * @method log
-	   * 自然対数
-	   */
-	  Number.prototype.$method("log", function() { return Math.log(this) });
-	
-	  /**
-	   * @method max
-	   * max
-	   */
-	  Number.prototype.$method("max", function(value) { return Math.max(this, value) });
-	
-	  /**
-	   * @method min
-	   * min
-	   */
-	  Number.prototype.$method("min", function(value) { return Math.min(this, value) });
-	
-	  /**
-	   * @method clamp
-	   * clamp
-	   */
-	  Number.prototype.$method("clamp", function(min, max) { return Math.clamp(this, min, max) });
-	
-	  /**
-	   * @method pow
-	   * 乗数
-	   */
-	  Number.prototype.$method("pow", function(exponent) { return Math.pow(this, exponent) });
-	
-	  /**
-	   * @method sin
-	   * サイン
-	   */
-	  Number.prototype.$method("sin", function() { return Math.sin(this) });
-	
-	  /**
-	   * @method sqrt
-	   * 平方根
-	   */
-	  Number.prototype.$method("sqrt", function() { return Math.sqrt(this) });
-	
-	  /**
-	   * @method tan
-	   * タンジェント
-	   */
-	  Number.prototype.$method("tan", function() { return Math.tan(this) });
-	
-	  /**
-	   * @method toDegree
-	   * to degree
-	   */
-	  Number.prototype.$method("toDegree", function() { return (this*Math.RAD_TO_DEG); });
-	
-	  /**
-	   * @method toRadian
-	   * to degree
-	   */
-	  Number.prototype.$method("toRadian", function() { return this*Math.DEG_TO_RAD; });
-	
-	})();
-	
-	
-	/*
-	 *
-	 */
-	
-	
-	;(function() {
-	  /**
-	   * @class global.String
-	   * Stringの拡張
-	   * `String` is a global object that may be used to construct String instances.
-	   */
-	
-	  /**
-	   * @method  format
-	   * フォーマット
-	   * ## example
-	   *      document.write("{0} + {1} = {2}".format(5, 10, 5+10));   // "5 + 10 = 15"
-	   *      document.write("rgb({r}, {g}, {b})".format({             // "rgb(128, 0, 255)"
-	   *          r: 128,
-	   *          g: 0,
-	   *          b: 255
-	   *      }));
-	   */
-	  String.prototype.$method("format", function(arg) {
-	    // 置換ファンク
-	    var rep_fn = undefined;
-	    
-	    // オブジェクトの場合
-	    if (typeof arg == "object") {
-	      /** @ignore */
-	      rep_fn = function(m, k) {
-	        if (arg[k] === undefined) {
-	          return '';
+	(function(window, undefined) {
+	
+	// ECMA-262 5th edition Functions
+	if (typeof Object.defineProperty !== 'function') {
+	    Object.defineProperty = function(obj, prop, desc) {
+	        if ('value' in desc) {
+	            obj[prop] = desc.value;
 	        }
-	        else {
-	          return arg[k];
+	        if ('get' in desc) {
+	            obj.__defineGetter__(prop, desc.get);
 	        }
-	      };
-	    }
-	    // 複数引数だった場合
-	    else {
-	      var args = arguments;
-	      /** @ignore */
-	      rep_fn = function(m, k) {
-	        var v = args[ parseInt(k) ];
-	        if (v !== undefined && v !== null) {
-	          return v;
+	        if ('set' in desc) {
+	            obj.__defineSetter__(prop, desc.set);
 	        }
-	        else {
-	          return '';
-	        }
-	      };
-	    }
-	    
-	    return this.replace( /\{(\w+)\}/g, rep_fn );
-	  });
-	
-	
-	  /**
-	   * @method  trim
-	   * トリム
-	   * ## example
-	   *      "  Hello, world!  ".trim(); // "Hello, world!"
-	   * <a href="http://jamesroberts.name/blog/2010/02/22/string-functions-for-javascript-trim-to-camel-case-to-dashed-and-to-underscore/">Reference</a>
-	   * 
-	   */
-	  String.prototype.$method("trim", function() {
-	    return this.replace(/^\s+|\s+$/g, "");
-	  });
-	  
-	  /**
-	   * @method  capitalize
-	   * キャピタライズ
-	   * 
-	   * ## example
-	   *      "i am a pen.".capitalize(); // "I Am A Pen."
-	   * 
-	   * ## Reference
-	   * 
-	   * - [キャピタライズ(単語の先頭の大文字化)を行う - oct inaodu](http://d.hatena.ne.jp/brazil/20051212/1134369083)
-	   * - [デザインとプログラムの狭間で: javascriptでキャピタライズ（一文字目を大文字にする）](http://design-program.blogspot.com/2011/02/javascript.html)
-	   * 
-	   */
-	  String.prototype.$method("capitalize", function() {
-	    return this.replace(/\w+/g, function(word){
-	      return word.capitalizeFirstLetter();
-	    });
-	  });
-	  
-	  /**
-	   * @method  capitalizeFirstLetter
-	   * 先頭文字のみキャピタライズ
-	   */
-	  String.prototype.$method("capitalizeFirstLetter", function() {
-	    return this.charAt(0).toUpperCase() + this.substr(1).toLowerCase();
-	  });
-	  
-	  /**
-	   * @method  toDash
-	   * ダッシュ
-	   */
-	  String.prototype.$method("toDash", function() {
-	    return this.replace(/([A-Z])/g, function(m){ return '-'+m.toLowerCase(); });
-	  });
-	  
-	  
-	  /**
-	   * @method toHash
-	   * ハッシュ値に変換
-	   */
-	  String.prototype.$method("toHash", function() {
-	    return this.toCRC32();
-	  });
-	  
-	  /**
-	   * @method  padding
-	   * 左側に指定された文字を詰めて右寄せにする
-	   */
-	  String.prototype.$method("padding", function(n, ch) {
-	    var str = this.toString();
-	    n  = n-str.length;
-	    ch = (ch || ' ')[0];
-	    
-	    while(n-- > 0) { str = ch + str; }
-	    
-	    return str;
-	  });
-	  
-	  /**
-	   * @method  paddingLeft
-	   * 左側に指定された文字を詰めて右寄せにする
-	   */
-	  String.prototype.$method("paddingLeft", function(n, ch) {
-	    var str = this.toString();
-	    n  = n-str.length;
-	    ch = (ch || ' ')[0];
-	    
-	    while(n-- > 0) { str = ch + str; }
-	    
-	    return str;
-	  });
-	  
-	  /**
-	   * @method  paddingRight
-	   * 右側に指定された文字を詰めて左寄せにする
-	   */
-	  String.prototype.$method("paddingRight", function(n, ch) {
-	    var str = this.toString();
-	    n  = n-str.length;
-	    ch = (ch || ' ')[0];
-	    
-	    while(n-- > 0) { str = str + ch; }
-	    
-	    return str;
-	  });
-	  
-	  /**
-	   * @method  quotemeta
-	   * メタ文字をクォート
-	   */
-	  String.prototype.$method("quotemeta", function(n) {
-	    return this.replace(/([^0-9A-Za-z_])/g, '\\$1');
-	  });
-	  
-	  /**
-	   * @method  repeat
-	   * リピート
-	   */
-	  String.prototype.$method("repeat", function(n) {
-	    // TODO: 確認する
-	    var arr = Array(n);
-	    for (var i=0; i<n; ++i) arr[i] = this;
-	    return arr.join('');
-	  });
-	  
-	  /**
-	   * @method  count
-	   * その文字が入ってる数をカウント
-	   */
-	  String.prototype.$method("count", function(str) {
-	    var re = new RegExp(str, 'gm');
-	    return this.match(re).length;
-	  });
-	  
-	  /**
-	   * @method  include
-	   * 含んでいるかを返す
-	   * ruby のやつ
-	   */
-	  String.prototype.$method("include", function(str) {
-	    return this.indexOf(str) != -1;
-	  });
-	  
-	  /**
-	   * @method  toString
-	   * 配列に変換
-	   */
-	  String.prototype.$method("toArray", function() {
-	    var arr = [];
-	    for (var i=0,len=this.length; i<len; ++i) {
-	      arr.push(this[i]);
-	    }
-	    return arr;
-	  });
-	  
-	  String.prototype.$method("toObject", function(sep, eq) {
-	    sep = sep || '&';
-	    eq  = eq || '=';
-	
-	    var obj = {};
-	    var params = this.split(sep);
-	    params.each(function(str, i) {
-	      var pos = str.indexOf(eq);
-	      if (pos > 0) {
-	        var key = str.substring(0, pos);
-	        var val = str.substring(pos+1);
-	        var num = Number(val);
-	
-	        if (!isNaN(num)) {
-	          val = num;
-	        }
-	        else if (val === 'true') {
-	          val = true;
-	        }
-	        else if (val === 'false') {
-	          val = false;
-	        }
-	
-	        obj[key] = val;
-	      }
-	    });
-	
-	    return obj;
-	  });
-	  
-	  var table = "00000000 77073096 EE0E612C 990951BA 076DC419 706AF48F E963A535 9E6495A3 0EDB8832 79DCB8A4 E0D5E91E 97D2D988 09B64C2B 7EB17CBD E7B82D07 90BF1D91 1DB71064 6AB020F2 F3B97148 84BE41DE 1ADAD47D 6DDDE4EB F4D4B551 83D385C7 136C9856 646BA8C0 FD62F97A 8A65C9EC 14015C4F 63066CD9 FA0F3D63 8D080DF5 3B6E20C8 4C69105E D56041E4 A2677172 3C03E4D1 4B04D447 D20D85FD A50AB56B 35B5A8FA 42B2986C DBBBC9D6 ACBCF940 32D86CE3 45DF5C75 DCD60DCF ABD13D59 26D930AC 51DE003A C8D75180 BFD06116 21B4F4B5 56B3C423 CFBA9599 B8BDA50F 2802B89E 5F058808 C60CD9B2 B10BE924 2F6F7C87 58684C11 C1611DAB B6662D3D 76DC4190 01DB7106 98D220BC EFD5102A 71B18589 06B6B51F 9FBFE4A5 E8B8D433 7807C9A2 0F00F934 9609A88E E10E9818 7F6A0DBB 086D3D2D 91646C97 E6635C01 6B6B51F4 1C6C6162 856530D8 F262004E 6C0695ED 1B01A57B 8208F4C1 F50FC457 65B0D9C6 12B7E950 8BBEB8EA FCB9887C 62DD1DDF 15DA2D49 8CD37CF3 FBD44C65 4DB26158 3AB551CE A3BC0074 D4BB30E2 4ADFA541 3DD895D7 A4D1C46D D3D6F4FB 4369E96A 346ED9FC AD678846 DA60B8D0 44042D73 33031DE5 AA0A4C5F DD0D7CC9 5005713C 270241AA BE0B1010 C90C2086 5768B525 206F85B3 B966D409 CE61E49F 5EDEF90E 29D9C998 B0D09822 C7D7A8B4 59B33D17 2EB40D81 B7BD5C3B C0BA6CAD EDB88320 9ABFB3B6 03B6E20C 74B1D29A EAD54739 9DD277AF 04DB2615 73DC1683 E3630B12 94643B84 0D6D6A3E 7A6A5AA8 E40ECF0B 9309FF9D 0A00AE27 7D079EB1 F00F9344 8708A3D2 1E01F268 6906C2FE F762575D 806567CB 196C3671 6E6B06E7 FED41B76 89D32BE0 10DA7A5A 67DD4ACC F9B9DF6F 8EBEEFF9 17B7BE43 60B08ED5 D6D6A3E8 A1D1937E 38D8C2C4 4FDFF252 D1BB67F1 A6BC5767 3FB506DD 48B2364B D80D2BDA AF0A1B4C 36034AF6 41047A60 DF60EFC3 A867DF55 316E8EEF 4669BE79 CB61B38C BC66831A 256FD2A0 5268E236 CC0C7795 BB0B4703 220216B9 5505262F C5BA3BBE B2BD0B28 2BB45A92 5CB36A04 C2D7FFA7 B5D0CF31 2CD99E8B 5BDEAE1D 9B64C2B0 EC63F226 756AA39C 026D930A 9C0906A9 EB0E363F 72076785 05005713 95BF4A82 E2B87A14 7BB12BAE 0CB61B38 92D28E9B E5D5BE0D 7CDCEFB7 0BDBDF21 86D3D2D4 F1D4E242 68DDB3F8 1FDA836E 81BE16CD F6B9265B 6FB077E1 18B74777 88085AE6 FF0F6A70 66063BCA 11010B5C 8F659EFF F862AE69 616BFFD3 166CCF45 A00AE278 D70DD2EE 4E048354 3903B3C2 A7672661 D06016F7 4969474D 3E6E77DB AED16A4A D9D65ADC 40DF0B66 37D83BF0 A9BCAE53 DEBB9EC5 47B2CF7F 30B5FFE9 BDBDF21C CABAC28A 53B39330 24B4A3A6 BAD03605 CDD70693 54DE5729 23D967BF B3667A2E C4614AB8 5D681B02 2A6F2B94 B40BBE37 C30C8EA1 5A05DF1B 2D02EF8D".split(' ');
-	  
-	  /**
-	   * @method  toCRC32
-	   * CRC32 変換
-	   */
-	  String.prototype.$method("toCRC32", function() {
-	    var crc = 0, x=0, y=0;
-	    
-	    crc = crc ^ (-1);
-	    for (var i=0, iTop=this.length; i<iTop; ++i) {
-	      y = (crc ^ this.charCodeAt(i)) & 0xff;
-	      x = "0x" + table[y];
-	      crc = (crc >>> 8) ^ x;
-	    }
-	    
-	    return (crc ^ (-1)) >>> 0;
-	  });
-	
-	})();
-	
-	
-	/*
-	 * array.js
-	 */
-	
-	;(function() {
-	
-	  /**
-	   * @class global.Array
-	   * # 拡張した Array クラス
-	   * Array クラスを拡張しています
-	   */
-	
-	
-	  /**
-	   * @property {Object} first
-	   * 最初の要素
-	   * 
-	   *     @example   
-	   *     arr = [6, 5, 2, 3, 1, 4]
-	   *     console.log(arr.first); // => 6
-	   */
-	  Array.prototype.accessor("first", {
-	      "get": function()   { return this[0]; },
-	      "set": function(v)  { this[0] = v; }
-	  });
-	  
-	  /**
-	   * @property {Object} last
-	   * 最後の要素
-	   *
-	   *     arr = [6, 5, 2, 3, 1, 4]
-	   *     arr.last; // => 4
-	   */
-	  Array.prototype.accessor("last", {
-	    "get": function()   { return this[this.length-1]; },
-	    "set": function(v)  { this[this.length-1] = v; }
-	  });
-	
-	  /**
-	   * @method equals
-	   * 渡された配列と等しいかどうかをチェックします
-	   *
-	   * 要素同士を === で比較します。要素に配列が含まれている場合は {@link global.Array#deepEquals} を使用してください。
-	   *
-	   *     arr1 = [6, 5, 2, 3, 1, 4];
-	   *     arr1.equals([6, 5, 2, 3, 1, 4]);       // => true
-	   *     arr2 = [6, 5, 2, [3, 1], 4];
-	   *     arr2.equals([6, 5, 2, [3, 1], 4]);     // => false
-	   *     arr2.deepEquals([6, 5, 2, [3, 1], 4]); // => true
-	   *
-	   * @param {Array} arr 比較する対象の配列
-	   * @return {Boolean} チェックの結果
-	   */
-	  Array.prototype.$method("equals", function(arr) {
-	    // 長さチェック
-	    if (this.length !== arr.length) return false;
-	    
-	    for (var i=0,len=this.length; i<len; ++i) {
-	      if (this[i] !== arr[i]) {
-	        return false;
-	      }
-	    }
-	
-	    return true;
-	  });
-	
-	  /**
-	   * @method deepEquals
-	   * ネストされている配列を含め、渡された配列と等しいかどうかをチェックします
-	   *
-	   *     arr = [6, 5, 2, [3, 1], 4];
-	   *     arr.equals([6, 5, 2, [3, 1], 4]);     // => false
-	   *     arr.deepEquals([6, 5, 2, [3, 1], 4]); // => true
-	   *
-	   * equalsDeep にするか検討. (Java では deepEquals なのでとりあえず合わせとく)
-	   *
-	   * @param {Array} arr 比較する対象の配列
-	   * @return {Boolean} チェックの結果
-	   */
-	  Array.prototype.$method("deepEquals", function(arr) {
-	    // 長さチェック
-	    if (this.length !== arr.length) return false;
-	    
-	    for (var i=0,len=this.length; i<len; ++i) {
-	      var result = (this[i].deepEquals) ? this[i].deepEquals(arr[i]) : (this[i] === arr[i]);
-	      if (result === false) {
-	        return false;
-	      }
-	    }
-	    return true;
-	  });
-	
-	  /**
-	   * @method contains
-	   * 指定した要素が配列に含まれているかをチェックします
-	   *
-	   * 比較には厳密な同値（三重イコール演算子 === で使われるのと同じ方法）を用います。
-	   *
-	   *     arr = [6, 5, 2, 3, 1, 4];
-	   *     arr.contains(3);     // => true
-	   *     arr.contains(3, 4);  // => false
-	   *     arr.contains(3, -4); // => true
-	   *     arr.contains("6");   // => false
-	   *
-	   * @param {Object} item チェックするオブジェクト
-	   * @param {Number} [fromIndex=0] 検索を始める位置。負数を指定した場合は末尾からのオフセットと見なします。
-	   * @return {Boolean} チェックの結果
-	   */
-	  Array.prototype.$method("contains", function(item, fromIndex) {
-	    return this.indexOf(item, fromIndex) != -1;
-	  });
-	  
-	  /**
-	   * @method at
-	   * 指定したインデックスの要素を返します（ループ・負数の指定可）
-	   *
-	   * 添字が負数の場合は末尾からのオフセットとみなします。末尾の要素が -1 番目になります。  
-	   * 添字の絶対値が Array.length 以上の場合はループします。
-	   *
-	   *     arr = ['a', 'b', 'c', 'd', 'e', 'f'];
-	   *     arr.at(0);  // => 'a'
-	   *     arr.at(6);  // => 'a'
-	   *     arr.at(13); // => 'b'
-	   *     arr.at(-1); // => 'f'
-	   *     arr.at(-8); // => 'e'
-	   *
-	   * @param {Number} index 添字
-	   * @return {Object} 添字で指定された要素
-	   */
-	  Array.prototype.$method("at", function(i) {
-	    i%=this.length;
-	    i+=this.length;
-	    i%=this.length;
-	    return this[i];
-	  });
-	
-	
-	  /**
-	   * @method find
-	   * 各要素を引数にして関数を実行し、その値が真となる（＝条件にマッチする）最初の要素を返します
-	   *
-	   * どの要素もマッチしなければ undefined を返します。
-	   *
-	   *     arr = ['foo', 'bar', 'hoge', 'fuga'];
-	   *     arr.find( function(elm) {
-	   *       return elm.indexOf('a') >= 0;
-	   *     });
-	   *     // => 'bar'
-	   *
-	   * @param {Function} callback 各要素に対して実行するコールバック関数
-	   * @param {Object} [self=this] callback 内で this として参照される値。デフォルトは呼び出し時の this。
-	   * @return {Object} 条件にマッチした最初の要素、または undefined
-	   */
-	  Array.prototype.$method("find", function(fn, self) {
-	    var target = null;
-	
-	    this.some(function(elm, i) {
-	      if (fn.call(self, elm, i, this)) {
-	        target = elm;
-	        return true;
-	      }
-	    });
-	
-	    return target;
-	  });
-	
-	  /**
-	   * @method findIndex
-	   * 各要素を引数にして関数を実行し、その値が真となる（＝条件にマッチする）最初のインデックスを返します
-	   *
-	   * どの要素もマッチしなければ -1 を返します。
-	   *
-	   *     arr = ['foo', 'bar', 'hoge', 'fuga'];
-	   *     arr.findIndex( function(elm) {
-	   *       return elm.indexOf('a') >= 0;
-	   *     });
-	   *     // => 1
-	   *
-	   * @param {Function} callback 各要素に対して実行するコールバック関数
-	   * @param {Object} [self=this] callback 内で this として参照される値。デフォルトは呼び出し時の this。
-	   * @return {Object} 条件にマッチした最初のインデックス、または -1
-	   */
-	  Array.prototype.$method("findIndex", function(fn, self) {
-	    var target = null;
-	
-	    this.some(function(elm, i) {
-	      if (fn.call(self, elm, i, this)) {
-	        target = i;
-	        return true;
-	      }
-	    });
-	
-	    return target;
-	  });
-	  
-	  /**
-	   * @method swap
-	   * @chainable
-	   * a 番目の要素 と b 番目の要素を入れ替えます
-	   *
-	   *     arr1 = ['a', 'b', 'c', 'd'];
-	   *     arr2 = arr1.swap(0, 3); // => ['d', 'b', 'c', 'a']
-	   *     arr1 === arr2;          // => true
-	   *
-	   * @param {Number} a  インデックス
-	   * @param {Number} b  インデックス
-	   */
-	  Array.prototype.$method("swap", function(a, b) {
-	    var temp = this[a];
-	    this[a] = this[b];
-	    this[b] = temp;
-	    
-	    return this;
-	  });
-	
-	  /**
-	   * @method erase
-	   * @chainable
-	   * 指定したオブジェクトと一致した最初の要素を削除します
-	   *
-	   *     arr1 = ['a', 'b', 'b', 'c'];
-	   *     arr2 = arr1.erase('b'); // => ['a', 'b', 'c']
-	   *     arr1 === arr2;          // => true
-	   *
-	   * @param {Object} elm 削除したいオブジェクト
-	   */
-	  Array.prototype.$method("erase", function(elm) {
-	    var index  = this.indexOf(elm);
-	    if (index >= 0) {
-	      this.splice(index, 1);
-	    }
-	    return this;
-	  });
-	  
-	  /**
-	   * @method eraseAll
-	   * @chainable
-	   * 指定したオブジェクトと一致したすべての要素を削除します
-	   *
-	   *     arr1 = ['a', 'b', 'b', 'c'];
-	   *     arr2 = arr1.eraseAll('b'); // => ['a', 'c']
-	   *     arr1 === arr2;             // => true
-	   *
-	   * @param {Object} elm 削除したいオブジェクト
-	   */
-	  Array.prototype.$method("eraseAll", function(elm) {
-	    for (var i=0,len=this.length; i<len; ++i) {
-	      if (this[i] == elm) {
-	        this.splice(i--, 1);
-	      }
-	    }
-	    return this;
-	  });
-	  
-	  /**
-	   * @method eraseIf
-	   * @chainable
-	   * 各要素を引数にして関数を実行し、その値が真となる（＝条件にマッチする）最初の要素を削除します
-	   *
-	   * どの要素もマッチしなければ何も起きません。
-	   *
-	   *     arr = ['foo', 'bar', 'hoge', 'fuga'];
-	   *     arr.eraseIf( function(elm) {
-	   *       return elm.indexOf('o') >= 0;
-	   *     });
-	   *     // => ['bar', 'hoge', 'fuga']
-	   *
-	   * @param {Function} callback 各要素に対して実行するコールバック関数
-	   */
-	  Array.prototype.$method("eraseIf", function(fn) {
-	    for (var i=0,len=this.length; i<len; ++i) {
-	      if ( fn(this[i], i, this) ) {
-	        this.splice(i, 1);
-	        break;
-	      }
-	    }
-	    return this;
-	  });
-	  
-	  /**
-	   * @method eraseIfAll
-	   * @chainable
-	   * 各要素を引数にして関数を実行し、その値が真となる（＝条件にマッチする）すべての要素を削除します
-	   *
-	   * どの要素もマッチしなければ何も起きません。
-	   *
-	   *     arr = ['foo', 'bar', 'hoge', 'fuga'];
-	   *     arr.eraseIfAll( function(elm) {
-	   *       return elm.indexOf('o') >= 0;
-	   *     });
-	   *     // => ['bar', 'fuga']
-	   *
-	   * @param {Function} callback 各要素に対して実行するコールバック関数
-	   */
-	  Array.prototype.$method("eraseIfAll", function(fn) {
-	    for (var i=0,len=this.length; i<len; ++i) {
-	      if ( fn(this[i], i, this) ) {
-	        this.splice(i--, 1);
-	        len--;
-	      }
-	    }
-	    return this;
-	  });
-	  
-	  /**
-	   * @method random
-	   * 配列からランダムに1つ取り出した要素を返します
-	   *
-	   * 取り出す範囲をインデックスで指定することもできます。  
-	   * {@link global.Array#pickup}、{@link global.Array#lot} と同じです。  
-	   *
-	   *     arr = ['foo', 'bar', 'hoge', 'fuga'];
-	   *     arr.random(2, 3);  // => 'hoge' または 'fuga'
-	   *
-	   * @param {Number} [min=0] インデックスの下限
-	   * @param {Number} [max=配列の最大インデックス] インデックスの上限
-	   * @return {Object} ランダムに1つ取り出した要素
-	   */
-	  Array.prototype.$method("random", function(min, max) {
-	    min = min || 0;
-	    max = max || this.length-1;
-	    return this[ Math.randint(min, max) ];
-	  });
-	  
-	  /**
-	   * @method pickup
-	   * 配列からランダムで1つ取り出した要素を返します
-	   *
-	   * {@link global.Array#random}、{@link global.Array#lot} と同じです。
-	   * @inheritdoc global.Array#random
-	   */
-	  Array.prototype.$method("pickup", function(min, max) {
-	    min = min || 0;
-	    max = max || this.length-1;
-	    return this[ Math.randint(min, max) ];
-	  });
-	  
-	  /**
-	   * @method lot
-	   * 配列からランダムで1つ取り出した要素を返します
-	   *
-	   * {@link global.Array#random}、{@link global.Array#pickup} と同じです。
-	   * @inheritdoc global.Array#random
-	   */
-	  Array.prototype.$method("lot", function(min, max) {
-	    min = min || 0;
-	    max = max || this.length-1;
-	    return this[ Math.randint(min, max) ];
-	  });
-	  
-	  /**
-	   * @method uniq
-	   * 要素の重複を取り除いた配列を生成して返します
-	   *
-	   * 自分自身は破壊されません。
-	   *
-	   *     arr = [1, 2, 3, 4, 3, 2];
-	   *     arr.uniq(); // => [1, 2, 3, 4]
-	   *
-	   * @param {Number} [deep] ※未使用
-	   * @return {Object} 新しい配列
-	   */
-	  Array.prototype.$method("uniq", function(deep) {
-	    return this.filter(function(value, index, self) {
-	      return self.indexOf(value) === index;
-	    });
-	  });
-	  
-	
-	  /**
-	   * @method flatten
-	   * 自身を再帰的に平滑化した配列を生成して返します
-	   *
-	   * level を指定しなければ深さの際限なく完全に平滑化します。
-	   *
-	   *     arr = [1, 2, [3, [4, 5]]];
-	   *     arr.flatten();  // => [1, 2, 3, 4, 5]
-	   *     arr.flatten(1); // => [1, 2, 3, [4, 5]]
-	   *
-	   * @param {Number} [level=0]  平滑化の再帰の深さ
-	   * @return {Object} 平滑化した配列
-	   */
-	  Array.prototype.$method("flatten", function(level) {
-	    var arr = null;
-	
-	    if (level) {
-	      arr = this;
-	      for (var i=0; i<level; ++i) {
-	        arr = Array.prototype.concat.apply([], arr);
-	      }
-	    }
-	    else {
-	      // 完全フラット
-	      arr = this.reduce(function (previousValue, curentValue) {
-	        return Array.isArray(curentValue) ?
-	          previousValue.concat(curentValue.flatten()) : previousValue.concat(curentValue);
-	      }, []);
-	    }
-	
-	    return arr;
-	  });
-	
-	  /**
-	   * @method clone
-	   * 自身のコピーを生成して返します
-	   *
-	   *     arr1 = [1, 2, [3, 4]];
-	   *     arr2 = arr1.clone();      // => [1, 2, [3, 4]]
-	   *     arr1[2] === arr2[2];      // => true
-	   *     arr1[2][0] = 9;
-	   *     arr2;                     // => [1, 2, [9, 4]]
-	   *     arr1 = [1, 2, [3, 4]];
-	   *     arr2 = arr1.clone(true);  // => [1, 2, [3, 4]]
-	   *     arr1[2] === arr2[2];      // => false
-	   *     arr1[2][0] = 9;
-	   *     arr2;                     // => [1, 2, [3, 4]]
-	   *
-	   * @param {Boolean} [deep=false] 配列のネストをたどって複製するかどうか
-	   * @return {Object} 新しい配列
-	   */
-	  Array.prototype.$method("clone", function(deep) {
-	    if (deep === true) {
-	      var a = Array(this.length);
-	      for (var i=0,len=this.length; i<len; ++i) {
-	        a[i] = (this[i].clone) ? this[i].clone(deep) : this[i];
-	      }
-	      return a;
-	    }
-	    else {
-	      return Array.prototype.slice.apply(this);
-	    }
-	  });
-	
-	
-	  /**
-	   * @method clear
-	   * @chainable
-	   * 自身を空の配列にします
-	   *
-	   *     arr = [1, 2, [3, 4]];
-	   *     arr.clear(); // => []
-	   */
-	  Array.prototype.$method("clear", function() {
-	    this.length = 0;
-	    return this;
-	  });
-	  
-	  /**
-	   * @method fill
-	   * @chainable
-	   * 自身の一部の要素を特定の値で埋めます
-	   *
-	   *     arr = [1, 2, 3, 4, 5];
-	   *     arr.fill("x");       // => ["x", "x", "x", "x", "x"]
-	   *     arr.fill("x", 2, 4); // => [1, 2, "x", "x", 5]
-	   *
-	   * @param {Object} value 埋める値
-	   * @param {Number} [start=0] 値を埋める最初のインデックス
-	   * @param {Number} [end=自身の配列の長さ] 値を埋める最後のインデックス+1
-	   */
-	  Array.prototype.$method("fill", function(value, start, end) {
-	    start = start || 0;
-	    end   = end   || (this.length);
-	    
-	    for (var i=start; i<end; ++i) {
-	      this[i] = value;
-	    }
-	    
-	    return this;
-	  });
-	  
-	
-	  /**
-	   * @method range
-	   * @chainable
-	   * 自身を等差数列（一定間隔の整数値の列）とします
-	   *
-	   * 引数が1つの場合、0～end（end含まず）の整数の配列です  
-	   * 引数が2つの場合、start～end（end含まず）の整数の配列です  
-	   * 引数が3つの場合、start～end（end含まず）かつ start + n * step (nは整数)を満たす整数の配列です
-	   *
-	   *     arr = [];
-	   *     arr.range(4);        // => [0, 1, 2, 3]
-	   *     arr.range(2, 5);     // => [2, 3, 4]
-	   *     arr.range(2, 14, 5); // => [2, 7, 12]
-	   *     arr.range(2, -3);    // => [2, 1, 0, -1, -2]
-	   *
-	   * @param {Number} start 最初の値
-	   * @param {Number} end 最後の値（省略不可）
-	   * @param {Number} [step=1または-1] 間隔
-	   */
-	  Array.prototype.$method("range", function(start, end, step) {
-	    this.clear();
-	    
-	    if (arguments.length == 1) {
-	      for (var i=0; i<start; ++i) this[i] = i;
-	    }
-	    else if (start < end) {
-	      step = step || 1;
-	      if (step > 0) {
-	        for (var i=start, index=0; i<end; i+=step, ++index) {
-	          this[index] = i;
-	        }
-	      }
-	    }
-	    else {
-	      step = step || -1;
-	      if (step < 0) {
-	        for (var i=start, index=0; i>end; i+=step, ++index) {
-	          this[index] = i;
-	        }
-	      }
-	    }
-	    
-	    return this;
-	  });
-	  
-	  /**
-	   * @method shuffle
-	   * @chainable
-	   * 自身の要素をランダムにシャッフルします
-	   *
-	   *     arr = [1, 2, 3, 4, 5];
-	   *     arr.shuffle(); // => [5, 1, 4, 2, 3] など
-	   */
-	  Array.prototype.$method("shuffle", function() {
-	    for (var i=0,len=this.length; i<len; ++i) {
-	      var j = Math.randint(0, len-1);
-	      
-	      if (i != j) {
-	        this.swap(i, j);
-	      }
-	    }
-	    
-	    return this;
-	  });
-	
-	  /**
-	   * @method sum
-	   * 要素の合計値を返します
-	   *
-	   * 要素に数値以外が含まれる場合の挙動は不定です。
-	   *
-	   *     arr = [1, 2, 3, 4, 5, 6];
-	   *     arr.sum(); // => 21
-	   *
-	   * @return {Number} 合計
-	   */
-	  Array.prototype.$method("sum", function() {
-	    var sum = 0;
-	    for (var i=0,len=this.length; i<len; ++i) {
-	      sum += this[i];
-	    }
-	    return sum;
-	  });
-	
-	  /**
-	   * @method average
-	   * 要素の平均値を返します
-	   *
-	   * 要素に数値以外が含まれる場合の挙動は不定です。
-	   *
-	   *     arr = [1, 2, 3, 4, 5, 6]
-	   *     arr.average(); // => 3.5
-	   *
-	   * @return {Number} 平均値
-	   */
-	  Array.prototype.$method("average", function() {
-	    var sum = 0;
-	    var len = this.length;
-	    for (var i=0; i<len; ++i) {
-	      sum += this[i];
-	    }
-	    return sum/len;
-	  });
-	
-	  /**
-	   * @method each
-	   * @chainable
-	   * 要素を順番に渡しながら関数を繰り返し実行します
-	   *
-	   * メソッドチェーンに対応していますが、このメソッドによって自分自身は変化しません。
-	   *
-	   *     arr = [1, 2, 3];
-	   *     arr.each( function(elm) {
-	   *       console.log(elm * elm)
-	   *     });
-	   *     // => 1
-	   *           4
-	   *           9
-	   *
-	   * @param {Function} callback 各要素に対して実行するコールバック関数
-	   * @param {Object} callback.currentValue 現在処理されている配列の要素
-	   * @param {Number} callback.index 現在処理されている配列の要素のインデックス
-	   * @param {Array} callback.array 適用されている配列
-	   * @param {Object} [self=this] callback 内で this として参照される値
-	   */
-	  Array.prototype.$method("each", function() {
-	    this.forEach.apply(this, arguments);
-	    return this;
-	  });
-	
-	  
-	  /**
-	   * @method toULElement
-	   * ULElement に変換します（未実装）
-	   */
-	  Array.prototype.$method("toULElement", function(){
-	      // TODO: 
-	  });
-	
-	  /**
-	   * @method toOLElement
-	   * OLElement に変換します（未実装）
-	   */
-	  Array.prototype.$method("toOLElement", function(){
-	      // TODO:
-	  });
-	
-	  
-	  /**
-	   * @method range
-	   * @static
-	   * インスタンスメソッドの {@link global.Array#range} と同じです
-	   *
-	   *     Array.range(2, 14, 5); // => [2, 7, 12]
-	   */
-	  Array.$method("range", function(start, end, step) {
-	    return Array.prototype.range.apply([], arguments);
-	  });
-	
-	
-	  /**
-	   * @method of
-	   * @static
-	   * ES6 準拠の of 関数です
-	   *
-	   * 可変長引数をとって Array オブジェクトにして返します。
-	   *
-	   *     Array.of();        // => []
-	   *     Array.of(1, 2, 3); // => [1, 2, 3]
-	   *
-	   * @param {Object} elementN 生成する配列の要素
-	   * @return {Array} 生成した配列
-	   */
-	  Array.$method("of", function() {
-	    return Array.prototype.slice.call(arguments);
-	  });
-	
-	  /**
-	   * @method from
-	   * @static
-	   * ES6 準拠の from 関数です
-	   *
-	   * array-like オブジェクトから新しい配列を生成します。  
-	   * array-like オブジェクトとは、length プロパティを持ち、数字の添字でアクセス可能なオブジェクトのことです。  
-	   * 通常の配列のほか、String、arguments、NodeList なども array-like オブジェクトです。
-	   *
-	   *     Array.from([1, 2, 3], function(elm){ return elm * elm} ); // => [1, 4, 9]
-	   *     Array.from("foo");                                        // => ["f", "o", "o"]
-	   *     Array.from( document.querySelectorAll("span"))            // => [Element, Element, Element,...]
-	   *
-	   * @param {Object} arrayLike 配列に変換する array-like オブジェクト
-	   * @param {Function} [callback] arrayLike のすべての要素に対して実行するマップ関数
-	   * @param {Object} [context] callback 内で this として参照される値
-	   * @return {Array} 生成した配列
-	   */
-	  Array.$method("from", function(arrayLike, callback, context) {
-	    if (!Object(arrayLike).length) return [];
-	
-	    return Array.prototype.map.call(arrayLike, typeof callback == 'function' ? callback : function(item) {
-	      return item;
-	    }, context);
-	  });
-	  
-	  /**
-	   * @method most
-	   * 指定した関数の返り値が最小となる要素と最大となる要素をまとめて返します
-	   *
-	   * 空の配列に対して実行すると {max: Infinity, min: -Infinity} を返します。
-	   *
-	   *     [5,1,4,1,9,2,-10].most(); // => {max:9, min: -10}
-	   *
-	   *     points = [ {x:0, y:0}, {x:640, y:960}, {x:-80, y:100} ];
-	   *     points.most(function(e){return e.x;}).min; // => [x:-80, y:100]
-	   *     points.most(function(e){return e.y;}).max; // => [x:640, y:960]
-	   *
-	   * @param {Function} [callback] 各要素に対して実行するコールバック関数
-	   * @param {Object} [self=this] 関数内で this として参照される値。デフォルトは自分自身。
-	   * @return {Object} max と min をキーに持つオブジェクト
-	   * @return {Object} return.min 関数の返り値が最小となる要素
-	   * @return {Object} return.max 関数の返り値が最大となる要素
-	   */
-	  Array.prototype.$method("most", function(func, self) {
-	    if(this.length < 1){
-	      return {
-	        max: -Infinity,
-	        min: Infinity,
-	      };
-	    }
-	    if(func){
-	      var maxValue = -Infinity;
-	      var minValue = Infinity;
-	      var maxIndex = 0;
-	      var minIndex = 0;
-	      
-	      if(typeof self === 'undefined'){self = this;}
-	      
-	      for (var i = 0, len = this.length; i < len; ++i) {
-	        var v = func.call(self, this[i], i, this);
-	        if(maxValue < v){
-	          maxValue = v;
-	          maxIndex = i;
-	        }
-	        if(minValue > v){
-	          minValue = v;
-	          minIndex = i;
-	        }
-	      }
-	      return {
-	        max: this[maxIndex],
-	        min: this[minIndex],
-	      };
-	    }
-	    else{
-	      var max = -Infinity;
-	      var min = Infinity;
-	      for (var i = 0, len = this.length;i < len; ++i) {
-	        if(max<this[i]){max=this[i];}
-	        if(min>this[i]){min=this[i];}
-	      }
-	      return {
-	        max: max,
-	        min: min,
-	      };
-	    }
-	    
-	  });  
-	
-	})();
-	
-	/*
-	 * date.js
-	 */
-	
-	(function() {
-	  
-	  /**
-	   * @class   global.Date
-	   * Date(日付)の拡張
-	   */
-	  
-	  var MONTH = [
-	    'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
-	  ];
-	  
-	  var WEEK = [
-	    'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
-	  ];
-	  
-	  /**
-	   * @method  format
-	   * 日付フォーマットに合わせた文字列を返す
-	   */
-	  Date.prototype.$method('format', function(pattern) {
-	    var year    = this.getFullYear();
-	    var month   = this.getMonth();
-	    var date    = this.getDate();
-	    var day     = this.getDay();
-	    var hours   = this.getHours();
-	    var minutes = this.getMinutes();
-	    var seconds = this.getSeconds();
-	    var millseconds = this.getMilliseconds();
-	    
-	    var patterns = {
-	      'yyyy': String(year).padding(4, '0'),
-	      'yy': year.toString().substr(2, 2),
-	      'y': year,
-	
-	      'MMMM': MONTH[month],
-	      'MMM': MONTH[month].substr(0, 3),
-	      'MM': String(month+1).padding(2, '0'),
-	      'M': (month+1),
-	
-	      'dd': String(date).padding(2, '0'),
-	      'd': date,
-	
-	      'EEEE': WEEK[day],
-	      'EEE': WEEK[day].substr(0, 3),
-	
-	      'HH': String(hours).padding(2, '0'),
-	      'H': hours,
-	
-	      'mm': String(minutes).padding(2, '0'),
-	      'm': minutes,
-	
-	      'ss': String(seconds).padding(2, '0'),
-	      's': seconds,
-	      
-	      // // date
-	      // 'd': String('00' + date).slice(-2),
-	      // 'D': WEEK[day].substr(0, 3),
-	      // 'j': date,
-	      // 'l': WEEK[day],
-	      
-	      // // month
-	      // 'm': String('00' + (month+1)).slice(-2),
-	      // 'M': MONTH[month].substr(0, 3),
-	      // 'n': (month+1),
-	      // 'F': MONTH[month],
-	      
-	      // // year
-	      // 'y': year.toString().substr(2, 2),
-	      // 'Y': year,
-	      
-	      // // time
-	      // 'G': hours,
-	      // 'H': String('00' + hours).slice(-2),
-	      // 'i': String('00' + minutes).slice(-2),
-	      // 's': String('00' + seconds).slice(-2),
-	      // 'S': String('000' + millseconds).slice(-3),
+	        return obj;
 	    };
-	
-	    var regstr = '(' + Object.keys(patterns).join('|') + ')';
-	    var re = new RegExp(regstr, 'g');
-	
-	    return pattern.replace(re, function(str) {
-	      return patterns[str];
-	    });
-	  });
-	
-	
-	  /*
-	   * http://qiita.com/n0bisuke/items/dd537bd4cbe9ab501ce8
-	   */
-	  Date.$method('calculateAge', function(birthday, when) {
-	    // birthday
-	    if (typeof birthday === 'string') {
-	      birthday = new Date(birthday);
-	    }
-	    // when
-	    if (!when) {
-	      when = new Date();
-	    }
-	    else if (typeof when === 'string') {
-	      when = new Date(when);
-	    }
-	
-	    var bn = new Date(birthday.getTime()).setFullYear(256);
-	    var wn = new Date(when.getTime()).setFullYear(256);
-	    var step = (wn < bn) ? 1 : 0;
-	
-	    return (when.getFullYear() - birthday.getFullYear()) - step;
-	  });
-	  
-	})();
-	
-	/*
-	 * math.js
-	 */
-	
-	;(function() {
-	    
-	  /**
-	   * @class global.Math
-	   * Mathの拡張
-	   */
-	
-	  
-	  /**
-	   * @property    DEG_TO_RAD
-	   * Degree to Radian.
-	   */
-	  Math.DEG_TO_RAD = Math.PI/180;
-	  
-	  /**
-	   * @property    RAD_TO_DEG
-	   * Radian to Degree.
-	   */
-	  Math.RAD_TO_DEG = 180/Math.PI;
-	  
-	  /**
-	   * @property    PHI
-	   * golden ratio
-	   */
-	  Math.PHI = (1 + Math.sqrt(5)) / 2;
-	  
-	  /**
-	   * @method
-	   * Degree を Radian に変換
-	   */
-	  Math.degToRad = function(deg) {
-	    return deg * Math.DEG_TO_RAD;
-	  };
-	  
-	  /**
-	   * @method
-	   * Radian を Degree に変換
-	   */
-	  Math.radToDeg = function(rad) {
-	    return rad * Math.RAD_TO_DEG;
-	  };
-	  
-	
-	  
-	  /**
-	   * @method clamp
-	   * クランプ
-	   */
-	  Math.$method("clamp", function(value, min, max) {
-	    return (value < min) ? min : ( (value > max) ? max : value );
-	  });
-	  
-	  /**
-	   * @method inside
-	   * min <= value <= max のとき true を返す
-	   */
-	  Math.$method("inside", function(value, min, max) {
-	    return (value >= min) && (value) <= max;
-	  });
-	  
-	  /**
-	   * @method randint
-	   * ランダムな値を指定された範囲内で生成
-	   */
-	  Math.$method("randint", function(min, max) {
-	    return Math.floor( Math.random()*(max-min+1) ) + min;
-	  });
-	  
-	  /**
-	   * @method randfloat
-	   * ランダムな値を指定された範囲内で生成
-	   */
-	  Math.$method("randfloat", function(min, max) {
-	    return Math.random()*(max-min)+min;
-	  });
-	  
-	  /**
-	   * @method randbool
-	   * ランダムな値を指定された範囲内で生成
-	   */
-	  Math.$method("randbool", function() {
-	    return Math.randint(0, 1) === 1;
-	  });
-	    
-	})();
-	/*
-	 *
-	 */
-	
-	
-	
-	/*
-	 * phina.js namespace
-	 */
-	var phina = phina || {};
-	
-	;(function() {
-	
-	  /**
-	   * @class phina
-	   * phina.js namespace
-	   */
-	
-	  /**
-	   * バージョン
-	   */
-	  phina.VERSION = '0.2.0';
-	
-	  phina.$method('isNode', function() {
-	    return (typeof module !== 'undefined');
-	  });
-	
-	  phina.$method('namespace', function(fn) {
-	    fn.call(this);
-	  });
-	
-	  var ns = phina.isNode() ? global : window;
-	
-	  /**
-	   * @method global
-	   * global
-	   */
-	  phina.accessor('global', {
-	    get: function() {
-	      return ns;
-	    },
-	  });
-	
-	  /**
-	   * @method isMobile
-	   * mobile かどうかをチェック
-	   */
-	  phina.$method('isMobile', function() {
-	    if (!phina.global.navigator) return false;
-	    var ua = phina.global.navigator.userAgent;
-	    return (ua.indexOf("iPhone") > 0 || ua.indexOf("iPad") > 0 || ua.indexOf("Android") > 0);
-	  });
-	
-	
-	  // support node.js
-	  if (phina.isNode()) {
-	    module.exports = phina;
-	  }
-	
-	  ns.phina = phina;
-	
-	})(this);
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @member phina
-	   * @static
-	   * @method createClass
-	   * クラスを生成
-	   */
-	  phina.$method('createClass', function(params) {
-	    var props = {};
-	
-	    var _class = function() {
-	      var instance = new _class.prototype._creator();
-	      _class.prototype.init.apply(instance, arguments);
-	      return instance;
-	    };
-	
-	    if (params.superClass) {
-	      _class.prototype = Object.create(params.superClass.prototype);
-	      params.init.owner = _class;
-	      _class.prototype.superInit = function() {
-	        this.__counter = this.__counter || 0;
-	
-	        var superClass = this._hierarchies[this.__counter++];
-	        var superInit = superClass.prototype.init;
-	        superInit.apply(this, arguments);
-	
-	        this.__counter = 0;
-	      };
-	      _class.prototype.superMethod = function() {
-	        var args = Array.prototype.slice.call(arguments, 0);
-	        var name = args.shift();
-	        this.__counters = this.__counters || {};
-	        this.__counters[name] = this.__counters[name] || 0;
-	
-	        var superClass = this._hierarchies[ this.__counters[name]++ ];
-	        var superMethod = superClass.prototype[name];
-	        var rst = superMethod.apply(this, args);
-	
-	        this.__counters[name] = 0;
-	
-	        return rst;
-	      };
-	      _class.prototype.constructor = _class;
-	    }
-	
-	
-	    // // 
-	    // params.forIn(function(key, value) {
-	    //   if (typeof value === 'function') {
-	    //     _class.$method(key, value);
-	    //   }
-	    //   else {
-	    //     _class.prototype[key] = value;
-	    //   }
-	    // });
-	    // 継承
-	    _class.prototype.$extend(params);
-	
-	    // 継承用
-	    _class.prototype._hierarchies = [];
-	    var _super = _class.prototype.superClass;
-	    while(_super) {
-	      _class.prototype._hierarchies.push(_super);
-	      _super = _super.prototype.superClass;
-	    }
-	
-	    // accessor
-	    if (params._accessor) {
-	      params._accessor.forIn(function(key, value) {
-	        _class.prototype.accessor(key, value);
-	      });
-	      // _class.prototype = Object.create(_class.prototype, params._accessor);
-	    }
-	
-	    _class.prototype._creator = function() { return this; };
-	    _class.prototype._creator.prototype = _class.prototype;
-	
-	    // static property/method
-	    if (params._static) {
-	      _class.$extend(params._static);
-	    }
-	
-	    if (params._defined) {
-	      params._defined.call(_class, _class);
-	    }
-	
-	    return _class;
-	  });
-	
-	  var chachedClasses = {};
-	  /*
-	   * 
-	   */
-	  phina.$method('using', function(path) {
-	    if (!path) {
-	      return phina.global;
-	    }
-	    
-	    var pathes = path.split(/[,.\/ ]|::/);
-	    var current = phina.global;
-	
-	    pathes.forEach(function(p) {
-	      current = current[p] || (current[p]={});
-	    });
-	
-	    return current;
-	  });
-	  
-	  /*
-	   * 
-	   */
-	  phina.$method('register', function(path, _class) {
-	    var pathes = path.split(/[,.\/ ]|::/);
-	    var className = pathes.last;
-	    var parentPath = path.substring(0, path.lastIndexOf('.'));
-	    var parent = phina.using(parentPath);
-	
-	    parent[className] = _class;
-	
-	    return _class;
-	  });
-	  
-	  var _classDefinedCallback = {};
-	
-	  /**
-	   * @member phina
-	   * @static
-	   * @method define
-	   * クラスを定義
-	   */
-	  phina.$method('define', function(path, params) {
-	    if (params.superClass) {
-	      if (typeof params.superClass === 'string') {
-	        var _superClass = phina.using(params.superClass);
-	        if (typeof _superClass != 'function') {
-	          if (!_classDefinedCallback[params.superClass]) {
-	            _classDefinedCallback[params.superClass] = [];
-	          }
-	          _classDefinedCallback[params.superClass].push(function() {
-	            phina.define(path, params);
-	          });
-	
-	          return ;
-	        }
-	        else {
-	          params.superClass = _superClass;
-	        }
-	      }
-	      else {
-	        params.superClass = params.superClass;
-	      }
-	    }
-	
-	    var _class = phina.createClass(params);
-	    _class.prototype.accessor('className', {
-	      get: function() {
-	        return path;
-	      },
-	    });
-	
-	    phina.register(path, _class);
-	    
-	    if (_classDefinedCallback[path]) {
-	      _classDefinedCallback[path].forEach(function(callback) {
-	        callback();
-	      });
-	      _classDefinedCallback[path] = null;
-	    }
-	
-	    return _class;
-	  });
-	
-	
-	  phina.$method('globalize', function() {
-	    phina.forIn(function(key, value) {
-	      var ns = key;
-	
-	      if (typeof value !== 'object') return ;
-	
-	      value.forIn(function(key, value) {
-	        // if (phina.global[key]) {
-	        //   console.log(ns, key);
-	        //   phina.global['_' + key] = value;
-	        // }
-	        // else {
-	        //   phina.global[key] = value;
-	        // }
-	        phina.global[key] = value;
-	      });
-	    });
-	  });
-	
-	  phina._mainListeners = [];
-	  phina._mainLoaded = false;
-	  phina.$method('main', function(func) {
-	    if (phina._mainLoaded) {
-	      func();
-	    }
-	    else {
-	      phina._mainListeners.push(func);
-	    }
-	  });
-	
-	  var doc = phina.global.document;
-	  if (phina.global.addEventListener && doc && doc.readyState !== 'complete') {
-	    phina.global.addEventListener('load', function() {
-	      var run = function() {
-	        var listeners = phina._mainListeners.clone();
-	        phina._mainListeners.clear();
-	        listeners.each(function(func) {
-	          func();
-	        });
-	
-	        // main 内で main を追加している場合があるのでそのチェック
-	        if (phina._mainListeners.length > 0) {
-	          run(0);
-	        }
-	        else {
-	          phina._mainLoaded = true;
-	        }
-	      };
-	      // ちょっと遅延させる(画面サイズ問題)
-	      setTimeout(run);
-	    });
-	  }
-	  else {
-	    phina._mainLoaded = true;
-	  }
-	
-	
-	
-	});
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.geom.Vector2
-	   * ベクトルクラス
-	   */
-	  phina.define('phina.geom.Vector2', {
-	
-	    /** x座標 */
-	    x: 0,
-	    /** y座標 */
-	    y: 0,
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(x, y) {
-	      this.x = x;
-	      this.y = y;
-	    },
-	
-	    /**
-	     * 複製
-	     */
-	    clone: function() {
-	      return phina.geom.Vector2(this.x, this.y);
-	    },
-	
-	    /**
-	     * 等しいかどうかをチェック
-	     * @return {Boolean}
-	     */
-	    equals: function(v) {
-	      return (this.x === v.x && this.y === v.y);
-	    },
-	
-	    /**
-	     * セッター
-	     */
-	    set: function(x, y) {
-	      this.x = x;
-	      this.y = y;
-	      return this;
-	    },
-	
-	    /**
-	     * 加算
-	     */
-	    add: function(v) {
-	      this.x += v.x;
-	      this.y += v.y;
-	      return this;
-	    },
-	
-	    /**
-	     * 減算
-	     */
-	    sub: function(v) {
-	      this.x -= v.x;
-	      this.y -= v.y;
-	      return this;
-	    },
-	
-	    /**
-	     * 乗算
-	     */
-	    mul: function(n) {
-	      this.x *= n;
-	      this.y *= n;
-	      return this;
-	    },
-	
-	    /**
-	     * 除算
-	     */
-	    div: function(n) {
-	      //console.assert(n != 0, "0 division!!");
-	      n = n || 0.01;
-	      this.x /= n;
-	      this.y /= n;
-	      return this;
-	    },
-	
-	    /**
-	     * 反転
-	     */
-	    negate: function() {
-	      this.x = -this.x;
-	      this.y = -this.y;
-	      
-	      return this;
-	    },
-	
-	    /**
-	     * @method
-	     * 内積.
-	     * 投影ベクトルを求めたり, 類似度に使ったり.
-	     */
-	    dot: function(v) {
-	      return this.x * v.x + this.y * v.y;
-	    },
-	
-	    /**
-	     * @method
-	     * 外積
-	     */
-	    cross: function(v) {
-	      return (this.x*v.y) - (this.y*v.x);
-	    },
-	
-	    /**
-	     * 長さを取得
-	     * ### memo
-	     * magnitude って名前の方が良いかも. 検討中.
-	     * @return {Number}
-	     */
-	    length: function() {
-	      return Math.sqrt(this.x*this.x + this.y*this.y);
-	    },
-	    
-	    /**
-	     * 2乗された長さを取得
-	     * C# の名前を引用
-	     * or lengthSquare or lengthSqrt
-	     * @return {Number}
-	     */
-	    lengthSquared: function() {
-	      return this.x*this.x + this.y*this.y;
-	    },
-	    
-	    /**
-	     * ２点間の距離を返す
-	     */
-	    distance: function(v) {
-	      return Math.sqrt( Math.pow(this.x-v.x, 2) + Math.pow(this.y-v.y, 2) );
-	    },
-	    
-	    /**
-	     * ２点間の距離を返す
-	     */
-	    distanceSquared: function(v) {
-	      return Math.pow(this.x-v.x, 2) + Math.pow(this.y-v.y, 2);
-	    },
-	
-	    /**
-	     * ランダムベクトルをセット
-	     */
-	    random: function(min, max, len) {
-	      var degree = phina.util.Random.randfloat(min || 0, max || 360);
-	      var rad = degree*Math.DEG_TO_RAD;
-	      var len = len || 1;
-	
-	      this.x = Math.cos(rad)*len;
-	      this.y = Math.sin(rad)*len;
-	
-	      return this;
-	    },
-	    
-	    /**
-	     * 正規化
-	     */
-	    normalize: function() {
-	      this.div(this.length());
-	      return this;
-	    },
-	
-	    /**
-	     * 文字列に変換
-	     * @return {String}
-	     */
-	    toString: function() {
-	      return "{x:{x}, y:{y}}".format(this);
-	    },
-	
-	    /**
-	     * 大体の向きを文字列で取得
-	     * @return {String}
-	     */
-	    getDirection: function() {
-	      var angle = this.toDegree();
-	      if (angle < 45) {
-	        return "right";
-	      } else if (angle < 135) {
-	        return "down";
-	      } else if (angle < 225) {
-	        return "left"
-	      } else if (angle < 315) {
-	        return "up";
-	      } else {
-	        return "right";
-	      }
-	    },
-	
-	    /**
-	     * 角度に変換
-	     * @return {Number}
-	     */
-	    toAngle: function() {
-	      var rad = Math.atan2(this.y, this.x);
-	      return (rad + Math.PI*2)%(Math.PI*2);
-	    },
-	    
-	    /**
-	     * 角度(radian)と長さでベクトルをセット
-	     */
-	    fromAngle: function(rad, len) {
-	      len = len || 1;
-	      this.x = Math.cos(rad)*len;
-	      this.y = Math.sin(rad)*len;
-	      
-	      return this;
-	    },
-	
-	    /**
-	     * 角度に変換(degree)
-	     * @return {Number}
-	     */
-	    toDegree: function() {
-	      return this.toAngle().toDegree();
-	    },
-	    
-	    /**
-	     * 角度(degree)と長さでベクトルをセット
-	     */
-	    fromDegree: function(deg, len) {
-	      return this.fromAngle(deg.toRadian(), len);
-	    },
-	
-	    /**
-	     * 任意の角度(radian)で回転
-	     */
-	    rotate: function(rad, center) {
-	      center = center || phina.geom.Vector2(0, 0);
-	
-	      var x1 = this.x - center.x;
-	      var y1 = this.y - center.y;
-	      var x2 = x1 * Math.cos(rad) - y1 * Math.sin(rad);
-	      var y2 = x1 * Math.sin(rad) + y1 * Math.cos(rad);
-	      this.set( center.x + x2, center.y + y2 );
-	
-	      return this;
-	    },
-	
-	    _accessor: {
-	    },
-	
-	    _static: {
-	      /**
-	       * @method
-	       * @static
-	       * min
-	       */
-	      min: function(a, b) {
-	        return phina.geom.Vector2(
-	          (a.x < b.x) ? a.x : b.x,
-	          (a.y < b.y) ? a.y : b.y
-	          );
-	      },
-	
-	      /**
-	       * @method
-	       * @static
-	       * max
-	       */
-	      max: function(a, b) {
-	        return phina.geom.Vector2(
-	          (a.x > b.x) ? a.x : b.x,
-	          (a.y > b.y) ? a.y : b.y
-	          );
-	      },
-	
-	      /**
-	       * @method
-	       * @static
-	       * 加算
-	       */
-	      add: function(lhs, rhs) {
-	        return phina.geom.Vector2(lhs.x+rhs.x, lhs.y+rhs.y);
-	      },
-	      
-	      /**
-	       * @method
-	       * @static
-	       * 減算
-	       */
-	      sub: function(lhs, rhs) {
-	        return phina.geom.Vector2(lhs.x-rhs.x, lhs.y-rhs.y);
-	      },
-	      
-	      /**
-	       * @method
-	       * @static
-	       * 乗算
-	       */
-	      mul: function(v, n) {
-	        return phina.geom.Vector2(v.x*n, v.y*n);
-	      },
-	      
-	      /**
-	       * @method
-	       * @static
-	       * 割算
-	       */
-	      div: function(v, n) {
-	        return phina.geom.Vector2(v.x/n, v.y/n);
-	      },
-	      
-	      /**
-	       * @method
-	       * @static
-	       * 反転
-	       */
-	      negate: function(v) {
-	        return phina.geom.Vector2(-v.x, -v.y);
-	      },
-	      
-	      /**
-	       * @method
-	       * @static
-	       * 内積.
-	       * 投影ベクトルを求めたり, 類似度に使ったり.
-	       */
-	      dot: function(lhs, rhs) {
-	        return lhs.x * rhs.x + lhs.y * rhs.y;
-	      },
-	      
-	      /**
-	       * @method
-	       * @static
-	       * 外積
-	       */
-	      cross: function(lhs, rhs) {
-	        return (lhs.x*rhs.y) - (lhs.y*rhs.x);
-	      },
-	      
-	      /**
-	       * @method
-	       * @static
-	       * ２点間の距離を返す
-	       */
-	      distance: function(lhs, rhs) {
-	        return Math.sqrt( Math.pow(lhs.x-rhs.x, 2) + Math.pow(lhs.y-rhs.y, 2) );
-	      },
-	
-	      distanceSquared: function(lhs, rhs) {
-	        return Math.pow(lhs.x-rhs.x, 2) + Math.pow(lhs.y-rhs.y, 2);
-	      },
-	
-	
-	      /**
-	       * @method
-	       * @static
-	       * マンハッタン距離
-	       */
-	      manhattanDistance: function(lhs, rhs) {
-	        return Math.abs(lhs.x-rhs.x) + Math.abs(lhs.y-rhs.y);
-	      },
-	      
-	      /**
-	       * @method
-	       * @static
-	       * 法線ベクトル
-	       */
-	      normal: function(a, b) {
-	        var temp = phina.geom.Vector2.sub(a, b);
-	
-	        return phina.geom.Vector2(-temp.y, temp.x);
-	      },
-	
-	      /**
-	       * @method
-	       * @static
-	       * 反射ベクトル
-	       */
-	      reflect: function(v, normal) {
-	        var len = phina.geom.Vector2.dot(v, normal);
-	        var temp= phina.geom.Vector2.mul(normal, 2*len);
-	        
-	        return phina.geom.Vector2.sub(v, temp);
-	      },
-	
-	      /**
-	       * @method
-	       * @static
-	       * 補間.
-	       * 0.5 で lhs と rhs の中間ベクトルを求めることができます.
-	       */
-	      lerp: function(lhs, rhs, t) {
-	        // TODO: 
-	        return phina.geom.Vector2(
-	          lhs.x + (rhs.x-lhs.x)*t,
-	          lhs.y + (rhs.y-lhs.y)*t
-	        );
-	      },
-	      
-	      
-	      /**
-	       * @method
-	       * @static
-	       * 補間
-	       */
-	      slerp: function(lhs, rhs, t) {
-	          // TODO:
-	          // cos...
-	      },
-	
-	      random: function(min, max, len) {
-	        return phina.geom.Vector2().random(min, max).mul(len||1);
-	      },
-	    },
-	
-	  });
-	
-	  phina.geom.Vector2.ZERO = phina.geom.Vector2(0, 0);
-	  phina.geom.Vector2.LEFT = phina.geom.Vector2(-1, 0);
-	  phina.geom.Vector2.RIGHT= phina.geom.Vector2(1, 0);
-	  phina.geom.Vector2.UP   = phina.geom.Vector2(0, -1);
-	  phina.geom.Vector2.DOWN = phina.geom.Vector2(0, 1);
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.geom.Vector3
-	   * ベクトルクラス
-	   */
-	  phina.define('phina.geom.Vector3', {
-	
-	    /** x座標 */
-	    x: 0,
-	    /** y座標 */
-	    y: 0,
-	    /** z座標 */
-	    z: 0,
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(x, y, z) {
-	      this.x = x;
-	      this.y = y;
-	      this.z = z;
-	    },
-	
-	  });
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.geom.Matrix33
-	   * マトリックスクラス
-	   */
-	  phina.define('phina.geom.Matrix33', {
-	
-	    /**
-	     * @constructor
-	     * m00 m01 m02
-	     * m10 m11 m12
-	     * m20 m21 m22
-	     */
-	    init: function() {
-	      if (arguments.length >= 9) {
-	          this.set.apply(this, arguments);
-	      }
-	      else {
-	          this.identity();
-	      }
-	    },
-	
-	    set: function(m00, m01, m02, m10, m11, m12, m20, m21, m22) {
-	      this.m00 = m00; this.m01 = m01; this.m02 = m02;
-	      this.m10 = m10; this.m11 = m11; this.m12 = m12;
-	      this.m20 = m20; this.m21 = m21; this.m22 = m22;
-	
-	      return this;
-	    },
-	
-	    identity: function() {
-	      this.m00 = 1; this.m01 = 0; this.m02 = 0;
-	      this.m10 = 0; this.m11 = 1; this.m12 = 0;
-	      this.m20 = 0; this.m21 = 0; this.m22 = 1;
-	      return this;
-	    },
-	
-	    /**
-	     * クローン
-	     */
-	    clone: function() {
-	      return phina.geom.Matrix33(
-	        this.m00, this.m01, this.m02,
-	        this.m10, this.m11, this.m12,
-	        this.m20, this.m21, this.m22
-	      );
-	    },
-	
-	    /**
-	     * 行列式
-	     */
-	    determinant: function() {
-	      var m00 = this.m00; var m01 = this.m01; var m02 = this.m02;
-	      var m10 = this.m10; var m11 = this.m11; var m12 = this.m12;
-	      var m20 = this.m20; var m21 = this.m21; var m22 = this.m22;
-	      
-	      return m00*m11*m22 + m10*m21*m02 + m01*m12*m20 - m02*m11*m20 - m01*m10*m22 - m12*m21*m00;
-	    },
-	
-	    /**
-	     * 転置
-	     */
-	    transpose: function() {
-	      var swap = function(a, b) {
-	        var temp = this[a];
-	        this[a] = this[b];
-	        this[b] = temp;
-	      }.bind(this);
-	
-	      swap('m01', 'm10');
-	      swap('m02', 'm20');
-	      swap('m12', 'm21');
-	      
-	      return this;
-	    },
-	
-	    /**
-	     * 逆行列
-	     */
-	    invert: function() {
-	      var m00 = this.m00; var m01 = this.m01; var m02 = this.m02;
-	      var m10 = this.m10; var m11 = this.m11; var m12 = this.m12;
-	      var m20 = this.m20; var m21 = this.m21; var m22 = this.m22;
-	
-	      var det = this.determinant();
-	
-	      // |m00, m01, m02|
-	      // |m10, m11, m12|
-	      // |m20, m21, m22|
-	      this.m00 = (m11*m22-m12*m21)/det;
-	      this.m01 = (m10*m22-m12*m20)/det*-1;
-	      this.m02 = (m10*m21-m11*m20)/det;
-	      
-	      this.m10 = (m01*m22-m02*m21)/det*-1;
-	      this.m11 = (m00*m22-m02*m20)/det;
-	      this.m12 = (m00*m21-m01*m20)/det*-1;
-	      
-	      this.m20 = (m01*m12-m02*m11)/det;
-	      this.m21 = (m00*m12-m02*m10)/det*-1;
-	      this.m22 = (m00*m11-m01*m10)/det;
-	      
-	      this.transpose();
-	      
-	      return this;
-	
-	    },
-	
-	    /**
-	     * 掛け算
-	     */
-	    multiply: function(mat) {
-	        var tm = this.m;
-	        var om = mat.m;
-	
-	        var a00 = this.m00, a01 = this.m01, a02 = this.m02;
-	        var a10 = this.m10, a11 = this.m11, a12 = this.m12;
-	        var a20 = this.m20, a21 = this.m21, a22 = this.m22;
-	        var b00 = mat.m00, b01 = mat.m01, b02 = mat.m02;
-	        var b10 = mat.m10, b11 = mat.m11, b12 = mat.m12;
-	        var b20 = mat.m20, b21 = mat.m21, b22 = mat.m22;
-	
-	        this.m00 = a00*b00 + a01*b10 + a02*b20;
-	        this.m01 = a00*b01 + a01*b11 + a02*b21;
-	        this.m02 = a00*b02 + a01*b12 + a02*b22;
-	
-	        this.m10 = a10*b00 + a11*b10 + a12*b20;
-	        this.m11 = a10*b01 + a11*b11 + a12*b21;
-	        this.m12 = a10*b02 + a11*b12 + a12*b22;
-	
-	        this.m20 = a20*b00 + a21*b10 + a22*b20;
-	        this.m21 = a20*b01 + a21*b11 + a22*b21;
-	        this.m22 = a20*b02 + a21*b12 + a22*b22;
-	        
-	        return this;
-	    },
-	
-	    /**
-	     * ベクトルとの掛け算
-	     */
-	    multiplyVector2: function(v) {
-	      var vx = this.m00*v.x + this.m01*v.y + this.m02;
-	      var vy = this.m10*v.x + this.m11*v.y + this.m12;
-	      
-	      return phina.geom.Vector2(vx, vy);
-	    },
-	
-	    // 行
-	    getRow: function(row) {
-	      if ( row === 0 ) {
-	        return [ this.m00, this.m01, this.m02 ];
-	      }
-	      else if ( row === 1 ) {
-	        return [ this.m10, this.m11, this.m12 ];
-	      }
-	      else if ( row === 2 ) {
-	        return [ this.m20, this.m21, this.m22 ];
-	      }
-	      else {
-	        return null;
-	      }
-	    },
-	
-	    // 列
-	    getCol: function(col) {
-	      if ( col === 0 ) {
-	        return [ this.m00, this.m10, this.m20 ];
-	      }
-	      else if ( col === 1 ) {
-	        return [ this.m01, this.m11, this.m21 ];
-	      }
-	      else if ( col === 2 ) {
-	        return [ this.m02, this.m12, this.m22 ];
-	      }
-	      else {
-	        return null;
-	      }
-	    },
-	    /**
-	     * 文字列化
-	     */
-	    toString: function() {
-	      return "|{m00}, {m01}, {m02}|\n|{m10}, {m11}, {m12}|\n|{m20}, {m21}, {m22}|".format(this);
-	    },
-	
-	    _accessor: {
-	      /**
-	       * x
-	       */
-	      x: {
-	        "get": function()   { return this._x; },
-	        "set": function(v)  { this._x = v; }
-	      },
-	    }
-	    
-	  });
-	
-	
-	  phina.geom.Matrix33.IDENTITY = phina.geom.Matrix33().identity();
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.geom.Rect
-	   * 
-	   */
-	  phina.define('phina.geom.Rect', {
-	
-	    /** x */
-	    x: 0,
-	    /** y */
-	    y: 0,
-	    /** 幅 */
-	    width: 32,
-	    /** 高さ */
-	    height: 32,
-	
-	    init: function(x, y, width, height) {
-	      this.set(x, y, width, height);
-	    },
-	
-	    set: function(x, y, width, height) {
-	      this.x = x;
-	      this.y = y;
-	      this.width = width;
-	      this.height = height;
-	
-	      return this;
-	    },
-	
-	    moveTo: function(x, y) {
-	      this.x = x;
-	      this.y = y;
-	      return this;
-	    },
-	
-	    moveBy: function(x, y) {
-	      this.x += x;
-	      this.y += y;
-	      return this;
-	    },
-	
-	    setSize: function(w, h) {
-	      this.width = w;
-	      this.height = h;
-	      return this;
-	    },
-	
-	    padding: function(top, right, bottom, left) {
-	      // css の padding に合わせて時計回りにパラメータ調整
-	      switch (arguments.length) {
-	        case 1:
-	          top = right = bottom = left = arguments[0];
-	          break;
-	        case 2:
-	          top     = bottom = arguments[0];
-	          right   = left   = arguments[1];
-	          break;
-	        case 3:
-	          top     = arguments[0];
-	          right   = left = arguments[1];
-	          bottom  = arguments[2];
-	          break;
-	      }
-	      
-	      this.x += left;
-	      this.y += top;
-	      this.width -= left+right;
-	      this.height-= top +bottom;
-	      
-	      return this;
-	    },
-	
-	    contains: function(x, y) {
-	      return this.left <= x && x <= this.right && this.top <= y && y <= this.bottom;
-	    },
-	
-	    clone: function() {
-	      return phina.geom.Rect(this.x, this.y, this.width, this.height);
-	    },
-	
-	    toCircle: function() {
-	      var radius = ((this.width < this.height) ? this.width : this.height)/2;
-	      return phina.geom.Circle(this.centerX, this.centerY, radius);
-	    },
-	
-	    /**
-	     * 配列に変換
-	     */
-	    toArray: function() {
-	      return [this.x, this.y, this.width, this.height];
-	    },
-	
-	    _accessor: {
-	      
-	      /**
-	       * @property  left
-	       * left
-	       */
-	      left: {
-	        "get": function()   { return this.x; },
-	        "set": function(v)  { this.width -= v-this.x; this.x = v; }
-	      },
-	      /**
-	       * @property  top
-	       * top
-	       */
-	      top: {
-	        "get": function()   { return this.y; },
-	        "set": function(v)  { this.height -= v-this.y; this.y = v; }
-	      },
-	      /**
-	       * @property  right
-	       * right
-	       */
-	      right: {
-	        "get": function()   { return this.x + this.width; },
-	        "set": function(v)  { this.width += v-this.right; },
-	      },
-	      /**
-	       * @property  bottom
-	       * bottom
-	       */
-	      bottom: {
-	        "get": function()   { return this.y + this.height; },
-	        "set": function(v)  { this.height += v-this.bottom; },
-	      },
-	      
-	      /**
-	       * @property  centerX
-	       * centerX
-	       */
-	      centerX: {
-	        "get": function()   { return this.x + this.width/2; },
-	        "set": function(v)  {
-	          // TODO: 検討中
-	        },
-	      },
-	      
-	      /**
-	       * @property  centerY
-	       * centerY
-	       */
-	      centerY: {
-	        "get": function()   { return this.y + this.height/2; },
-	        "set": function(v)  {
-	          // TODO: 検討中
-	        },
-	      },
-	    }
-	
-	  });
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.geom.Circle
-	   * 
-	   */
-	  phina.define('phina.geom.Circle', {
-	
-	    /** x */
-	    x: 0,
-	    /** y */
-	    y: 0,
-	    /** 半径 */
-	    radius: 32,
-	
-	    init: function(x, y, radius) {
-	      this.set(x, y, radius);
-	    },
-	
-	    set: function(x, y, radius) {
-	      this.x = x;
-	      this.y = y;
-	      this.radius = radius;
-	
-	      return this;
-	    },
-	
-	    moveTo: function(x, y) {
-	      this.x = x;
-	      this.y = y;
-	      return this;
-	    },
-	
-	    moveBy: function(x, y) {
-	      this.x += x;
-	      this.y += y;
-	      return this;
-	    },
-	
-	    contains: function(x, y) {
-	      var lenX = this.x-x;
-	      var lenY = this.y-y;
-	      var lenSquared = (lenX*lenX)+(lenY*lenY);
-	
-	      return lenSquared <= this.radius*this.radius;
-	    },
-	
-	    clone: function() {
-	      return phina.geom.Circle(this.x, this.y, this.radius);
-	    },
-	
-	    toRect: function() {
-	      var size = this.size;
-	      return phina.geom.Rect(this.x - this.radius, this.y - this.radius, size, size);
-	    },
-	
-	    /**
-	     * 配列に変換
-	     */
-	    toArray: function() {
-	      return [this.x, this.y, this.radius];
-	    },
-	
-	    _accessor: {
-	      
-	      /**
-	       * @property  left
-	       * left
-	       */
-	      left: {
-	        "get": function()   { return this.x - this.radius; },
-	        "set": function(v)  {
-	          // TODO: 
-	        }
-	      },
-	      /**
-	       * @property  top
-	       * top
-	       */
-	      top: {
-	        "get": function()   { return this.y - this.radius; },
-	        "set": function(v)  {
-	          // TODO: 
-	        }
-	      },
-	      /**
-	       * @property  right
-	       * right
-	       */
-	      right: {
-	        "get": function()   { return this.x + this.radius; },
-	        "set": function(v)  {
-	          // TODO: 
-	        }
-	      },
-	      /**
-	       * @property  bottom
-	       * bottom
-	       */
-	      bottom: {
-	        "get": function()   { return this.y + this.radius; },
-	        "set": function(v)  {
-	          // TODO: 
-	        }
-	      },
-	      
-	      /**
-	       * @property  size
-	       * size
-	       */
-	      size: {
-	        "get": function()   { return this.radius*2; },
-	        "set": function(v)  {
-	          // TODO: 検討中
-	        },
-	      },
-	    }
-	
-	  });
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.geom.Collision
-	   * 
-	   */
-	  phina.define('phina.geom.Collision', {
-	
-	    _static: {
-	      testCircleCircle: function(circle0, circle1) {
-	        var distanceSquared = phina.geom.Vector2.distanceSquared(circle0, circle1);
-	        return distanceSquared <= Math.pow(circle0.radius + circle1.radius, 2);
-	      },
-	      testRectRect: function(rect0, rect1) {
-	        return (rect0.left < rect1.right) && (rect0.right > rect1.left) &&
-	          (rect0.top < rect1.bottom) && (rect0.bottom > rect1.top);
-	      },
-	      testCircleRect: function(circle, rect) {
-	        // まずは大きな矩形で判定(高速化)
-	        var bigRect = phina.geom.Rect(rect.left-circle.radius, rect.top-circle.radius, rect.width+circle.radius*2, rect.height+circle.radius*2);
-	        if (bigRect.contains(circle.x, circle.y) === false) {
-	          return false;
-	        }
-	        
-	        // 2種類の矩形と衝突判定
-	        var r = phina.geom.Rect(rect.left-circle.radius, rect.top, rect.width+circle.radius*2, rect.height);
-	        if (r.contains(circle.x, circle.y)) {
-	          return true;
-	        }
-	        r.set(rect.left, rect.top-circle.radius, rect.width, rect.height+circle.radius*2);
-	        if (r.contains(circle.x, circle.y)) {
-	          return true;
-	        }
-	        
-	        // 円と矩形の４点の判定
-	        var c = phina.geom.Circle(circle.x, circle.y, circle.radius);
-	        // left top
-	        if (c.contains(rect.left, rect.top)) {
-	          return true;
-	        }
-	        // right top
-	        if (c.contains(rect.right, rect.top)) {
-	          return true;
-	        }
-	        // right bottom
-	        if (c.contains(rect.right, rect.bottom)) {
-	          return true;
-	        }
-	        // left bottom
-	        if (c.contains(rect.left, rect.bottom)) {
-	          return true;
-	        }
-	        
-	        return false;
-	      },
-	      // 円と2点を結ぶ線分の当たり判定
-	      testCircleLine : function(circle, p1, p2) {
-	        // 先に線分端との判定
-	        if (circle.contains(p1.x, p1.y) || circle.contains(p2.x, p2.y)) return true;
-	        // 半径の2乗
-	        var r2 = circle.radius * circle.radius;
-	        // 円の中心座標
-	        var p3 = phina.geom.Vector2(circle.x, circle.y);
-	        // 各ベクトル
-	        var p1p2 = phina.geom.Vector2.sub(p1, p2);
-	        var p1p3 = phina.geom.Vector2.sub(p1, p3);
-	        var p2p3 = phina.geom.Vector2.sub(p2, p3);
-	        // 外積
-	        var cross = phina.geom.Vector2.cross(p1p2, p1p3);
-	        // 外積の絶対値の2乗
-	        var cross2 = cross * cross;
-	        // p1p2の長さの2乗
-	        var length2 = p1p2.lengthSquared();
-	        // 円の中心から線分までの垂線の距離の2乗
-	        var d2 = cross2 / length2;
-	        // 円の半径の2乗より小さいなら重複
-	        if (d2 <= r2) {
-	          var dot1 = phina.geom.Vector2.dot(p1p3, p1p2);
-	          var dot2 = phina.geom.Vector2.dot(p2p3, p1p2);
-	          // 通常は内積の乗算
-	          if (dot1 * dot2 <= 0) return true;
-	        }
-	        return false;
-	      },
-	    }
-	
-	  });
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.util.Support
-	   * 
-	   */
-	  phina.define('phina.util.Support', {
-	    _static: {
-	      canvas: !!phina.global.CanvasRenderingContext2D,
-	      webGL: (function() {
-	        return !!phina.global.CanvasRenderingContext2D && !!document.createElement('canvas').getContext('webgl');
-	      })(),
-	      webAudio: !!phina.global.AudioContext || !!phina.global.webkitAudioContext || !!phina.global.mozAudioContext,
-	    },
-	  });
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.util.EventDispatcher
-	   */
-	  phina.define('phina.util.EventDispatcher', {
-	
-	    init: function() {
-	      this._listeners = {};
-	    },
-	
-	    on: function(type, listener) {
-	      if (this._listeners[type] === undefined) {
-	        this._listeners[type] = [];
-	      }
-	
-	      this._listeners[type].push(listener);
-	      return this;
-	    },
-	
-	    off: function(type, listener) {
-	      var listeners = this._listeners[type];
-	      var index = listeners.indexOf(listener);
-	      if (index != -1) {
-	        listeners.splice(index,1);
-	      }
-	      return this;
-	    },
-	
-	    fire: function(e) {
-	      e.target = this;
-	      var oldEventName = 'on' + e.type;
-	      if (this[oldEventName]) this[oldEventName](e);
-	      
-	      var listeners = this._listeners[e.type];
-	      if (listeners) {
-	        var temp = listeners.clone();
-	        for (var i=0,len=temp.length; i<len; ++i) {
-	            temp[i].call(this, e);
-	        }
-	      }
-	      
-	      return this;
-	    },
-	
-	    flare: function(type, param) {
-	      var e = {type:type};
-	      if (param) {
-	        param.forIn(function(key, val) {
-	          e[key] = val;
-	        });
-	      }
-	      this.fire(e);
-	
-	      return this;
-	    },
-	
-	    one: function(type, listener) {
-	      var self = this;
-	      
-	      var func = function() {
-	        var result = listener.apply(self, arguments);
-	        self.off(type, func);
-	        return result;
-	      };
-	      
-	      this.on(type, func);
-	      
-	      return this;
-	    },
-	
-	    has: function(type) {
-	      if (this._listeners[type] === undefined && !this["on" + type]) return false;
-	      return true;
-	    },
-	
-	    clear: function(type) {
-	      var oldEventName = 'on' + type;
-	      if (this[oldEventName]) delete this[oldEventName];
-	      this._listeners[type] = [];
-	      return this;
-	    },
-	  });
-	
-	
-	  // 別名のメソッドを定義
-	  (function() {
-	    var methodMap = {
-	      addEventListener: 'on',
-	      removeEventListener: 'off',
-	      clearEventListener: 'clear',
-	      hasEventListener: 'has',
-	      dispatchEvent: 'fire',
-	      dispatchEventByType: 'flare',
-	    };
-	    methodMap.forIn(function(old, name) {
-	      phina.util.EventDispatcher.prototype.$method(old, phina.util.EventDispatcher.prototype[name]);
-	    });
-	  })();
-	
-	});
-	
-	
-	;(function() {
-	
-	  /**
-	   * @class phina.util.Tween
-	   * 
-	   */
-	  phina.define('phina.util.Tween', {
-	    superClass: 'phina.util.EventDispatcher',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(target) {
-	      this.superInit();
-	
-	      this.time = 0;
-	    },
-	
-	    fromTo: function(target, beginProps, finishProps, duration, easing) {
-	      this.target = target;
-	      this.beginProps = beginProps;
-	      this.finishProps = finishProps;
-	      this.duration = duration || 1000;
-	      this.easing = easing;
-	
-	      // setup
-	      this.changeProps = {};
-	      for (var key in beginProps) {
-	          this.changeProps[key] = finishProps[key] - beginProps[key];
-	      }
-	
-	      return this;
-	    },
-	
-	    to: function(target, finishProps, duration, easing) {
-	      var beginProps = {};
-	
-	      for (var key in finishProps) {
-	        beginProps[key] = target[key];
-	      }
-	
-	      this.fromTo(target, beginProps, finishProps, duration, easing);
-	
-	      return this;
-	    },
-	
-	    from: function(target, beginProps, duration, easing) {
-	        var finishProps = {};
-	
-	        for (var key in beginProps) {
-	          finishProps[key] = target[key];
-	          target[key] = beginProps[key];
-	        }
-	
-	        this.fromTo(target, beginProps, finishProps, duration, easing);
-	
-	        return this;
-	    },
-	
-	    by: function(target, props, duration, easing) {
-	      var beginProps = {};
-	      var finishProps = {};
-	
-	      for (var key in props) {
-	        beginProps[key] = target[key];
-	        finishProps[key] = target[key] + props[key];
-	      }
-	
-	      this.fromTo(target, beginProps, finishProps, duration, easing);
-	
-	      return this;
-	    },
-	
-	    yoyo: function() {
-	      var temp = this.beginProps;
-	      this.beginProps = this.finishProps;
-	      this.finishProps = temp;
-	      this.changeProps.forIn(function(key, value, index) {
-	        this.changeProps[key] = -value;
-	        this.target[key] = this.beginProps[key];
-	      }, this);
-	      // TODO: easing も反転させる
-	      // this.easing = easing;
-	      return this;
-	    },
-	
-	    gain: function(time) {
-	      this.seek(this.time + time);
-	    },
-	    forward: function(time) {
-	      this.seek(this.time + time);
-	    },
-	
-	    backward: function(time) {
-	      this.seek(this.time - time);
-	    },
-	
-	    seek: function(time) {
-	      this.time = Math.clamp(time, 0, this.duration);
-	
-	      this.beginProps.forIn(function(key, value) {
-	        var v = this.easing(this.time, value, this.changeProps[key], this.duration);
-	        this.target[key] = v;
-	      }, this);
-	
-	      return this;
-	    },
-	
-	    _accessor: {
-	      easing: {
-	        get: function() {
-	          return this._easing;
-	        },
-	        set: function(v) {
-	          this._easing = phina.util.Tween.EASING[v] || phina.util.Tween.EASING.default;
-	        },
-	      },
-	    },
-	
-	    _static: {
-	      /**
-	       * @static
-	       * イージング
-	       * ### Reference
-	       * - <http://coderepos.org/share/wiki/JSTweener>
-	       * - <http://coderepos.org/share/browser/lang/javascript/jstweener/trunk/src/JSTweener.js>
-	       * - <http://gsgd.co.uk/sandbox/jquery/easing/jquery.easing.1.3.js>
-	       * - <http://hosted.zeh.com.br/tweener/docs/en-us/misc/transitions.html>
-	       */
-	      EASING: {
-	
-	        /** default */
-	        "default": function(t, b, c, d) {
-	          return c*t/d + b;
-	        },
-	        /** linear */
-	        linear: function(t, b, c, d) {
-	          return c*t/d + b;
-	        },
-	        /** swing */
-	        swing: function(t, b, c, d) {
-	          return -c *(t/=d)*(t-2) + b;
-	        },
-	        /** easeInQuad */
-	        easeInQuad: function(t, b, c, d) {
-	          return c*(t/=d)*t + b;
-	        },
-	        /** easeOutQuad */
-	        easeOutQuad: function(t, b, c, d) {
-	          return -c *(t/=d)*(t-2) + b;
-	        },
-	        /** easeInOutQuad */
-	        easeInOutQuad: function(t, b, c, d) {
-	          if((t/=d/2) < 1) return c/2*t*t + b;
-	          return -c/2 *((--t)*(t-2) - 1) + b;
-	        },
-	        /** defeInCubic */
-	        easeInCubic: function(t, b, c, d) {
-	          return c*(t/=d)*t*t + b;
-	        },
-	        /** easeOutCubic */
-	        easeOutCubic: function(t, b, c, d) {
-	          return c*((t=t/d-1)*t*t + 1) + b;
-	        },
-	        /** easeInOutCubic */
-	        easeInOutCubic: function(t, b, c, d) {
-	          if((t/=d/2) < 1) return c/2*t*t*t + b;
-	          return c/2*((t-=2)*t*t + 2) + b;
-	        },
-	        /** easeOutInCubic */
-	        easeOutInCubic: function(t, b, c, d) {
-	          if(t < d/2) return phina.util.Tween.EASING.easeOutCubic(t*2, b, c/2, d);
-	          return phina.util.Tween.EASING.easeInCubic((t*2)-d, b+c/2, c/2, d);
-	        },
-	        /** easeInQuart */
-	        easeInQuart: function(t, b, c, d) {
-	          return c*(t/=d)*t*t*t + b;
-	        },
-	        /** easeOutQuart */
-	        easeOutQuart: function(t, b, c, d) {
-	          return -c *((t=t/d-1)*t*t*t - 1) + b;
-	        },
-	        /** easeInOutQuart */
-	        easeInOutQuart: function(t, b, c, d) {
-	          if((t/=d/2) < 1) return c/2*t*t*t*t + b;
-	          return -c/2 *((t-=2)*t*t*t - 2) + b;
-	        },
-	        /** easeOutInQuart */
-	        easeOutInQuart: function(t, b, c, d) {
-	          if(t < d/2) return phina.util.Tween.EASING.easeOutQuart(t*2, b, c/2, d);
-	          return phina.util.Tween.EASING.easeInQuart((t*2)-d, b+c/2, c/2, d);
-	        },
-	        /** easeInQuint */
-	        easeInQuint: function(t, b, c, d) {
-	          return c*(t/=d)*t*t*t*t + b;
-	        },
-	        /** easeOutQuint */
-	        easeOutQuint: function(t, b, c, d) {
-	          return c*((t=t/d-1)*t*t*t*t + 1) + b;
-	        },
-	        /** easeInOutQuint */
-	        easeInOutQuint: function(t, b, c, d) {
-	          if((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
-	          return c/2*((t-=2)*t*t*t*t + 2) + b;
-	        },
-	        /** easeOutInQuint */
-	        easeOutInQuint: function(t, b, c, d) {
-	          if(t < d/2) return phina.util.Tween.EASING.easeOutQuint(t*2, b, c/2, d);
-	          return phina.util.Tween.EASING.easeInQuint((t*2)-d, b+c/2, c/2, d);
-	        },
-	        /** easeInSine */
-	        easeInSine: function(t, b, c, d) {
-	          return -c * Math.cos(t/d *(Math.PI/2)) + c + b;
-	        },
-	        /** easeOutSine */
-	        easeOutSine: function(t, b, c, d) {
-	          return c * Math.sin(t/d *(Math.PI/2)) + b;
-	        },
-	        /** easeInOutSine */
-	        easeInOutSine: function(t, b, c, d) {
-	          return -c/2 *(Math.cos(Math.PI*t/d) - 1) + b;
-	        },
-	        /** easeOutInSine */
-	        easeOutInSine: function(t, b, c, d) {
-	          if(t < d/2) return phina.util.Tween.EASING.easeOutSine(t*2, b, c/2, d);
-	          return phina.util.Tween.EASING.easeInSine((t*2)-d, b+c/2, c/2, d);
-	        },
-	        /** easeInExpo */
-	        easeInExpo: function(t, b, c, d) {
-	          return(t==0) ? b : c * Math.pow(2, 10 *(t/d - 1)) + b - c * 0.001;
-	        },
-	        /** easeOutExpo */
-	        easeOutExpo: function(t, b, c, d) {
-	          return(t==d) ? b+c : c * 1.001 *(-Math.pow(2, -10 * t/d) + 1) + b;
-	        },
-	        /** easeInOutExpo */
-	        easeInOutExpo: function(t, b, c, d) {
-	          if(t==0) return b;
-	          if(t==d) return b+c;
-	          if((t/=d/2) < 1) return c/2 * Math.pow(2, 10 *(t - 1)) + b - c * 0.0005;
-	          return c/2 * 1.0005 *(-Math.pow(2, -10 * --t) + 2) + b;
-	        },
-	        /** easeOutInExpo */
-	        easeOutInExpo: function(t, b, c, d) {
-	          if(t < d/2) return phina.util.Tween.EASING.easeOutExpo(t*2, b, c/2, d);
-	          return phina.util.Tween.EASING.easeInExpo((t*2)-d, b+c/2, c/2, d);
-	        },
-	        /** easeInCirc */
-	        easeInCirc: function(t, b, c, d) {
-	          return -c *(Math.sqrt(1 -(t/=d)*t) - 1) + b;
-	        },
-	        /** easeOutCirc */
-	        easeOutCirc: function(t, b, c, d) {
-	          return c * Math.sqrt(1 -(t=t/d-1)*t) + b;
-	        },
-	        /** easeInOutCirc */
-	        easeInOutCirc: function(t, b, c, d) {
-	          if((t/=d/2) < 1) return -c/2 *(Math.sqrt(1 - t*t) - 1) + b;
-	          return c/2 *(Math.sqrt(1 -(t-=2)*t) + 1) + b;
-	        },
-	        /** easeOutInCirc */
-	        easeOutInCirc: function(t, b, c, d) {
-	          if(t < d/2) return phina.util.Tween.EASING.easeOutCirc(t*2, b, c/2, d);
-	          return phina.util.Tween.EASING.easeInCirc((t*2)-d, b+c/2, c/2, d);
-	        },
-	        /** easeInElastic */
-	        easeInElastic: function(t, b, c, d, a, p) {
-	          var s;
-	          if(t==0) return b;  if((t/=d)==1) return b+c;  if(!p) p=d*.3;
-	          if(!a || a < Math.abs(c)) { a=c; s=p/4; } else s = p/(2*Math.PI) * Math.asin(c/a);
-	          return -(a*Math.pow(2,10*(t-=1)) * Math.sin((t*d-s)*(2*Math.PI)/p )) + b;
-	        },
-	        /** easeOutElastic */
-	        easeOutElastic: function(t, b, c, d, a, p) {
-	          var s;
-	          if(t==0) return b;  if((t/=d)==1) return b+c;  if(!p) p=d*.3;
-	          if(!a || a < Math.abs(c)) { a=c; s=p/4; } else s = p/(2*Math.PI) * Math.asin(c/a);
-	          return(a*Math.pow(2,-10*t) * Math.sin((t*d-s)*(2*Math.PI)/p ) + c + b);
-	        },
-	        /** easeInOutElastic */
-	        easeInOutElastic: function(t, b, c, d, a, p) {
-	          var s;
-	          if(t==0) return b;  if((t/=d/2)==2) return b+c;  if(!p) p=d*(.3*1.5);
-	          if(!a || a < Math.abs(c)) { a=c; s=p/4; }       else s = p/(2*Math.PI) * Math.asin(c/a);
-	          if(t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin((t*d-s)*(2*Math.PI)/p )) + b;
-	          return a*Math.pow(2,-10*(t-=1)) * Math.sin((t*d-s)*(2*Math.PI)/p )*.5 + c + b;
-	        },
-	        /** easeOutInElastic */
-	        easeOutInElastic: function(t, b, c, d, a, p) {
-	          if(t < d/2) return phina.util.Tween.EASING.easeOutElastic(t*2, b, c/2, d, a, p);
-	          return phina.util.Tween.EASING.easeInElastic((t*2)-d, b+c/2, c/2, d, a, p);
-	        },
-	        /** easeInBack */
-	        easeInBack: function(t, b, c, d, s) {
-	          if(s == undefined) s = 1.70158;
-	          return c*(t/=d)*t*((s+1)*t - s) + b;
-	        },
-	        /** easeOutBack */
-	        easeOutBack: function(t, b, c, d, s) {
-	          if(s == undefined) s = 1.70158;
-	          return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
-	        },
-	        /** easeInOutBack */
-	        easeInOutBack: function(t, b, c, d, s) {
-	          if(s == undefined) s = 1.70158;
-	          if((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
-	          return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
-	        },
-	        /** easeOutInBack */
-	        easeOutInBack: function(t, b, c, d, s) {
-	          if(t < d/2) return phina.util.Tween.EASING.easeOutBack(t*2, b, c/2, d, s);
-	          return phina.util.Tween.EASING.easeInBack((t*2)-d, b+c/2, c/2, d, s);
-	        },
-	        /** easeInBounce */
-	        easeInBounce: function(t, b, c, d) {
-	          return c - phina.util.Tween.EASING.easeOutBounce(d-t, 0, c, d) + b;
-	        },
-	        /** easeOutBounce */
-	        easeOutBounce: function(t, b, c, d) {
-	          if((t/=d) <(1/2.75)) {
-	            return c*(7.5625*t*t) + b;
-	          } else if(t <(2/2.75)) {
-	            return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
-	          } else if(t <(2.5/2.75)) {
-	            return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
-	          } else {
-	            return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
-	          }
-	        },
-	        /** easeInOutBounce */
-	        easeInOutBounce: function(t, b, c, d) {
-	          if(t < d/2) return phina.util.Tween.EASING.easeInBounce(t*2, 0, c, d) * .5 + b;
-	          else return phina.util.Tween.EASING.easeOutBounce(t*2-d, 0, c, d) * .5 + c*.5 + b;
-	        },
-	        /** easeOutInBounce */
-	        easeOutInBounce: function(t, b, c, d) {
-	          if(t < d/2) return phina.util.Tween.EASING.easeOutBounce(t*2, b, c/2, d);
-	          return phina.util.Tween.EASING.easeInBounce((t*2)-d, b+c/2, c/2, d);
-	        }
-	
-	      },
-	    },
-	  });
-	
-	})();
-	
-	
-	
-	;(function() {
-	
-	  /**
-	   * @class phina.util.Ticker
-	   * tick management class
-	   */
-	  phina.define('phina.util.Ticker', {
-	    superClass: 'phina.util.EventDispatcher',
-	
-	    /** 経過フレーム数 */
-	    frame: null,
-	    /** 1フレームの経過時間 */
-	    deltaTime: null,
-	    /** 全体の経過時間 */
-	    elapsedTime: null,
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function() {
-	      this.superInit();
-	
-	      this.fps = 30;
-	      this.frame = 0;
-	      this.deltaTime = 0;
-	      this.elapsedTime = 0;
-	    },
-	
-	    tick: function(func) {
-	      this.on('tick', func);
-	    },
-	
-	    run: function() {
-	      var now = (new Date()).getTime();
-	      // 1フレームに掛かった時間
-	      this.deltaTime = now - this.currentTime;
-	      // 全体の経過時間
-	      this.elapsedTime = now - this.startTime;
-	
-	      var start = this.currentTime = now;
-	      this.flare('tick');
-	      var end = (new Date()).getTime();
-	
-	      // フレームを更新
-	      this.frame += 1;
-	
-	      // calculate elapsed time
-	      var elapsed = end-start;
-	
-	      // calculate next waiting time
-	      var delay = Math.max(this.frameTime-elapsed, 0);
-	
-	      return delay;
-	    },
-	
-	    start: function() {
-	      var self = this;
-	
-	      this.startTime = this.currentTime = (new Date()).getTime();
-	
-	      var fn = function() {
-	        var delay = self.run();
-	        setTimeout(fn, delay);
-	      };
-	      fn();
-	
-	      return this;
-	    },
-	
-	    resume: function() {
-	      // TODO: 
-	    },
-	
-	    stop: function() {
-	      // TODO: 
-	    },
-	
-	    rewind: function() {
-	      // TODO: 
-	    },
-	
-	    _accessor: {
-	      fps: {
-	        "get": function()   { return this._fps; },
-	        "set": function(v)  {
-	          this._fps = v;
-	          this.frameTime = 1000/this._fps;
-	        },
-	      },
-	    },
-	  });
-	
-	})();
-	
-	;(function() {
-	
-	  /**
-	   * @class phina.util.Grid
-	   * tick management class
-	   */
-	  phina.define('phina.util.Grid', {
-	
-	    /** 幅 */
-	    width: 640,
-	    /** 列数 */
-	    columns: 12,
-	    /** ループ */
-	    loop: false,
-	    /** オフセット値 */
-	    offset: 0,
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function() {
-	      if (typeof arguments[0] === 'object') {
-	        var param = arguments[0];
-	        var width = param.width || 640;
-	        var columns = param.columns || 12;
-	        var loop = param.loop || false;
-	        var offset = param.offset || 0;
-	      }
-	      else {
-	        var width   = arguments[0] || 640;
-	        var columns = arguments[1] || 12;
-	        var loop    = arguments[2] || false;
-	        var offset = arguments[3] || 0;
-	      }
-	
-	      this.width = width;
-	      this.columns = columns;
-	      this.loop = loop;
-	      this.offset = offset;
-	      this.unitWidth = this.width/this.columns;
-	    },
-	
-	    // スパン指定で値を取得(負数もok)
-	    span: function(index) {
-	      if (this.loop) {
-	        index += this.columns;
-	        index %= this.columns;
-	      }
-	      return this.unitWidth * index + this.offset;
-	    },
-	
-	    //
-	    unit: function() {
-	      return this.unitWidth;
-	    },
-	
-	    center: function(offset) {
-	      var index = offset || 0;
-	      return (this.width/2) + (this.unitWidth * index);
-	    },
-	
-	  });
-	
-	})();
-	
-	
-	
-	// 監視オブジェクト
-	// register で key を登録 (デフォルト値も一緒に？)
-	// event dispatcher を継承
-	// event dispatcher って util じゃね？
-	// register で登録した値を変更したら change イベントが走る
-	
-	
-	// 名前候補
-	//  middleman(仲立人)
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.util.ChangeDispatcher
-	   */
-	  phina.define('phina.util.ChangeDispatcher', {
-	    superClass: 'phina.util.EventDispatcher',
-	
-	    init: function() {
-	      this.superInit();
-	
-	      this._observe = true;
-	    },
-	
-	    register: function(key, defaultValue) {
-	      if (arguments.length === 1) {
-	        var obj = arguments[0];
-	        obj.forIn(function(key, value) {
-	          this.register(key, value);
-	        }, this);
-	      }
-	      else {
-	        var tempKey = '__' + key;
-	        this[tempKey] = defaultValue;
-	        this.accessor(key, {
-	          get: function() {
-	            return this[tempKey];
-	          },
-	          set: function(v) {
-	            this[tempKey] = v;
-	            if (this._observe) {
-	              this.flare('change');
+	}
+	if (typeof Object.defineProperties !== 'function') {
+	    Object.defineProperties = function(obj, descs) {
+	        for (var prop in descs) {
+	            if (descs.hasOwnProperty(prop)) {
+	                Object.defineProperty(obj, prop, descs[prop]);
 	            }
-	          },
-	        });
-	      }
-	      return this;
-	    },
+	        }
+	        return obj;
+	    };
+	}
+	if (typeof Object.create !== 'function') {
+	    Object.create = function(prototype, descs) {
+	        function F() {
+	        }
 	
-	    observe: function() {
-	      this._observe = true;
-	    },
-	    unobserve: function() {
-	      this._observe = false;
-	    },
-	  });
+	        F.prototype = prototype;
+	        var obj = new F();
+	        if (descs != null) {
+	            Object.defineProperties(obj, descs);
+	        }
+	        return obj;
+	    };
+	}
+	if (typeof Object.getPrototypeOf !== 'function') {
+	    Object.getPrototypeOf = function(obj) {
+	        return obj.__proto__;
+	    };
+	}
 	
-	});
-	
-	;(function() {
-	
-	  /**
-	   * @class phina.util.Flow
-	   * tick management class
-	   */
-	  phina.define('phina.util.Flow', {
-	    superClass: 'phina.util.EventDispatcher',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(func, wait) {
-	      this.superInit();
-	
-	      this.status = 'pending';
-	      this.resultValue = null;
-	      this._queue = [];
-	      this.func = func;
-	
-	      if (wait !== true) {
-	        var self = this;
-	        var resolve = function() {
-	          self.resolve.apply(self, arguments);
-	          self.status = 'resolved';
+	if (typeof Function.prototype.bind !== 'function') {
+	    Function.prototype.bind = function(thisObject) {
+	        var func = this;
+	        var args = Array.prototype.slice.call(arguments, 1);
+	        var Nop = function() {
 	        };
-	        var reject = function() {
-	          self.reject.apply(self, arguments);
-	          self.status = 'rejected';
+	        var bound = function() {
+	            var a = args.concat(Array.prototype.slice.call(arguments));
+	            return func.apply(
+	                this instanceof Nop ? this : thisObject || window, a);
 	        };
+	        Nop.prototype = func.prototype;
+	        bound.prototype = new Nop();
+	        return bound;
+	    };
+	}
 	
-	        this.func(resolve, reject);
-	      }
-	    },
-	
-	    /*
-	     * 成功
-	     */
-	    resolve: function(arg) {
-	      this.resultValue = arg;
-	
-	      // キューに積まれた関数を実行
-	      this._queue.each(function(func) {
-	        func(this.resultValue);
-	      }, this);
-	      this._queue.clear();
-	    },
-	
-	    /*
-	     * 失敗
-	     */
-	    reject: function() {
-	
-	    },
-	
-	    /*
-	     * 非同期終了時の処理を登録
-	     */
-	    then: function(func) {
-	      var self = this;
-	      // 成功ステータスだった場合は即実行
-	      if (this.status === 'resolved') {
-	        var value = func(this.resultValue);
-	        return phina.util.Flow.resolve(value);
-	      }
-	      else {
-	        var flow = phina.util.Flow(function(resolve) {
-	          resolve();
-	        }, true);
-	
-	        this._queue.push(function(arg) {
-	          var resultValue = func(arg);
-	
-	          if (resultValue instanceof phina.util.Flow) {
-	            resultValue.then(function(value) {
-	              flow.resolve(value);
-	            });
-	          }
-	          else {
-	            flow.resolve(arg);
-	          }
-	        });
-	
-	        return flow;
-	      }
-	    },
-	
-	    _static: {
-	      resolve: function(value) {
-	        if (value instanceof phina.util.Flow) {
-	          return value;
-	        }
-	        else {
-	          var flow = phina.util.Flow(function(resolve) {
-	            resolve(value);
-	          });
-	          return flow;
-	        }
-	      },
-	      all: function(flows) {
-	        return phina.util.Flow(function(resolve) {
-	          var count = 0;
-	
-	          var args = [];
-	
-	          flows.each(function(flow) {
-	            flow.then(function(d) {
-	              ++count;
-	              args.push(d);
-	
-	              if (count >= flows.length) {
-	                resolve(args);
-	              }
-	            });
-	          });
-	        });
-	      },
-	    },
-	  });
-	
-	})();
-	/*
-	 * color.js
-	 */
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.util.Color
-	   * カラークラス
-	   */
-	  phina.define("phina.util.Color", {
-	    /** R値 */
-	    r: 255,
-	    /** G値 */
-	    g: 255,
-	    /** B値 */
-	    b: 255,
-	    /** A値 */
-	    a: 1.0,
-	
-	    /**
-	     * 初期化
-	     */
-	    init: function(r, g, b, a) {
-	      this.set.apply(this, arguments);
-	    },
-	
-	    /**
-	     * セッター.
-	     */
-	    set: function(r, g, b, a) {
-	      this.r = r;
-	      this.g = g;
-	      this.b = b;
-	      this.a = (a !== undefined) ? a : 1.0;
-	      return this;
-	    },
-	
-	    /**
-	     * 数値によるセッター.
-	     */
-	    setFromNumber: function(r, g, b, a) {
-	      this.r = r;
-	      this.g = g;
-	      this.b = b;
-	      this.a = (a !== undefined) ? a : 1.0;
-	      return this;
-	    },
-	
-	    /**
-	     * 配列によるセッター
-	     */
-	    setFromArray: function(arr) {
-	      return this.set.apply(this, arr);
-	    },
-	
-	    /**
-	     * オブジェクトによるセッター
-	     */
-	    setFromObject: function(obj) {
-	      return this.set(obj.r, obj.g, obj.b, obj.a);
-	    },
-	
-	    /**
-	     * 文字列によるセッター
-	     */
-	    setFromString: function(str) {
-	      var color = phina.util.Color.stringToNumber(str);
-	      return this.set(color[0], color[1], color[2], color[3]);
-	    },
-	
-	    /**
-	     * 賢いセッター
-	     */
-	    setSmart: function() {
-	      var arg = arguments[0];
-	      if (arguments.length >= 3) {
-	        this.set(arguments.r, arguments.g, arguments.b, arguments.a);
-	      } else if (arg instanceof Array) {
-	        this.setFromArray(arg);
-	      } else if (arg instanceof Object) {
-	        this.setFromObject(arg);
-	      } else if (typeof(arg) == "string") {
-	        this.setFromString(arg);
-	      }
-	      return this;
-	    },
-	
-	    /**
-	     * CSS 用 16進数文字列に変換
-	     */
-	    toStyleAsHex: function() {
-	      return "#{0}{1}{2}".format(
-	        this.r.toString(16).padding(2, '0'),
-	        this.g.toString(16).padding(2, '0'),
-	        this.b.toString(16).padding(2, '0')
-	      );
-	    },
-	
-	    /**
-	     * CSS 用 RGB文字列に変換
-	     */
-	    toStyleAsRGB: function() {
-	      return "rgb({r},{g},{b})".format({
-	        r: ~~this.r,
-	        g: ~~this.g,
-	        b: ~~this.b
-	      });
-	    },
-	
-	
-	    /**
-	     * CSS 用 RGBA文字列に変換
-	     */
-	    toStyleAsRGBA: function() {
-	      return "rgba({r},{g},{b},{a})".format({
-	        r: ~~this.r,
-	        g: ~~this.g,
-	        b: ~~this.b,
-	        a: this.a
-	      });
-	    },
-	
-	    /**
-	     * CSS 用 RGBA 文字列に変換
-	     */
-	    toStyle: function() {
-	      return "rgba({r},{g},{b},{a})".format({
-	        r: ~~this.r,
-	        g: ~~this.g,
-	        b: ~~this.b,
-	        a: this.a
-	      });
-	    },
-	
-	    _static: {
-	
-	      /**
-	       * @static
-	       * カラーリスト
-	       */
-	      COLOR_LIST: {
-	        /** @property black */
-	        "black": [0x00, 0x00, 0x00],
-	        /** @property silver */
-	        "silver": [0xc0, 0xc0, 0xc0],
-	        /** @property gray */
-	        "gray": [0x80, 0x80, 0x80],
-	        /** @property white */
-	        "white": [0xff, 0xff, 0xff],
-	        /** @property maroon */
-	        "maroon": [0x80, 0x00, 0x00],
-	        /** @property red */
-	        "red": [0xff, 0x00, 0x00],
-	        /** @property purple */
-	        "purple": [0x80, 0x00, 0x80],
-	        /** @property fuchsia */
-	        "fuchsia": [0xff, 0x00, 0xff],
-	        /** @property green */
-	        "green": [0x00, 0x80, 0x00],
-	        /** @property lime */
-	        "lime": [0x00, 0xff, 0x00],
-	        /** @property olive */
-	        "olive": [0x80, 0x80, 0x00],
-	        /** @property yellow */
-	        "yellow": [0xff, 0xff, 0x00],
-	        /** @property navy */
-	        "navy": [0x00, 0x00, 0x80],
-	        /** @property blue */
-	        "blue": [0x00, 0x00, 0xff],
-	        /** @property teal */
-	        "teal": [0x00, 0x80, 0x80],
-	        /** @property aqua */
-	        "aqua": [0x00, 0xff, 0xff],
-	      },
-	
-	      /**
-	       * @static
-	       * @member phina.util.Color
-	       * @method strToNum
-	       */
-	      strToNum: function(str) {
-	        return this.stringToNumber(str);
-	      },
-	      stringToNumber: function(str) {
-	        var value = null;
-	        var type = null;
-	
-	        if (str[0] === '#') {
-	          type = (str.length == 4) ? "hex111" : "hex222";
-	        } else if (str[0] === 'r' && str[1] === 'g' && str[2] === 'b') {
-	          type = (str[3] == 'a') ? "rgba" : "rgb";
-	        } else if (str[0] === 'h' && str[1] === 's' && str[2] === 'l') {
-	          type = (str[3] == 'a') ? "hsla" : "hsl";
-	        }
-	
-	        if (type) {
-	          var match_set = MATCH_SET_LIST[type];
-	          var m = str.match(match_set.reg);
-	          value = match_set.exec(m);
-	        } else if (phina.util.Color.COLOR_LIST[str]) {
-	          value = phina.util.Color.COLOR_LIST[str];
-	        }
-	
-	        return value;
-	      },
-	
-	      /**
-	       * @static
-	       * @method
-	       * hsl を rgb に変換
-	       */
-	      HSLtoRGB: function(h, s, l) {
-	        var r, g, b;
-	
-	        h %= 360;
-	        h += 360;
-	        h %= 360;
-	        s *= 0.01;
-	        l *= 0.01;
-	
-	        if (s === 0) {
-	          var l = Math.round(l * 255);
-	          return [l, l, l];
-	        }
-	        var m2 = (l < 0.5) ? l * (1 + s) : l + s - l * s;
-	        var m1 = l * 2 - m2;
-	
-	        // red
-	        var temp = (h + 120) % 360;
-	        if (temp < 60) {
-	          r = m1 + (m2 - m1) * temp / 60;
-	        } else if (temp < 180) {
-	          r = m2;
-	        } else {
-	          r = m1;
-	        }
-	
-	        // green
-	        temp = h;
-	        if (temp < 60) {
-	          g = m1 + (m2 - m1) * temp / 60;
-	        } else if (temp < 180) {
-	          g = m2;
-	        } else if (temp < 240) {
-	          g = m1 + (m2 - m1) * (240 - temp) / 60;
-	        } else {
-	          g = m1;
-	        }
-	
-	        // blue
-	        temp = ((h - 120) + 360) % 360;
-	        if (temp < 60) {
-	          b = m1 + (m2 - m1) * temp / 60;
-	        } else if (temp < 180) {
-	          b = m2;
-	        } else if (temp < 240) {
-	          b = m1 + (m2 - m1) * (240 - temp) / 60;
-	        } else {
-	          b = m1;
-	        }
-	
-	        return [
-	          parseInt(r * 255),
-	          parseInt(g * 255),
-	          parseInt(b * 255)
-	        ];
-	      },
-	
-	      /**
-	       * @static
-	       * @method
-	       * hsla を rgba に変換
-	       */
-	      HSLAtoRGBA: function(h, s, l, a) {
-	        var temp = phina.util.Color.HSLtoRGB(h, s, l);
-	        temp[3] = a;
-	        return temp;
-	      },
-	
-	      /**
-	       * @static
-	       * @method
-	       * rgb 値を作成
-	       */
-	      createStyleRGB: function(r, g, b) {
-	        return "rgba(" + r + "," + g + "," + b + ")";
-	      },
-	
-	      /**
-	       * @static
-	       * @method
-	       * rgba 値を作成
-	       */
-	      createStyleRGBA: function(r, g, b, a) {
-	        return "rgba(" + r + "," + g + "," + b + "," + a + ")";
-	      },
-	
-	      /**
-	       * @static
-	       * @method
-	       * hsl 値を作成
-	       */
-	      createStyleHSL: function(h, s, l) {
-	        return "hsl(" + h + "," + s + "%," + l + "%)";
-	      },
-	
-	      /**
-	       * @static
-	       * @method
-	       * hsla 値を作成
-	       */
-	      createStyleHSLA: function(h, s, l, a) {
-	        return "hsla(" + h + "," + s + "%," + l + "%," + a + ")";
-	      },
+	window.getTime = (function() {
+	    var origin;
+	    if (window.performance && window.performance.now) {
+	        origin = Date.now();
+	        return function() {
+	            return origin + window.performance.now();
+	        };
+	    } else if (window.performance && window.performance.webkitNow) {
+	        origin = Date.now();
+	        return function() {
+	            return origin + window.performance.webkitNow();
+	        };
+	    } else {
+	        return Date.now;
 	    }
-	  });
+	}());
 	
+	// define requestAnimationFrame
+	window.requestAnimationFrame =
+	    window.requestAnimationFrame ||
+	    window.mozRequestAnimationFrame ||
+	    window.webkitRequestAnimationFrame ||
+	    window.msRequestAnimationFrame ||
+	    (function() {
+	        var lastTime = window.getTime();
+	        var frame = 1000 / 60;
+	        return function(func) {
+	            var _id = setTimeout(function() {
+	                lastTime = window.getTime();
+	                func(lastTime);
+	            }, Math.max(0, lastTime + frame - window.getTime()));
+	            return _id;
+	        };
+	    }());
 	
-	  var MATCH_SET_LIST = {
-	    "hex111": {
-	      reg: /^#(\w{1})(\w{1})(\w{1})$/,
-	      exec: function(m) {
-	        return [
-	          parseInt(m[1] + m[1], 16),
-	          parseInt(m[2] + m[2], 16),
-	          parseInt(m[3] + m[3], 16)
-	        ];
-	      }
-	    },
-	    "hex222": {
-	      reg: /^#(\w{2})(\w{2})(\w{2})$/,
-	      exec: function(m) {
-	        return [
-	          parseInt(m[1], 16),
-	          parseInt(m[2], 16),
-	          parseInt(m[3], 16)
-	        ];
-	      }
-	    },
-	    "rgb": {
-	      reg: /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/,
-	      exec: function(m) {
-	        return [
-	          parseInt(m[1]),
-	          parseInt(m[2]),
-	          parseInt(m[3])
-	        ];
-	      }
-	    },
-	    "rgba": {
-	      reg: /^rgba\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d{1}(\.{1}\d+)?)\)$/,
-	      exec: function(m) {
-	        return [
-	          parseInt(m[1]),
-	          parseInt(m[2]),
-	          parseInt(m[3]),
-	          parseFloat(m[4])
-	        ];
-	      }
-	    },
-	    "hsl": {
-	      reg: /^hsl\((\d{1,3}),\s*(\d{1,3})%,\s*(\d{1,3})%\)$/,
-	      exec: function(m) {
-	        return phina.util.Color.HSLtoRGB(m[1], m[2], m[3]);
-	      }
-	    },
-	    "hsla": {
-	      reg: /^rgba\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d{1}(\.{1}\d+)?)\)$/,
-	      exec: function(m) {
-	        return phina.util.Color.HSLAtoRGBA(m[1], m[2], m[3], m[4]);
-	      },
-	    }
-	  };
-	
-	});
-	
-	/*
-	 * random.js
+	/**
+	 * Export the library classes globally.
+	 *
+	 * When no arguments are given, all classes defined in enchant.js as well as all classes defined in
+	 * plugins will be exported. When more than one argument is given, by default only classes defined
+	 * in enchant.js will be exported. When you wish to export plugin classes you must explicitly deliver
+	 * the plugin identifiers as arguments.
+	 *
+	 * @example
+	 * enchant();     // All classes will be exported.
+	 * enchant('');   // Only classes in enchant.js will be exported.
+	 * enchant('ui'); // enchant.js classes and ui.enchant.js classes will be exported.
+	 *
+	 * @param {...String} [modules] Export module. Multiple designations possible.
+	 * @function
+	 * @global
+	 * @name enchant
 	 */
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.util.Random
-	   * ランダムクラス
-	   */
-	  phina.define("phina.util.Random", {
-	
-	    seed: 1,
-	
-	    init: function(seed) {
-	      this.seed = seed || (Date.now()) || 1;
-	    },
-	
-	    random: function() {
-	      var seed = this.seed;
-	      seed = seed ^ (seed << 13);
-	      seed = seed ^ (seed >>> 17);
-	      seed = (seed ^ (seed << 5));
-	
-	      this.seed = seed;
-	
-	      return (seed >>> 0) / phina.util.Random.MAX;
-	    },
-	
-	    randint: function(min, max) {
-	      return Math.floor( this.random()*(max-min+1) ) + min;
-	    },
-	    randfloat: function(min, max) {
-	      return this.random()*(max-min)+min;
-	    },
-	    randbool: function() {
-	      return this.randint(0, 1) === 1;
-	    },
-	    randarray: function(len, min, max) {
-	      len = len || 100;
-	      min = min || 0;
-	      max = max || 100;
-	
-	      return (len).map(function() {
-	        return this.randint(min, max);
-	      }, this);
-	    },
-	
-	    _accessor: {
-	      seed: {
-	        get: function() { return this._seed; },
-	        set: function (v) { this._seed = (v >>> 0) || 1; },
-	      },
-	    },
-	
-	    _static: {
-	      MAX: 4294967295,
-	
-	      seed: (Date.now()),
-	
-	      getSeed: function() {
-	        return this.seed;
-	      },
-	      setSeed: function(seed) {
-	        this.seed = (seed >>> 0) || 1;
-	        return this;
-	      },
-	
-	      random: function() {
-	        this.seed = this.xor32(this.seed);
-	        return (this.seed >>> 0) / phina.util.Random.MAX;
-	      },
-	
-	      randint: function(min, max) {
-	        return phina.global.Math.floor( this.random()*(max-min+1) ) + min;
-	      },
-	      randfloat: function(min, max) {
-	        return this.random()*(max-min)+min;
-	      },
-	      randbool: function() {
-	        return this.randint(0, 1) === 1;
-	      },
-	      randarray: function(len, min, max) {
-	        len = len || 100;
-	        min = min || 0;
-	        max = max || 100;
-	
-	        return (len).map(function() {
-	          return this.randint(min, max);
-	        }, this);
-	      },
-	
-	      xor32: function(seed) {
-	        seed = seed ^ (seed << 13);
-	        seed = seed ^ (seed >>> 17);
-	        seed = (seed ^ (seed << 5));
-	
-	        return seed;
-	      },
-	
-	      /*
-	       * http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-	       */
-	      uuid: function() {
-	        var d = new Date().getTime();
-	        if(phina.global.performance && typeof phina.global.performance.now === "function"){
-	          d += performance.now(); //use high-precision timer if available
+	var enchant = function(modules) {
+	    if (modules != null) {
+	        if (!(modules instanceof Array)) {
+	            modules = Array.prototype.slice.call(arguments);
 	        }
-	        var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-	          var r = (d + Math.random()*16)%16 | 0;
-	          d = Math.floor(d/16);
-	          return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+	        modules = modules.filter(function(module) {
+	            return [module].join();
 	        });
-	        return uuid;
-	      },
-	
-	    },
-	  });
-	
-	  Math.$method("randint", function(min, max) {
-	    return phina.util.Random.randint(min, max);
-	  });
-	  Math.$method("randfloat", function(min, max) {
-	    return phina.util.Random.randfloat(min, max);
-	  });
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.util.QueryString
-	   * 
-	   */
-	  phina.define('phina.util.QueryString', {
-	    _static: {
-	      parse: function(text, sep, eq, isDecode) {
-	        text = text || location.search.substr(1);
-	        sep = sep || '&';
-	        eq = eq || '=';
-	        var decode = (isDecode) ? decodeURIComponent : function(a) { return a; };
-	        return text.split(sep).reduce(function(obj, v) {
-	          var pair = v.split(eq);
-	          obj[pair[0]] = decode(pair[1]);
-	          return obj;
-	        }, {});
-	      },
-	      stringify: function(value, sep, eq, isEncode) {
-	        sep = sep || '&';
-	        eq = eq || '=';
-	        var encode = (isEncode) ? encodeURIComponent : function(a) { return a; };
-	        return Object.keys(value).map(function(key) {
-	          return key + eq + encode(value[key]);
-	        }).join(sep);
-	      },
-	    },
-	  });
-	
-	});
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.asset.Asset
-	   * 
-	   */
-	  phina.define('phina.asset.Asset', {
-	    superClass: "phina.util.EventDispatcher",
-	
-	    serverError: false,
-	    notFound: false,
-	    loadError: false,
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(src) {
-	      this.superInit();
-	
-	      this.loaded = false;
-	    },
-	
-	    load: function(src) {
-	      this.src = src;
-	      return phina.util.Flow(this._load.bind(this));
-	    },
-	
-	    isLoaded: function() {
-	      return this.loaded;
-	    },
-	
-	    _load: function(resolve) {
-	      var self = this;
-	      setTimeout(function() {
-	        self.loaded = true;
-	        resolve();
-	      }, 100);
-	    },
-	
-	    // ロード失敗時にダミーをセットする
-	    loadDummy: function() { },
-	
-	  });
-	
-	});
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.asset.AssetManager
-	   * 
-	   */
-	  phina.define('phina.asset.AssetManager', {
-	    _static: {
-	      assets: {
-	        image: {},
-	        sound: {},
-	        spritesheet: {},
-	      },
-	      
-	      get: function(type, key) {
-	        return this.assets[type] && this.assets[type][key];
-	      },
-	      set: function(type, key, asset) {
-	        if (!this.assets[type]) {
-	          this.assets[type] = {};
-	        }
-	        this.assets[type][key] = asset;
-	      },
-	      contains: function(type, key) {
-	        return ;
-	      }
-	    },
-	
-	  });
-	
-	});
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.asset.AssetLoader
-	   * 
-	   */
-	  phina.define('phina.asset.AssetLoader', {
-	    superClass: "phina.util.EventDispatcher",
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(params) {
-	      this.superInit();
-	
-	      params = (params || {}).$safe({
-	        cache: true,
-	      });
-	
-	      this.assets = {};
-	      this.cache = params.cache;
-	    },
-	
-	    load: function(params) {
-	      var self = this;
-	      var flows = [];
-	
-	      var counter = 0;
-	
-	      params.forIn(function(type, assets) {
-	        assets.forIn(function(key, value) {
-	          var func = phina.asset.AssetLoader.assetLoadFunctions[type];
-	          var flow = func(key, value);
-	          flow.then(function(asset) {
-	            if (self.cache) {
-	              phina.asset.AssetManager.set(type, key, asset);
-	            }
-	            self.flare('progress', {
-	              key: key,
-	              asset: asset,
-	              progress: (++counter/flows.length),
-	            });
-	          });
-	          flows.push(flow);
-	        });
-	      });
-	
-	
-	      if (self.cache) {
-	
-	        self.on('progress', function(e) {
-	          if (e.progress >= 1.0) {
-	            // load失敗時、対策
-	            params.forIn(function(type, assets) {
-	              assets.forIn(function(key, value) {
-	                var asset = phina.asset.AssetManager.get(type, key);
-	                if (asset.loadError) {
-	                  var dummy = phina.asset.AssetManager.get(type, 'dummy');
-	                  if (dummy) {
-	                    if (dummy.loadError) {
-	                      dummy.loadDummy();
-	                      dummy.loadError = false;
+	    }
+	    (function include(module, prefix) {
+	        var submodules = [],
+	            i, len;
+	        for (var prop in module) {
+	            if (module.hasOwnProperty(prop)) {
+	                if (typeof module[prop] === 'function') {
+	                    window[prop] = module[prop];
+	                } else if (typeof module[prop] === 'object' && module[prop] !== null && Object.getPrototypeOf(module[prop]) === Object.prototype) {
+	                    if (modules == null) {
+	                        submodules.push(prop);
+	                    } else {
+	                        i = modules.indexOf(prefix + prop);
+	                        if (i !== -1) {
+	                            submodules.push(prop);
+	                            modules.splice(i, 1);
+	                        }
 	                    }
-	                    phina.asset.AssetManager.set(type, key, dummy);
-	                  } else {
-	                    asset.loadDummy();
-	                  }
 	                }
-	              });
-	            });
-	          }
-	        });
-	      }
-	      return phina.util.Flow.all(flows).then(function(args) {
-	        self.flare('load');
-	      });
-	    },
-	
-	    _static: {
-	      assetLoadFunctions: {
-	        image: function(key, path) {
-	          var texture = phina.asset.Texture();
-	          var flow = texture.load(path);
-	          return flow;
-	        },
-	        sound: function(key, path) {
-	          var sound = phina.asset.Sound();
-	          var flow = sound.load(path);
-	          return flow;
-	        },
-	        spritesheet: function(key, path) {
-	          var ss = phina.asset.SpriteSheet();
-	          var flow = ss.load(path);
-	          return flow;
-	        },
-	        script: function(key, path) {
-	          var script = phina.asset.Script();
-	          return script.load(path);
-	        },
-	        font: function(key, path) {
-	          var font = phina.asset.Font();
-	          font.setFontName(key);
-	          return font.load(path);
-	        },
-	        json: function(key, path) {
-	          var text = phina.asset.File();
-	          return text.load({
-	            path: path,
-	            dataType: "json",
-	          });
-	        },
-	        xml: function(key, path) {
-	          var text = phina.asset.File();
-	          return text.load({
-	            path: path,
-	            dataType: "xml",
-	          });
-	        },
-	        text: function(key, path) {
-	          var text = phina.asset.File();
-	          return text.load(path);
+	            }
 	        }
-	      }
+	
+	        for (i = 0, len = submodules.length; i < len; i++) {
+	            include(module[submodules[i]], prefix + submodules[i] + '.');
+	        }
+	    }(enchant, ''));
+	
+	    // issue 185
+	    if (enchant.Class.getInheritanceTree(window.Game).length <= enchant.Class.getInheritanceTree(window.Core).length) {
+	        window.Game = window.Core;
 	    }
 	
-	  });
-	
-	});
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.asset.File
-	   * 
-	   */
-	  phina.define('phina.asset.File', {
-	    superClass: "phina.asset.Asset",
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function() {
-	      this.superInit();
-	    },
-	
-	    _load: function(resolve) {
-	
-	      var params = {};
-	
-	      if (typeof this.src === 'string') {
-	        params.$extend({
-	          path: this.src,
-	        });
-	      }
-	      else if (typeof this.src === 'object') {
-	        params.$extend(this.src);
-	      }
-	
-	      params.$safe({
-	        path: '',
-	        dataType: 'text',
-	      });
-	
-	      // load
-	      var self = this;
-	      var xml = new XMLHttpRequest();
-	      xml.open('GET', params.path);
-	      xml.onreadystatechange = function() {
-	        if (xml.readyState === 4) {
-	          if ([200, 201, 0].indexOf(xml.status) !== -1) {
-	            var data = xml.responseText;
-	
-	            if (params.dataType === 'json') {
-	              data = JSON.parse(data);
-	            } else if (params.dataType === 'xml') {
-	              data = (new DOMParser()).parseFromString(data, "text/xml");
-	            }
-	            self.dataType = params.dataType;
-	
-	            self.data = data;
-	            resolve(self);
-	          }
-	        }
-	      };
-	
-	      xml.send(null);
-	      // this.domElement = new Image();
-	      // this.domElement.src = this.src;
-	
-	      // var self = this;
-	      // this.domElement.onload = function() {
-	      //   self.loaded = true;
-	      //   resolve(self);
-	      // };
-	    },
-	
-	  });
-	
-	});
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.asset.Script
-	   * 
-	   */
-	  phina.define('phina.asset.Script', {
-	    superClass: "phina.asset.Asset",
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function() {
-	      this.superInit();
-	    },
-	
-	    _load: function(resolve) {
-	      var self = this;
-	      this.domElement = document.createElement('script');
-	      this.domElement.src = this.src;
-	
-	      this.domElement.onload = function() {
-	        resolve(self);
-	      }.bind(this);
-	
-	      document.body.appendChild(this.domElement);
-	    },
-	
-	  });
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.asset.Texture
-	   *
-	   */
-	  phina.define('phina.asset.Texture', {
-	    superClass: "phina.asset.Asset",
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function() {
-	      this.superInit();
-	    },
-	
-	    _load: function(resolve) {
-	      this.domElement = new Image();
-	
-	      var isLocal = (location.protocol == 'file:');
-	      if ( !isLocal && !(/^data:/.test(this.src)) ) {
-	        // this.domElement.crossOrigin = 'Anonymous'; // クロスオリジン解除
-	      }
-	
-	      this.domElement.src = this.src;
-	
-	      var self = this;
-	      this.domElement.onload = function(e) {
-	        self.loaded = true;
-	        resolve(self);
-	      };
-	      this.domElement.onerror = function(e) {
-	        console.error("[phina.js] not found `{0}`!".format(this.src));
-	
-	        var key = self.src.split('/').last.replace('.png', '').split('?').first.split('#').first;
-	        e.target.src = "http://dummyimage.com/128x128/444444/eeeeee&text=" + key;
-	        e.target.onerror = null;
-	      };
-	    },
-	
-	    clone: function () {
-	      var image = this.domElement;
-	      var canvas = phina.graphics.Canvas().setSize(image.width, image.height);
-	      var t = phina.asset.Texture();
-	      canvas.context.drawImage(image, 0, 0);
-	      t.domElement = canvas.domElement;
-	      return t;
-	    },
-	
-	    transmit: function(color) {
-	      // imagaオブジェクトをゲット
-	      var image = this.domElement;
-	      // 新規canvas作成
-	      var canvas = phina.graphics.Canvas().setSize(image.width, image.height);
-	      // 新規canvasに描画
-	      canvas.context.drawImage(image, 0, 0);
-	      // canvas全体のイメージデータ配列をゲット
-	      var imageData = canvas.context.getImageData(0, 0, canvas.width, canvas.height);
-	      var data = imageData.data;
-	      // 透過色の指定がなければ左上のrgb値を抽出
-	      var r = (color !== undefined) ? color.r : data[0];
-	      var g = (color !== undefined) ? color.g : data[1];
-	      var b = (color !== undefined) ? color.b : data[2];
-	      // 配列を4要素目から4つ飛び（アルファ値）でループ
-	      (3).step(data.length, 4, function(i) {
-	        // rgb値を逆算でゲットし、左上のrgbと比較
-	        if (data[i - 3] === r && data[i - 2] === g && data[i - 1] === b) {
-	          // 一致した場合はアルファ値を書き換える
-	          data[i] = 0;
-	        }
-	      });
-	      // 書き換えたイメージデータをcanvasに戻す
-	      canvas.context.putImageData(imageData, 0, 0);
-	
-	      this.domElement = canvas.domElement;
-	    },
-	
-	    filter: function (filters) {
-	      if (!filters) {
-	        return this;
-	      }
-	      if (!Array.isArray(filters)) {
-	        filters = [filters];
-	      }
-	      var image = this.domElement;
-	      var w = image.width;
-	      var h = image.height;
-	      var canvas = phina.graphics.Canvas().setSize(w, h);
-	      var imageData = null;
-	
-	      canvas.context.drawImage(image, 0, 0);
-	      imageData = canvas.context.getImageData(0, 0, w, h);
-	      filters.forEach( function (fn) {
-	        if (typeof fn == 'function') {
-	          h.times( function (y) {
-	            w.times( function (x) {
-	              var i = (y * w + x) * 4;
-	              var pixel = imageData.data.slice(i, i + 4);
-	              fn(pixel, i, x, y, imageData);
-	            });
-	          });
-	        }
-	      });
-	      canvas.context.putImageData(imageData, 0, 0);
-	      this.domElement = canvas.domElement;
-	      return this;
-	    },
-	
-	  });
-	
-	});
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.asset.Sound
-	   * 
-	   */
-	  phina.define('phina.asset.Sound', {
-	    superClass: "phina.asset.Asset",
-	    
-	    _loop: false,
-	    _loopStart: 0,
-	    _loopEnd: 0,
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function() {
-	      this.superInit();
-	      this.context = phina.asset.Sound.getAudioContext();
-	      this.gainNode = this.context.createGain();
-	    },
-	
-	    play: function() {
-	      if (this.source) {
-	        // TODO: キャッシュする？
-	      }
-	
-	      this.source = this.context.createBufferSource();
-	      this.source.buffer = this.buffer;
-	      this.source.loop = this._loop;
-	      this.source.loopStart = this._loopStart;
-	      this.source.loopEnd = this._loopEnd;
-	
-	      // connect
-	      this.source.connect(this.gainNode);
-	      this.gainNode.connect(this.context.destination);
-	      // play
-	      this.source.start(0);
-	      
-	      // check play end
-	      if (this.source.buffer) {
-	        var time = (this.source.buffer.duration/this.source.playbackRate.value)*1000;
-	        window.setTimeout(function(self) {
-	          self.flare('ended');
-	        }, time, this);
-	      }
-	
-	      return this;
-	    },
-	
-	    stop: function() {
-	      // stop
-	      if (this.source) {
-	        this.source.stop && this.source.stop(0);
-	        this.source = null;
-	      }
-	
-	      return this;
-	    },
-	
-	    pause: function() {
-	      this.source.disconnect();
-	      return this;
-	    },
-	
-	    resume: function() {
-	      this.source.connect(this.gainNode);
-	      return this;
-	    },
-	
-	    // 試してみるなう
-	    _oscillator: function(type) {
-	      var context = this.context;
-	
-	      var oscillator = context.createOscillator();
-	
-	      // Sine wave is type = “sine”
-	      // Square wave is type = “square”
-	      // Sawtooth wave is type = “saw”
-	      // Triangle wave is type = “triangle”
-	      // Custom wave is type = “custom” 
-	      oscillator.type = type || 'sine';
-	
-	      this.source = oscillator;
-	      // connect
-	      this.source.connect(context.destination);
-	    },
-	
-	    loadFromBuffer: function(buffer) {
-	      var context = this.context;
-	
-	      // set default buffer
-	      if (!buffer) {
-	        buffer = context.createBuffer( 1, 44100, 44100 );
-	        var channel = buffer.getChannelData(0);
-	
-	        for( var i=0; i < channel.length; i++ )
-	        {
-	          channel[i] = Math.sin( i / 100 * Math.PI);
-	        }
-	      }
-	
-	      // source
-	      this.buffer = buffer;
-	    },
-	
-	    setLoop: function(loop) {
-	      this.loop = loop;
-	      return this;
-	    },
-	    setLoopStart: function(loopStart) {
-	      this.loopStart = loopStart;
-	      return this;
-	    },
-	    setLoopEnd: function(loopEnd) {
-	      this.loopEnd = loopEnd;
-	      return this;
-	    },
-	
-	    _load: function(r) {
-	      if (/^data:/.test(this.src)) {
-	        this._loadFromURIScheme(r);
-	      }
-	      else {
-	        this._loadFromFile(r);
-	      }
-	    },
-	
-	    _loadFromFile: function(r) {
-	      var self = this;
-	
-	      var xml = new XMLHttpRequest();
-	      xml.open('GET', this.src);
-	      xml.onreadystatechange = function() {
-	        if (xml.readyState === 4) {
-	          if ([200, 201, 0].indexOf(xml.status) !== -1) {
-	
-	            // 音楽バイナリーデータ
-	            var data = xml.response;
-	
-	            // webaudio 用に変換
-	            self.context.decodeAudioData(data, function(buffer) {
-	              self.loadFromBuffer(buffer);
-	              r(self);
-	            }, function() {
-	              console.warn("音声ファイルのデコードに失敗しました。(" + self.src + ")");
-	              r(self);
-	              self.flare('decodeerror');
-	            });
-	
-	          } else if (xml.status === 404) {
-	            // not found
-	
-	            self.loadError = true;
-	            self.notFound= true;
-	            r(self);
-	            self.flare('loaderror');
-	            self.flare('notfound');
-	
-	          } else {
-	            // サーバーエラー
-	
-	            self.loadError = true;
-	            self.serverError = true;
-	            r(self);
-	            self.flare('loaderror');
-	            self.flare('servererror');
-	          }
-	        }
-	      };
-	
-	      xml.responseType = 'arraybuffer';
-	
-	      xml.send(null);
-	    },
-	
-	    _loadFromURIScheme: function(r) {
-	      var byteString = '';
-	      if (this.src.split(',')[0].indexOf('base64') >= 0) {
-	        byteString = atob(this.src.split(',')[1]);
-	      }
-	      else {
-	        byteString = unescape(this.src.split(',')[1]);
-	      }
-	
-	      var self = this;
-	      var len = byteString.length;
-	      var buffer = new Uint8Array(len);
-	
-	      for (var i=0; i<len; ++i) {
-	        buffer[i] = byteString.charCodeAt(i);
-	      }
-	
-	      // webaudio 用に変換
-	      this.context.decodeAudioData(buffer.buffer, function(buffer) {
-	        self.loadFromBuffer(buffer);
-	        r(self);
-	      }, function() {
-	        console.warn("音声ファイルのデコードに失敗しました。(" + self.src + ")");
-	        self.loaded = true;
-	        r(self);
-	      });
-	    },
-	
-	    loadDummy: function() {
-	      this.loadFromBuffer();
-	    },
-	
-	    _accessor: {
-	      volume: {
-	        get: function()  { return this.gainNode.gain.value; },
-	        set: function(v) { this.gainNode.gain.value = v; },
-	      },
-	      loop: {
-	        get: function()  { return this._loop; },
-	        set: function(v) {
-	          this._loop = v;
-	          if (this.source) this.source._loop = v;
-	        },
-	      },
-	      loopStart: {
-	        get: function()  { return this._loopStart; },
-	        set: function(v) {
-	          this._loopStart = v;
-	          if (this.source) this.source._loopStart = v;
-	        },
-	      },
-	      loopEnd: {
-	        get: function()  { return this._loopEnd; },
-	        set: function(v) {
-	          this._loopEnd = v;
-	          if (this.source) this.source._loopEnd = v;
-	        },
-	      },
-	    },
-	
-	    _static: {
-	      getAudioContext: function() {
-	        if (!phina.util.Support.webAudio) return null;
-	
-	        if (this.context) return this.context;
-	
-	        var g = phina.global;
-	        var context = null;
-	
-	        if (g.AudioContext) {
-	          context = new AudioContext();
-	        }
-	        else if (g.webkitAudioContext) {
-	          context = new webkitAudioContext();
-	        }
-	        else if (g.mozAudioContext) {
-	          context = new mozAudioContext();
-	        }
-	
-	        this.context = context;
-	
-	        return context;
-	      },
-	    },
-	
-	  });
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.asset.SoundManager
-	   * ### Ref
-	   * - http://evolve.reintroducing.com/_source/classes/as3/SoundManager/SoundManager.html
-	   * - https://github.com/nicklockwood/SoundManager
-	   */
-	  phina.define('phina.asset.SoundManager', {
-	    _static: {
-	      volume: 0.8,
-	      musicVolume: 0.8,
-	      muteFlag: false,
-	      currentMusic: null,
-	
-	      play: function(name) {
-	        var sound = phina.asset.AssetManager.get('sound', name);
-	
-	        sound.volume = this.getVolume();
-	        sound.play();
-	
-	        return sound;
-	      },
-	
-	      stop: function() {
-	        // TODO: 
-	      },
-	      pause: function() {
-	        // TODO: 
-	      },
-	      fade: function() {
-	        // TODO: 
-	      },
-	      setVolume: function(volume) {
-	        this.volume = volume;
-	      },
-	      getVolume: function() {
-	        return this.volume;
-	      },
-	
-	      /*
-	       * ミュート
-	       */
-	      mute: function() {
-	        this.muteFlag = true;
-	        if (this.currentMusic) {
-	          this.currentMusic.volume = 0;
-	        }
-	        return this;
-	      },
-	      /*
-	       * ミュート解除
-	       */
-	      unmute: function() {
-	        this.muteFlag = false;
-	        if (this.currentMusic) {
-	          this.currentMusic.volume = this.getVolumeMusic();
-	        }
-	        return this;
-	      },
-	      isMute: function() {
-	        return this.muteFlag;
-	      },
-	
-	      playMusic: function(name, fadeTime, loop) {
-	        loop = (loop !== undefined) ? loop : true;
-	
-	        if (this.currentMusic) {
-	          this.stopMusic(fadeTime);
-	        }
-	
-	        var music = phina.asset.AssetManager.get('sound', name);
-	
-	        music.setLoop(loop);
-	        music.play();
-	
-	        if (fadeTime > 0) {
-	          var count = 32;
-	          var counter = 0;
-	          var unitTime = fadeTime/count;
-	          var volume = this.getVolumeMusic();
-	
-	          music.volume = 0;
-	          var id = setInterval(function() {
-	            counter += 1;
-	            var rate = counter/count;
-	            music.volume = rate*volume;
-	
-	            if (rate >= 1) {
-	              clearInterval(id);
-	              return false;
-	            }
-	
-	            return true;
-	          }, unitTime);
-	        }
-	        else {
-	          music.volume = this.getVolumeMusic();
-	        }
-	
-	        this.currentMusic = music;
-	
-	        return this.currentMusic;
-	      },
-	
-	      stopMusic: function(fadeTime) {
-	        if (!this.currentMusic) { return ; }
-	
-	        var music = this.currentMusic;
-	        this.currentMusic = null;
-	
-	        if (fadeTime > 0) {
-	          var count = 32;
-	          var counter = 0;
-	          var unitTime = fadeTime/count;
-	          var volume = this.getVolumeMusic();
-	
-	          music.volume = 0;
-	          var id = setInterval(function() {
-	            counter += 1;
-	            var rate = counter/count;
-	            music.volume = volume*(1-rate);
-	
-	            if (rate >= 1) {
-	              music.stop();
-	              clearInterval(id);
-	              return false;
-	            }
-	
-	            return true;
-	          }, unitTime);
-	        }
-	        else {
-	          music.stop();
-	        }
-	      },
-	
-	      /*
-	       * 音楽を一時停止
-	       */
-	      pauseMusic: function() {
-	        if (!this.currentMusic) { return ; }
-	        this.currentMusic.pause();
-	      },
-	      /*
-	       * 音楽を再開
-	       */
-	      resumeMusic: function() {
-	        if (!this.currentMusic) { return ; }
-	        this.currentMusic.resume();
-	      },
-	      /*
-	       * 音楽のボリュームを設定
-	       */
-	      setVolumeMusic: function(volume) {
-	        this.musicVolume = volume;
-	        if (this.currentMusic) {
-	          this.currentMusic.volume = volume;
-	        }
-	
-	        return this;
-	      },
-	      /*
-	       * 音楽のボリュームを取得
-	       */
-	      getVolumeMusic: function() {
-	        return this.musicVolume;
-	      },
-	
-	    },
-	  });
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.asset.SpriteSheet
-	   * 
-	   */
-	  phina.define('phina.asset.SpriteSheet', {
-	    superClass: "phina.asset.Asset",
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function() {
-	      this.superInit();
-	    },
-	
-	    setup: function(params) {
-	      this._setupFrame(params.frame);
-	      this._setupAnim(params.animations);
-	      return this;
-	    },
-	
-	    _load: function(resolve) {
-	
-	      var self = this;
-	
-	      if (typeof this.src === 'string') {
-	        var xml = new XMLHttpRequest();
-	        xml.open('GET', this.src);
-	        xml.onreadystatechange = function() {
-	          if (xml.readyState === 4) {
-	            if ([200, 201, 0].indexOf(xml.status) !== -1) {
-	              var data = xml.responseText;
-	              var json = JSON.parse(data);
-	
-	              self.setup(json);
-	
-	              resolve(self);
-	            }
-	          }
-	        };
-	
-	        xml.send(null);
-	      }
-	      else {
-	        this.setup(this.src);
-	        resolve(self);
-	      }
-	
-	    },
-	
-	    _setupFrame: function(frame) {
-	      var frames = this.frames = [];
-	      var unitWidth = frame.width;
-	      var unitHeight = frame.height;
-	
-	      var count = frame.rows * frame.cols;
-	      this.frame = count;
-	
-	      (count).times(function(i) {
-	        var xIndex = i%frame.cols;
-	        var yIndex = (i/frame.cols)|0;
-	
-	        frames.push({
-	          x: xIndex*unitWidth,
-	          y: yIndex*unitHeight,
-	          width: unitWidth,
-	          height: unitHeight,
-	        });
-	      });
-	    },
-	
-	    _setupAnim: function(animations) {
-	      this.animations = {};
-	
-	      // デフォルトアニメーション
-	      this.animations["default"] = {
-	          frames: [].range(0, this.frame),
-	          next: "default",
-	          frequency: 1,
-	      };
-	
-	      animations.forIn(function(key, value) {
-	        var anim = value;
-	
-	        if (anim instanceof Array) {
-	          this.animations[key] = {
-	            frames: [].range(anim[0], anim[1]),
-	            next: anim[2],
-	            frequency: anim[3] || 1,
-	          };
-	        }
-	        else {
-	          this.animations[key] = {
-	            frames: anim.frames,
-	            next: anim.next,
-	            frequency: anim.frequency || 1
-	          };
-	        }
-	
-	      }, this);
-	    },
-	
-	    /**
-	     * フレームを取得
-	     */
-	    getFrame: function(index) {
-	      return this.frames[index];
-	    },
-	
-	    getAnimation: function(name) {
-	      name = (name !== undefined) ? name : "default";
-	      return this.animations[name];
-	    },
-	
-	  });
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.asset.Font
-	   * 
-	   */
-	  phina.define("phina.asset.Font", {
-	    superClass: "phina.asset.Asset",
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function() {
-	      this.superInit();
-	      this.fontName = null;
-	    },
-	
-	    load: function(path) {
-	      this.src = path;
-	
-	      var reg = /(.*)(?:\.([^.]+$))/;
-	      var key = this.fontName || path.match(reg)[1].split('/').last;    //フォント名指定が無い場合はpathの拡張子前を使用
-	      var type = path.match(reg)[2];
-	      var format = "unknown";
-	      switch (type) {
-	        case "ttf":
-	          format = "truetype"; break;
-	        case "otf":
-	          format = "opentype"; break;
-	        case "woff":
-	          format = "woff"; break;
-	        case "woff2":
-	          format = "woff2"; break;
-	        default:
-	          console.warn("サポートしていないフォント形式です。(" + path + ")");
-	      }
-	      this.format = format;
-	      this.fontName = key;
-	
-	      if (format !== "unknown") {
-	        var text = "@font-face { font-family: '{0}'; src: url({1}) format('{2}'); }".format(key, path, format);
-	        var e = document.querySelector("head");
-	        var fontFaceStyleElement = document.createElement("style");
-	        if (fontFaceStyleElement.innerText) {
-	          fontFaceStyleElement.innerText = text;
-	        } else {
-	          fontFaceStyleElement.textContent = text;
-	        }
-	        e.appendChild(fontFaceStyleElement);
-	      }
-	
-	      return phina.util.Flow(this._load.bind(this));
-	    },
-	
-	    _load: function(resolve) {
-	      if (this.format !== "unknown") {
-	        this._checkLoaded(this.fontName, function() {
-	          this.loaded = true;
-	          resolve(this);
-	        }.bind(this));
-	      } else {
-	        this.loaded = true;
-	        resolve(this);
-	      }
-	    },
-	
-	    _checkLoaded: function (font, callback) {
-	      var canvas = phina.graphics.Canvas();
-	      var DEFAULT_FONT = canvas.context.font.split(' ')[1];
-	      canvas.context.font = '40px ' + DEFAULT_FONT;
-	
-	      var checkText = "1234567890-^\\qwertyuiop@[asdfghjkl;:]zxcvbnm,./\!\"#$%&'()=~|QWERTYUIOP`{ASDFGHJKL+*}ZXCVBNM<>?_１２３４５６７８９０－＾￥ｑｗｅｒｔｙｕｉｏｐａｓｄｆｇｈｊｋｌｚｘｃｖｂｎｍ，．あいうかさたなをん時は金なり";
-	      // 特殊文字対応
-	      checkText += String.fromCharCode("0xf04b");
-	
-	      var before = canvas.context.measureText(checkText).width;
-	      canvas.context.font = '40px ' + font + ', ' + DEFAULT_FONT;
-	
-	      var timeoutCount = 30;
-	      var checkLoadFont = function () {
-	        var after = canvas.context.measureText(checkText).width;
-	        if (after !== before) {
-	          setTimeout(function() {
-	            callback && callback();
-	          }, 100);
-	        } else {
-	          if (--timeoutCount > 0) {
-	            setTimeout(checkLoadFont, 100);
-	          }
-	          else {
-	            callback && callback();
-	            console.warn("timeout font loading");
-	          }
-	        }
-	      };
-	      checkLoadFont();
-	    },
-	
-	    setFontName: function(name) {
-	      if (this.loaded) {
-	        console.warn("フォント名はLoad前にのみ設定が出来ます(" + name + ")");
-	        return this;
-	      }
-	      this.fontName = name;
-	      
-	      return this;
-	    },
-	
-	    getFontName: function() {
-	      return this.fontName;
-	    },
-	
-	  });
-	});
-	
-	
-	;(function() {
-	  /**
-	   * @class phina.input.Input
-	   * 
-	   */
-	  phina.define('phina.input.Input', {
-	
-	    superClass: 'phina.util.EventDispatcher',
-	
-	    /** domElement */
-	    domElement: null,
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(domElement) {
-	      this.superInit();
-	      
-	      this.domElement = domElement || window.document;
-	
-	      this.position = phina.geom.Vector2(0, 0);
-	      this.startPosition = phina.geom.Vector2(0, 0);
-	      this.deltaPosition = phina.geom.Vector2(0, 0);
-	      this.prevPosition = phina.geom.Vector2(0, 0);
-	      this._tempPosition = phina.geom.Vector2(0, 0);
-	
-	      this.maxCacheNum = phina.input.Input.defaults.maxCacheNum;
-	      this.minDistance = phina.input.Input.defaults.minDistance;
-	      this.maxDistance = phina.input.Input.defaults.maxDistance;
-	      this.cachePositions = [];
-	      this.flickVelocity = phina.geom.Vector2(0, 0);
-	
-	      this.flags = 0;
-	    },
-	
-	    update: function() {
-	      this.last = this.now;
-	      this.now = this.flags;
-	      this.start = (this.now ^ this.last) & this.now;
-	      this.end   = (this.now ^ this.last) & this.last;
-	
-	      // 変化値を更新
-	      this.deltaPosition.x = this._tempPosition.x - this.position.x;
-	      this.deltaPosition.y = this._tempPosition.y - this.position.y;
-	
-	      if (this.deltaPosition.x === 0 && this.deltaPosition.y === 0) {
-	        this._moveFlag = false;
-	      }
-	      else {
-	        this._moveFlag = true;
-	      }
-	
-	      if (this.start) {
-	        this.startPosition.set(this.position.x, this.position.y);
-	      }
-	
-	      // 前回の座標を更新
-	      this.prevPosition.set(this.position.x, this.position.y);
-	
-	      // 現在の位置を更新
-	      this.position.set(this._tempPosition.x, this._tempPosition.y);
-	
-	      if (this.cachePositions.length > this.maxCacheNum) {
-	        this.cachePositions.shift();
-	      }
-	      this.cachePositions.push(this.position.clone());
-	    },
-	
-	    _start: function(x, y, flag) {
-	      flag = (flag !== undefined) ? flag : 1;
-	      this._move(x, y);
-	
-	      this.flags |= flag;
-	
-	      var x = this._tempPosition.x;
-	      var y = this._tempPosition.y;
-	      this.position.set(x, y);
-	      this.prevPosition.set(x, y);
-	
-	      this.flickVelocity.set(0, 0);
-	      this.cachePositions.clear();
-	    },
-	
-	    _end: function(flag) {
-	      flag = (flag !== undefined) ? flag : 1;
-	      this.flags &= ~(flag);
-	
-	      if (this.cachePositions.length < 2) return;
-	
-	      var first = this.cachePositions.first;
-	      var last = this.cachePositions.last;
-	
-	      var v = phina.geom.Vector2.sub(last, first);
-	
-	      var len = v.length();
-	
-	      if (len > this.minDistance) {
-	        var normalLen = len.clamp(this.minDistance, this.maxDistance);
-	        v.div(len).mul(normalLen);
-	        this.flickVelocity.set(v.x, v.y);
-	      }
-	
-	      this.cachePositions.clear();
-	    },
-	
-	    // スケールを考慮
-	    _move: function(x, y) {
-	      this._tempPosition.x = x;
-	      this._tempPosition.y = y;
-	
-	      // adjust scale
-	      var elm = this.domElement;
-	      if (elm.style.width) {
-	        this._tempPosition.x *= elm.width / parseInt(elm.style.width);
-	      }
-	      if (elm.style.height) {
-	        this._tempPosition.y *= elm.height / parseInt(elm.style.height);
-	      }
-	    },
-	
-	    _accessor: {
-	      /**
-	       * @property    x
-	       * x座標値
-	       */
-	      x: {
-	        "get": function()   { return this.position.x; },
-	        "set": function(v)  { this.position.x = v; }
-	      },
-	      /**
-	       * @property    y
-	       * y座標値
-	       */
-	      y: {
-	        "get": function()   { return this.position.y; },
-	        "set": function(v)  { this.position.y = v; }
-	      },
-	      /**
-	       * @property    dx
-	       * dx値
-	       */
-	      dx: {
-	        "get": function()   { return this.deltaPosition.x; },
-	        "set": function(v)  { this.deltaPosition.x = v; }
-	      },
-	      /**
-	       * @property    dy
-	       * dy値
-	       */
-	      dy: {
-	        "get": function()   { return this.deltaPosition.y; },
-	        "set": function(v)  { this.deltaPosition.y = v; }
-	      },
-	
-	      /**
-	       * @property    fx
-	       * fx値
-	       */
-	      fx: {
-	        "get": function()   { return this.flickVelocity.x; },
-	        "set": function(v)  { this.flickVelocity.x = v; }
-	      },
-	      /**
-	       * @property    fy
-	       * fy値
-	       */
-	      fy: {
-	        "get": function()   { return this.flickVelocity.y; },
-	        "set": function(v)  { this.flickVelocity.y = v; }
-	      },
-	
-	    },
-	
-	    _static: {
-	      defaults: {
-	        maxCacheNum: 3,
-	        minDistance: 10,
-	        maxDistance: 100,
-	      },
-	    },
-	  });
-	
-	
-	})();
-	
-	;(function() {
-	
-	  /**
-	   * @class phina.input.Mouse
-	   * @extends phina.input.Input
-	   */
-	  phina.define('phina.input.Mouse', {
-	
-	    superClass: 'phina.input.Input',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(domElement) {
-	      this.superInit(domElement);
-	
-	      this.id = 0;
-	
-	      var self = this;
-	      this.domElement.addEventListener('mousedown', function(e) {
-	        self._start(e.pointX, e.pointY, 1<<e.flags);
-	      });
-	
-	      this.domElement.addEventListener('mouseup', function(e) {
-	        self._end(1<<e.flags);
-	      });
-	      this.domElement.addEventListener('mousemove', function(e) {
-	        self._move(e.pointX, e.pointY);
-	      });
-	    },
-	
-	    /**
-	     * ボタン取得
-	     */
-	    getButton: function(button) {
-	      if (typeof(button) == "string") {
-	        button = BUTTON_MAP[button];
-	      }
-	      
-	      return (this.now & button) != 0;
-	    },
-	
-	    /**
-	     * ボタンダウン取得
-	     */
-	    getButtonDown: function(button) {
-	      if (typeof(button) === 'string') {
-	        button = BUTTON_MAP[button];
-	      }
-	
-	      return (this.start & button) != 0;
-	    },
-	        
-	    /**
-	     * ボタンアップ取得
-	     */
-	    getButtonUp: function(button) {
-	      if (typeof(button) == "string") {
-	        button = BUTTON_MAP[button];
-	      }
-	      
-	      return (this.end & button) != 0;
-	    },
-	
-	    _static: {
-	      /** @static @property */
-	      BUTTON_LEFT: 0x1,
-	      /** @static @property */
-	      BUTTON_MIDDLE: 0x2,
-	      /** @static @property */
-	      BUTTON_RIGHT: 0x4,
+	    if (modules != null && modules.length) {
+	        throw new Error('Cannot load module: ' + modules.join(', '));
 	    }
-	  });
+	};
 	
-	  var BUTTON_MAP = {
-	    "left"  : phina.input.Mouse.BUTTON_LEFT,
-	    "middle": phina.input.Mouse.BUTTON_MIDDLE,
-	    "right" : phina.input.Mouse.BUTTON_RIGHT
-	  };
+	// export enchant
+	window.enchant = enchant;
 	
-	  phina.input.Mouse.prototype.getPointing = function() { return this.getButton("left"); };
-	  phina.input.Mouse.prototype.getPointingStart = function() { return this.getButtonDown("left"); };
-	  phina.input.Mouse.prototype.getPointingEnd = function() { return this.getButtonUp("left"); };
-	
-	})();
-	
-	;(function() {
-	
-	  /**
-	   * @class phina.input.Touch
-	   * @extends phina.input.Input
-	   */
-	  phina.define('phina.input.Touch', {
-	
-	    superClass: 'phina.input.Input',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(domElement, isMulti) {
-	      this.superInit(domElement);
-	
-	      this.id = null;
-	
-	      if (isMulti === true) {
-	        return ;
-	      }
-	
-	      var self = this;
-	      this.domElement.addEventListener('touchstart', function(e) {
-	        self._start(e.pointX, e.pointY, true);
-	      });
-	
-	      this.domElement.addEventListener('touchend', function(e) {
-	        self._end();
-	      });
-	      this.domElement.addEventListener('touchmove', function(e) {
-	        self._move(e.pointX, e.pointY);
-	      });
-	    },
-	
-	    /**
-	     * タッチしているかを判定
-	     */
-	    getTouch: function() {
-	      return this.now != 0;
-	    },
-	    
-	    /**
-	     * タッチ開始時に true
-	     */
-	    getTouchStart: function() {
-	      return this.start != 0;
-	    },
-	    
-	    /**
-	     * タッチ終了時に true
-	     */
-	    getTouchEnd: function() {
-	      return this.end != 0;
-	    },
-	
-	  });
-	
-	  /**
-	   * @method
-	   * ポインティング状態取得(mouse との差異対策)
-	   */
-	  phina.input.Touch.prototype.getPointing        = phina.input.Touch.prototype.getTouch;
-	  /**
-	   * @method
-	   * ポインティングを開始したかを取得(mouse との差異対策)
-	   */
-	  phina.input.Touch.prototype.getPointingStart   = phina.input.Touch.prototype.getTouchStart;
-	  /**
-	   * @method
-	   * ポインティングを終了したかを取得(mouse との差異対策)
-	   */
-	  phina.input.Touch.prototype.getPointingEnd     = phina.input.Touch.prototype.getTouchEnd;
-	
-	
-	})();
-	
-	
-	;(function() {
-	
-	  phina.define('phina.input.TouchList', {
-	    domElement: null,
-	    touchMap: null,
-	    touches: null,
-	    _id: null,
-	
-	    init: function(domElement) {
-	      this.domElement = domElement;
-	
-	      this.touches = [];
-	      var touchMap = this.touchMap = {};
-	
-	      // 32bit 周期でIDをループさせる
-	      this._id = new Uint32Array(1);
-	
-	      var self = this;
-	      var each = Array.prototype.forEach;
-	      this.domElement.addEventListener('touchstart', function(e) {
-	        each.call(e.changedTouches, function(t) {
-	          var touch = self.getEmpty();
-	          touchMap[t.identifier] = touch;
-	          touch._start(t.pointX, t.pointY);
-	        });
-	      });
-	
-	      this.domElement.addEventListener('touchend', function(e) {
-	        each.call(e.changedTouches, function(t) {
-	          var id = t.identifier;
-	          var touch = touchMap[id];
-	          touch._end();
-	          delete touchMap[id];
-	        });
-	      });
-	      this.domElement.addEventListener('touchmove', function(e) {
-	        each.call(e.changedTouches, function(t) {
-	          var touch = touchMap[t.identifier];
-	          touch._move(t.pointX, t.pointY);
-	        });
-	        e.stop();
-	      });
-	
-	      // iPhone では 6本指以上タッチすると強制的にすべてのタッチが解除される
-	      this.domElement.addEventListener('touchcancel', function(e) {
-	        console.warn('この端末での同時タッチ数の制限を超えました。');
-	        each.call(e.changedTouches, function(t) {
-	          var id = t.identifier;
-	          var touch = touchMap[id];
-	          touch._end();
-	          delete touchMap[id];
-	        });
-	        e.stop();
-	      });
-	    },
-	
-	    getEmpty: function() {
-	      var touch = phina.input.Touch(this.domElement, true);
-	    
-	      touch.id = this.id;
-	      this.touches.push(touch);
-	
-	      return touch;
-	    },
-	
-	    getTouch: function(id) {
-	      return this.touchMap[id];
-	    },
-	
-	
-	    removeTouch: function(touch) {
-	      var i = this.touches.indexOf(touch);
-	      this.touches.splice(i, 1);
-	    },
-	
-	    update: function() {
-	      this.touches.forEach(function(touch) {
-	        if (!touch.released) {
-	          touch.update();
-	
-	          if (touch.flags === 0) {
-	            touch.released = true;
-	          }
+	window.addEventListener("message", function(msg, origin) {
+	    try {
+	        var data = JSON.parse(msg.data);
+	        if (data.type === "event") {
+	            enchant.Core.instance.dispatchEvent(new enchant.Event(data.value));
+	        } else if (data.type === "debug") {
+	            switch (data.value) {
+	                case "start":
+	                    enchant.Core.instance.start();
+	                    break;
+	                case "pause":
+	                    enchant.Core.instance.pause();
+	                    break;
+	                case "resume":
+	                    enchant.Core.instance.resume();
+	                    break;
+	                case "tick":
+	                    enchant.Core.instance._tick();
+	                    break;
+	                default:
+	                    break;
+	            }
 	        }
-	        else {
-	          touch.released = false;
-	          this.removeTouch(touch);
-	        }
+	    } catch (e) {
+	        // ignore
+	    }
+	}, false);
 	
-	      }, this);
-	    },
-	
-	    _accessor: {
-	      id: {
-	        get: function() {
-	          return this._id[0]++;
-	        }
-	      },
-	    },
-	  });
-	
-	})();
-	/*
-	 *
+	/**
+	 * @name enchant.Class
+	 * @class
+	 * A Class representing a class which supports inheritance.
+	 * @param {Function} [superclass] The class from which the
+	 * new class will inherit the class definition.
+	 * @param {*} [definition] Class definition.
+	 * @constructor
 	 */
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.input.Keyboard
-	   * @extends phina.input.Input
-	   */
-	  phina.define('phina.input.Keyboard', {
-	
-	    superClass: 'phina.input.Input',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(domElement) {
-	      this.superInit(domElement);
-	
-	      this.key = {};
-	      this.press  = {};
-	      this.down   = {};
-	      this.up     = {};
-	      this.last   = {};
-	
-	      this._keydown = null;
-	      this._keyup = null;
-	      this._keypress = null;
-	
-	      var self = this;
-	      this.domElement.addEventListener('keydown', function(e) {
-	        self.key[e.keyCode] = true;
-	        self._keydown = e.keyCode;
-	      });
-	
-	      this.domElement.addEventListener('keyup', function(e) {
-	        self.key[e.keyCode] = false;
-	        self._keyup = e.keyCode;
-	      });
-	      this.domElement.addEventListener('keypress', function(e) {
-	        self._keypress = e.keyCode;
-	      });
-	    },
-	
-	    /**
-	     * 情報更新処理
-	     * マイフレーム呼んで下さい.
-	     * @private
-	     */
-	    update: function() {
-	      // TODO: 一括ビット演算で行うよう修正する
-	      for (var k in this.key) {
-	        this.last[k]    = this.press[k];
-	        this.press[k]   = this.key[k];
-	        
-	        this.down[k] = (this.press[k] ^ this.last[k]) & this.press[k];
-	        this.up[k] = (this.press[k] ^ this.last[k]) & this.last[k];
-	      }
-	
-	      if (this._keydown) {
-	        this.flare('keydown', { keyCode: this._keydown });
-	        this._keydown = null;
-	      }
-	      if (this._keyup) {
-	        this.flare('keyup', { keyCode: this._keyup });
-	        this._keyup = null;
-	      }
-	      if (this._keypress) {
-	        this.flare('keypress', { keyCode: this._keypress });
-	        this._keypress = null;
-	      }
-	      
-	      return this;
-	    },
-	
-	    /**
-	     * キーを押しているかをチェック
-	     * @param   {Number/String} key keyCode or keyName
-	     * @returns {Boolean}   チェック結果
-	     */
-	    getKey: function(key) {
-	      if (typeof(key) === "string") {
-	        key = phina.input.Keyboard.KEY_CODE[key];
-	      }
-	      return !!this.press[key] === true;
-	    },
-	    
-	    /**
-	     * キーを押したかをチェック
-	     * @param   {Number/String} key keyCode or keyName
-	     * @returns {Boolean}   チェック結果
-	     */
-	    getKeyDown: function(key) {
-	      if (typeof(key) == "string") {
-	        key = phina.input.Keyboard.KEY_CODE[key];
-	      }
-	      return this.down[key] == true;
-	    },
-	    
-	    /**
-	     * キーを離したかをチェック
-	     * @param   {Number/String} key keyCode or keyName
-	     * @returns {Boolean}   チェック結果
-	     */
-	    getKeyUp: function(key) {
-	      if (typeof(key) == "string") {
-	        key = phina.input.Keyboard.KEY_CODE[key];
-	      }
-	      return this.up[key] == true;
-	    },
-	    
-	    /**
-	     * キーの方向を Angle(Degree) で取得
-	     * @returns {Boolean}   角度(Degree)
-	     */
-	    getKeyAngle: function() {
-	      var angle = null;
-	      var arrowBit =
-	        (this.getKey("left")   << 3) | // 1000
-	        (this.getKey("up")     << 2) | // 0100
-	        (this.getKey("right")  << 1) | // 0010
-	        (this.getKey("down"));         // 0001
-	      
-	      if (arrowBit !== 0 && phina.input.Keyboard.ARROW_BIT_TO_ANGLE_TABLE.hasOwnProperty(arrowBit)) {
-	        angle = phina.input.Keyboard.ARROW_BIT_TO_ANGLE_TABLE[arrowBit];
-	      }
-	      
-	      return angle;
-	    },
-	
-	    /**
-	     * キーの押している向きを取得
-	     * 正規化されている
-	     */
-	    getKeyDirection: function() {
-	      var direction = phina.geom.Vector2(0, 0);
-	
-	      if (this.getKey("left")) {
-	        direction.x = -1;
-	      }
-	      else if (this.getKey("right")) {
-	        direction.x = 1;
-	      }
-	      if (this.getKey("up")) {
-	        direction.y = -1;
-	      }
-	      else if (this.getKey("down")) {
-	        direction.y = 1;
-	      }
-	
-	      if (direction.x && direction.y) {
-	        direction.div(Math.SQRT2);
-	      }
-	
-	      return direction;
-	    },
-	    
-	    /**
-	     * キーの状態を設定する
-	     */
-	    setKey: function(key, flag) {
-	      if (typeof(key) == "string") {
-	        key = phina.input.Keyboard.KEY_CODE[key];
-	      }
-	      this.key[key] = flag;
-	      
-	      return this;
-	    },
-	
-	    /**
-	     * キーを全て離したことにする
-	     */
-	    clearKey: function() {
-	      this.key = {};
-	      
-	      return this;
-	    },
-	
-	
-	    /*
-	     * @enum ARROW_BIT_TO_ANGLE_TABLE
-	     * 方向のアングル jsduckでは数字をプロパティに指定できない？
-	     * @private
-	     */
-	    _static: {
-	      ARROW_BIT_TO_ANGLE_TABLE: {
-	        /* @property 下 */
-	        0x01: 270,
-	        /* @property 右 */
-	        0x02:   0,
-	        /* @property 上 */
-	        0x04:  90,
-	        /* @property 左 */
-	        0x08: 180,
-	
-	        /* @property 右上 */
-	        0x06:  45,
-	        /* @property 右下 */
-	        0x03: 315,
-	        /* @property 左上 */
-	        0x0c: 135,
-	        /* @property 左下 */
-	        0x09: 225,
-	
-	        // 三方向同時押し対応
-	        // 想定外の操作だが対応しといたほうが無難
-	        /* @property 右上左 */
-	        0x0e:  90,
-	        /* @property 上左下 */
-	        0x0d: 180,
-	        /* @property 左下右 */
-	        0x0b: 270,
-	        /* @property 下右上 */
-	        0x07:   0,
-	      },
-	
-	      /*
-	       * @enum KEY_CODE
-	       * キー番号
-	       * @private
-	       */
-	      KEY_CODE: {
-	        /* @property */
-	        "backspace" : 8,
-	        /* @property */
-	        "tab"       : 9,
-	        /* @property */
-	        "enter"     : 13,
-	        /* @property */
-	        "return"    : 13,
-	        /* @property */
-	        "shift"     : 16,
-	        /* @property */
-	        "ctrl"      : 17,
-	        /* @property */
-	        "alt"       : 18,
-	        /* @property */
-	        "pause"     : 19,
-	        /* @property */
-	        "capslock"  : 20,
-	        /* @property */
-	        "escape"    : 27,
-	        /* @property */
-	        "pageup"    : 33,
-	        /* @property */
-	        "pagedown"  : 34,
-	        /* @property */
-	        "end"       : 35,
-	        /* @property */
-	        "home"      : 36,
-	        /* @property */
-	        "left"      : 37,
-	        /* @property */
-	        "up"        : 38,
-	        /* @property */
-	        "right"     : 39,
-	        /* @property */
-	        "down"      : 40,
-	        /* @property */
-	        "insert"    : 45,
-	        /* @property */
-	        "delete"    : 46,
-	        
-	        /* @property */
-	        "0" : 48,
-	        /* @property */
-	        "1" : 49,
-	        /* @property */
-	        "2" : 50,
-	        /* @property */
-	        "3" : 51,
-	        /* @property */
-	        "4" : 52,
-	        /* @property */
-	        "5" : 53,
-	        /* @property */
-	        "6" : 54,
-	        /* @property */
-	        "7" : 55,
-	        /* @property */
-	        "8" : 56,
-	        /* @property */
-	        "9" : 57,
-	        /* @property */
-	        
-	        "a" : 65,
-	        /* @property */
-	        "A" : 65,
-	        /* @property */
-	        "b" : 66,
-	        /* @property */
-	        "B" : 66,
-	        /* @property */
-	        "c" : 67,
-	        /* @property */
-	        "C" : 67,
-	        /* @property */
-	        "d" : 68,
-	        /* @property */
-	        "D" : 68,
-	        /* @property */
-	        "e" : 69,
-	        /* @property */
-	        "E" : 69,
-	        /* @property */
-	        "f" : 70,
-	        /* @property */
-	        "F" : 70,
-	        /* @property */
-	        "g" : 71,
-	        /* @property */
-	        "G" : 71,
-	        /* @property */
-	        "h" : 72,
-	        /* @property */
-	        "H" : 72,
-	        /* @property */
-	        "i" : 73,
-	        /* @property */
-	        "I" : 73,
-	        /* @property */
-	        "j" : 74,
-	        /* @property */
-	        "J" : 74,
-	        /* @property */
-	        "k" : 75,
-	        /* @property */
-	        "K" : 75,
-	        /* @property */
-	        "l" : 76,
-	        /* @property */
-	        "L" : 76,
-	        /* @property */
-	        "m" : 77,
-	        /* @property */
-	        "M" : 77,
-	        /* @property */
-	        "n" : 78,
-	        /* @property */
-	        "N" : 78,
-	        /* @property */
-	        "o" : 79,
-	        /* @property */
-	        "O" : 79,
-	        /* @property */
-	        "p" : 80,
-	        /* @property */
-	        "P" : 80,
-	        /* @property */
-	        "q" : 81,
-	        /* @property */
-	        "Q" : 81,
-	        /* @property */
-	        "r" : 82,
-	        /* @property */
-	        "R" : 82,
-	        /* @property */
-	        "s" : 83,
-	        /* @property */
-	        "S" : 83,
-	        /* @property */
-	        "t" : 84,
-	        /* @property */
-	        "T" : 84,
-	        /* @property */
-	        "u" : 85,
-	        /* @property */
-	        "U" : 85,
-	        /* @property */
-	        "v" : 86,
-	        /* @property */
-	        "V" : 86,
-	        /* @property */
-	        "w" : 87,
-	        /* @property */
-	        "W" : 87,
-	        /* @property */
-	        "x" : 88,
-	        /* @property */
-	        "X" : 88,
-	        /* @property */
-	        "y" : 89,
-	        /* @property */
-	        "Y" : 89,
-	        /* @property */
-	        "z" : 90,
-	        /* @property */
-	        "Z" : 90,
-	        
-	        /* @property */
-	        "numpad0" : 96,
-	        /* @property */
-	        "numpad1" : 97,
-	        /* @property */
-	        "numpad2" : 98,
-	        /* @property */
-	        "numpad3" : 99,
-	        /* @property */
-	        "numpad4" : 100,
-	        /* @property */
-	        "numpad5" : 101,
-	        /* @property */
-	        "numpad6" : 102,
-	        /* @property */
-	        "numpad7" : 103,
-	        /* @property */
-	        "numpad8" : 104,
-	        /* @property */
-	        "numpad9" : 105,
-	        /* @property */
-	        "multiply"      : 106,
-	        /* @property */
-	        "add"           : 107,
-	        /* @property */
-	        "subtract"      : 109,
-	        /* @property */
-	        "decimalpoint"  : 110,
-	        /* @property */
-	        "divide"        : 111,
-	
-	        /* @property */
-	        "f1"    : 112,
-	        /* @property */
-	        "f2"    : 113,
-	        /* @property */
-	        "f3"    : 114,
-	        /* @property */
-	        "f4"    : 115,
-	        /* @property */
-	        "f5"    : 116,
-	        /* @property */
-	        "f6"    : 117,
-	        /* @property */
-	        "f7"    : 118,
-	        /* @property */
-	        "f8"    : 119,
-	        /* @property */
-	        "f9"    : 120,
-	        /* @property */
-	        "f10"   : 121,
-	        /* @property */
-	        "f11"   : 122,
-	        /* @property */
-	        "f12"   : 123,
-	        
-	        /* @property */
-	        "numlock"   : 144,
-	        /* @property */
-	        "scrolllock": 145,
-	        /* @property */
-	        "semicolon" : 186,
-	        /* @property */
-	        "equalsign" : 187,
-	        /* @property */
-	        "comma"     : 188,
-	        /* @property */
-	        "dash"      : 189,
-	        /* @property */
-	        "period"    : 190,
-	        /* @property */
-	        "forward slash" : 191,
-	        /* @property */
-	        "/": 191,
-	        /* @property */
-	        "grave accent"  : 192,
-	        /* @property */
-	        "open bracket"  : 219,
-	        /* @property */
-	        "back slash"    : 220,
-	        /* @property */
-	        "close bracket"  : 221,
-	        /* @property */
-	        "single quote"  : 222,
-	        /* @property */
-	        "space"         : 32
-	
-	      },
-	    }
-	  });
-	
-	});
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.input.GamepadManager
-	   * ゲームパッドマネージャー.
-	   * ゲームパッド接続状況の監視、個々のゲームパッドの入力状態の更新を行う.
-	   */
-	  phina.define('phina.input.GamepadManager', {
-	    superClass: 'phina.util.EventDispatcher',
-	
-	    /**
-	     * 作成済みphina.input.Gamepadオブジェクトのリスト
-	     *
-	     * @type {Object.<number, phina.input.Gamepad>}
-	     */
-	    gamepads: null,
-	
-	    /**
-	     * 作成済みゲームパッドのindexのリスト
-	     *
-	     * @type {number[]}
-	     * @private
-	     */
-	    _created: null,
-	
-	    /**
-	     * ラップ前Gamepadのリスト
-	     * @type {phina.input.Gamepad[]}
-	     * @private
-	     */
-	    _rawgamepads: null,
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function() {
-	      this.superInit();
-	
-	      this.gamepads = {};
-	      this._created = [];
-	      this._rawgamepads = [];
-	
-	      this._prevTimestamps = {};
-	
-	      this._getGamepads = null;
-	      var navigator = phina.global.navigator;
-	      if (navigator && navigator.getGamepads) {
-	        this._getGamepads = navigator.getGamepads.bind(navigator);
-	      } else if (navigator && navigator.webkitGetGamepads) {
-	        this._getGamepads = navigator.webkitGetGamepads.bind(navigator);
-	      } else {
-	        this._getGamepads = function() {};
-	      }
-	
-	      phina.global.addEventListener('gamepadconnected', function(e) {
-	        var gamepad = this.get(e.gamepad.index);
-	        gamepad.connected = true;
-	        this.flare('connected', {
-	          gamepad: gamepad,
-	        });
-	      }.bind(this));
-	
-	      phina.global.addEventListener('gamepaddisconnected', function(e) {
-	        var gamepad = this.get(e.gamepad.index);
-	        gamepad.connected = false;
-	        this.flare('disconnected', {
-	          gamepad: gamepad,
-	        });
-	      }.bind(this));
-	    },
-	
-	    /**
-	     * 情報更新処理
-	     * マイフレーム呼んで下さい.
-	     */
-	    update: function() {
-	      this._poll();
-	
-	      for (var i = 0, end = this._created.length; i < end; i++) {
-	        var index = this._created[i];
-	        var rawgamepad = this._rawgamepads[index];
-	
-	        if (!rawgamepad) {
-	          continue;
-	        }
-	
-	        if (rawgamepad.timestamp && (rawgamepad.timestamp === this._prevTimestamps[i])) {
-	          this.gamepads[index]._updateStateEmpty();
-	          continue;
-	        }
-	
-	        this._prevTimestamps[i] = rawgamepad.timestamp;
-	        this.gamepads[index]._updateState(rawgamepad);
-	      }
-	    },
-	
-	    /**
-	     * 指定されたindexのGamepadオブジェクトを返す.
-	     *
-	     * 未作成の場合は作成して返す.
-	     */
-	    get: function(index) {
-	      index = index || 0;
-	
-	      if (!this.gamepads[index]) {
-	        this._created.push(index);
-	        this.gamepads[index] = phina.input.Gamepad(index);
-	      }
-	
-	      return this.gamepads[index];
-	    },
-	
-	    /**
-	     * 指定されたindexのGamepadオブジェクトを破棄する.
-	     * 破棄されたGamepadオブジェクトは以降更新されない.
-	     */
-	    dispose: function(index) {
-	      if (this._created.contains(index)) {
-	        var gamepad = this.get(index);
-	        delete this.gamepad[gamepad];
-	        this._created.erase(index);
-	
-	        gamepad.connected = false;
-	      }
-	    },
-	
-	    /**
-	     * 指定されたindexのゲームパッドが接続中かどうかを返す.
-	     *
-	     * Gamepadオブジェクトが未作成の場合でも動作する.
-	     */
-	    isConnected: function(index) {
-	      index = index || 0;
-	
-	      return this._rawgamepads[index] && this._rawgamepads[index].connected;
-	    },
-	
-	    /**
-	     * @private
-	     */
-	    _poll: function() {
-	      var rawGamepads = this._getGamepads();
-	      if (rawGamepads) {
-	        this._rawgamepads.clear();
-	
-	        for (var i = 0, end = rawGamepads.length; i < end; i++) {
-	          if (rawGamepads[i]) {
-	            this._rawgamepads.push(rawGamepads[i]);
-	          }
-	        }
-	      }
-	    },
-	
-	    _static: {
-	      /** ブラウザがGamepad APIに対応しているか. */
-	      isAvailable: (function() {
-	        var nav = phina.global.navigator;
-	        if (!nav) return false;
-	
-	        return (!!nav.getGamepads) || (!!nav.webkitGetGamepads);
-	      })(),
-	    },
-	
-	  });
-	
-	  /**
-	   * @class phina.input.Gamepad
-	   * ゲームパッド
-	   *
-	   * 直接インスタンス化せず、phina.input.GamepadManagerオブジェクトから取得して使用する.
-	   */
-	  phina.define("phina.input.Gamepad", {
-	
-	    index: null,
-	    buttons: null,
-	    /** @type {Array.<phina.geom.Vector2>} */
-	    sticks: null,
-	
-	    id: null,
-	    connected: false,
-	    mapping: null,
-	    timestamp: null,
-	
-	    init: function(index) {
-	      this.index = index || 0;
-	
-	      this.buttons = Array.range(0, 16).map(function() {
-	        return {
-	          value: 0,
-	          pressed: false,
-	          last: false,
-	          down: false,
-	          up: false,
-	        };
-	      });
-	      this.sticks = Array.range(0, 2).map(function() {
-	        return phina.geom.Vector2(0, 0);
-	      });
-	    },
-	
-	    /**
-	     * ボタンが押されているか.
-	     */
-	    getKey: function(button) {
-	      if (typeof(button) === 'string') {
-	        button = phina.input.Gamepad.BUTTON_CODE[button];
-	      }
-	      if (this.buttons[button]) {
-	        return this.buttons[button].pressed;
-	      } else {
-	        return false;
-	      }
-	    },
-	
-	    /**
-	     * ボタンを押した.
-	     */
-	    getKeyDown: function(button) {
-	      if (typeof(button) === 'string') {
-	        button = phina.input.Gamepad.BUTTON_CODE[button];
-	      }
-	      if (this.buttons[button]) {
-	        return this.buttons[button].down;
-	      } else {
-	        return false;
-	      }
-	    },
-	
-	    /**
-	     * ボタンを離した.
-	     */
-	    getKeyUp: function(button) {
-	      if (typeof(button) === 'string') {
-	        button = phina.input.Gamepad.BUTTON_CODE[button];
-	      }
-	      if (this.buttons[button]) {
-	        return this.buttons[button].up;
-	      } else {
-	        return false;
-	      }
-	    },
-	
-	    /**
-	     * 十字キーの入力されている方向.
-	     */
-	    getKeyAngle: function() {
-	      var angle = null;
-	      var arrowBit =
-	        (this.getKey('left') << 3) | // 1000
-	        (this.getKey('up') << 2) | // 0100
-	        (this.getKey('right') << 1) | // 0010
-	        (this.getKey('down')); // 0001
-	
-	      if (arrowBit !== 0 && ARROW_BIT_TO_ANGLE_TABLE.hasOwnProperty(arrowBit)) {
-	        angle = ARROW_BIT_TO_ANGLE_TABLE[arrowBit];
-	      }
-	
-	      return angle;
-	    },
-	
-	    /**
-	     * 十字キーの入力されている方向をベクトルで.
-	     * 正規化されている.
-	     */
-	    getKeyDirection: function() {
-	      var direction = phina.geom.Vector2(0, 0);
-	
-	      if (this.getKey('left')) {
-	        direction.x = -1;
-	      } else if (this.getKey('right')) {
-	        direction.x = 1;
-	      }
-	      if (this.getKey('up')) {
-	        direction.y = -1;
-	      } else if (this.getKey('down')) {
-	        direction.y = 1;
-	      }
-	
-	      if (direction.x && direction.y) {
-	        direction.div(Math.SQRT2);
-	      }
-	
-	      return direction;
-	    },
-	
-	    /**
-	     * スティックの入力されている方向.
-	     */
-	    getStickAngle: function(stickId) {
-	      stickId = stickId || 0;
-	      var stick = this.sticks[stickId];
-	      return stick ? Math.atan2(-stick.y, stick.x) : null;
-	    },
-	
-	    /**
-	     * スティックの入力されている方向をベクトルで.
-	     */
-	    getStickDirection: function(stickId) {
-	      stickId = stickId || 0;
-	      return this.sticks ? this.sticks[stickId].clone() : phina.geom.Vector2(0, 0);
-	    },
-	
-	    /**
-	     * @private
-	     */
-	    _updateState: function(gamepad) {
-	      this.id = gamepad.id;
-	      this.connected = gamepad.connected;
-	      this.mapping = gamepad.mapping;
-	      this.timestamp = gamepad.timestamp;
-	
-	      for (var i = 0, iend = gamepad.buttons.length; i < iend; i++) {
-	        this._updateButton(gamepad.buttons[i], i);
-	      }
-	
-	      for (var j = 0, jend = gamepad.axes.length; j < jend; j += 2) {
-	        this._updateStick(gamepad.axes[j + 0], j / 2, 'x');
-	        this._updateStick(gamepad.axes[j + 1], j / 2, 'y');
-	      }
-	    },
-	
-	    /**
-	     * @private
-	     */
-	    _updateStateEmpty: function() {
-	      for (var i = 0, iend = this.buttons.length; i < iend; i++) {
-	        this.buttons[i].down = false;
-	        this.buttons[i].up = false;
-	      }
-	    },
-	
-	    /**
-	     * @private
-	     */
-	    _updateButton: function(value, buttonId) {
-	      if (this.buttons[buttonId] === undefined) {
-	        this.buttons[buttonId] = {
-	          value: 0,
-	          pressed: false,
-	          last: false,
-	          down: false,
-	          up: false,
-	        };
-	      }
-	      
-	      var button = this.buttons[buttonId];
-	
-	      button.last = button.pressed;
-	
-	      if (typeof value === 'object') {
-	        button.value = value.value;
-	        button.pressed = value.pressed;
-	      } else {
-	        button.value = value;
-	        button.pressed = value > phina.input.Gamepad.ANALOGUE_BUTTON_THRESHOLD;
-	      }
-	
-	      button.down = (button.pressed ^ button.last) & button.pressed;
-	      button.up = (button.pressed ^ button.last) & button.last;
-	    },
-	
-	    /**
-	     * @private
-	     */
-	    _updateStick: function(value, stickId, axisName) {
-	      if (this.sticks[stickId] === undefined) {
-	        this.sticks[stickId] = phina.geom.Vector2(0, 0);
-	      }
-	      this.sticks[stickId][axisName] = value;
-	    },
-	
-	    _static: {
-	      /** ブラウザがGamepad APIに対応しているか. */
-	      isAvailable: (function() {
-	        var nav = phina.global.navigator;
-	        if (!nav) return false;
-	
-	        return (!!nav.getGamepads) || (!!nav.webkitGetGamepads);
-	      })(),
-	
-	      /** アナログ入力対応のボタンの場合、どの程度まで押し込むとonになるかを表すしきい値. */
-	      ANALOGUE_BUTTON_THRESHOLD: 0.5,
-	
-	      /** ボタン名とボタンIDのマップ. */
-	      BUTTON_CODE: {
-	        'a': 0,
-	        'b': 1,
-	        'x': 2,
-	        'y': 3,
-	
-	        'l1': 4,
-	        'r1': 5,
-	        'l2': 6,
-	        'r2': 7,
-	
-	        'select': 8,
-	        'start': 9,
-	
-	        'l3': 10,
-	        'r3': 11,
-	
-	        'up': 12,
-	        'down': 13,
-	        'left': 14,
-	        'right': 15,
-	
-	        'special': 16,
-	
-	        'A': 0,
-	        'B': 1,
-	        'X': 2,
-	        'Y': 3,
-	
-	        'L1': 4,
-	        'R1': 5,
-	        'L2': 6,
-	        'R2': 7,
-	
-	        'SELECT': 8,
-	        'START': 9,
-	
-	        'L3': 10,
-	        'R3': 11,
-	
-	        'UP': 12,
-	        'DOWN': 13,
-	        'LEFT': 14,
-	        'RIGHT': 15,
-	
-	        'SPECIAL': 16,
-	      },
-	    },
-	  });
-	
-	  var ARROW_BIT_TO_ANGLE_TABLE = {
-	    0x00: null,
-	
-	    /* @property 下 */
-	    0x01: 270,
-	    /* @property 右 */
-	    0x02: 0,
-	    /* @property 上 */
-	    0x04: 90,
-	    /* @property 左 */
-	    0x08: 180,
-	
-	    /* @property 右上 */
-	    0x06: 45,
-	    /* @property 右下 */
-	    0x03: 315,
-	    /* @property 左上 */
-	    0x0c: 135,
-	    /* @property 左下 */
-	    0x09: 225,
-	
-	    // 三方向同時押し対応
-	    // 想定外の操作だが対応しといたほうが無難
-	    /* @property 右上左 */
-	    0x0e: 90,
-	    /* @property 上左下 */
-	    0x0d: 180,
-	    /* @property 左下右 */
-	    0x0b: 270,
-	    /* @property 下右上 */
-	    0x07: 0,
-	  };
-	
-	});
-	
-	/*
+	enchant.Class = function(superclass, definition) {
+	    return enchant.Class.create(superclass, definition);
+	};
+	
+	/**
+	 * Creates a class.
 	 *
+	 * When defining a class that extends from another class, 
+	 * the constructor of the other class will be used by default.
+	 * Even if you override this constructor, you must still call it
+	 * to ensure that the class is initialized correctly.
+	 *
+	 * @example
+	 * // Creates a Ball class.
+	 * var Ball = Class.create({ 
+	 *
+	 *     // Ball's constructor
+	 *     initialize: function(radius) {
+	 *       // ... code ...
+	 *     }, 
+	 *
+	 *     // Defines a fall method that doesn't take any arguments.
+	 *     fall: function() { 
+	 *       // ... code ...
+	 *     }
+	 * });
+	 *
+	 * // Creates a Ball class that extends from "Sprite"
+	 * var Ball = Class.create(Sprite);  
+	 *
+	 * // Creates a Ball class that extends from "Sprite"
+	 * var Ball = Class.create(Sprite, { 
+	 *
+	 *     // Overwrite Sprite's constructor
+	 *     initialize: function(radius) { 
+	 *
+	 *         // Call Sprite's constructor.
+	 *         Sprite.call(this, radius * 2, radius * 2);
+	 *
+	 *         this.image = core.assets['ball.gif'];
+	 *     }
+	 * });
+	 *
+	 * @param {Function} [superclass] The class from which the
+	 * new class will inherit the class definition.
+	 * @param {*} [definition] Class definition.
+	 * @static
 	 */
+	enchant.Class.create = function(superclass, definition) {
+	    if (superclass == null && definition) {
+	        throw new Error("superclass is undefined (enchant.Class.create)");
+	    } else if (superclass == null) {
+	        throw new Error("definition is undefined (enchant.Class.create)");
+	    }
 	
+	    if (arguments.length === 0) {
+	        return enchant.Class.create(Object, definition);
+	    } else if (arguments.length === 1 && typeof arguments[0] !== 'function') {
+	        return enchant.Class.create(Object, arguments[0]);
+	    }
 	
-	phina.namespace(function() {
+	    for (var prop in definition) {
+	        if (definition.hasOwnProperty(prop)) {
+	            if (typeof definition[prop] === 'object' && definition[prop] !== null && Object.getPrototypeOf(definition[prop]) === Object.prototype) {
+	                if (!('enumerable' in definition[prop])) {
+	                    definition[prop].enumerable = true;
+	                }
+	            } else {
+	                definition[prop] = { value: definition[prop], enumerable: true, writable: true };
+	            }
+	        }
+	    }
+	    var Constructor = function() {
+	        if (this instanceof Constructor) {
+	            Constructor.prototype.initialize.apply(this, arguments);
+	        } else {
+	            return new Constructor();
+	        }
+	    };
+	    Constructor.prototype = Object.create(superclass.prototype, definition);
+	    Constructor.prototype.constructor = Constructor;
+	    if (Constructor.prototype.initialize == null) {
+	        Constructor.prototype.initialize = function() {
+	            superclass.apply(this, arguments);
+	        };
+	    }
 	
-	  /**
-	   * @class phina.input.Accelerometer
-	   * スマートフォンのセンサー情報
-	   */
-	  phina.define('phina.input.Accelerometer', {
+	    var tree = this.getInheritanceTree(superclass);
+	    for (var i = 0, l = tree.length; i < l; i++) {
+	        if (typeof tree[i]._inherited === 'function') {
+	            tree[i]._inherited(Constructor);
+	            break;
+	        }
+	    }
 	
-	    /** @property  gravity 重力センサー */
-	    /** @property  acceleration 加速度センサー */
-	    /** @property  rotation 回転加速度センサー */
-	    /** @property  orientation スマートフォンの傾き */
+	    return Constructor;
+	};
 	
+	/**
+	 * Get the inheritance tree of this class.
+	 * @param {Function} Constructor
+	 * @return {Function[]} Parent's constructor
+	 */
+	enchant.Class.getInheritanceTree = function(Constructor) {
+	    var ret = [];
+	    var C = Constructor;
+	    var proto = C.prototype;
+	    while (C !== Object) {
+	        ret.push(C);
+	        proto = Object.getPrototypeOf(proto);
+	        C = proto.constructor;
+	    }
+	    return ret;
+	};
+	
+	/**
+	 * @namespace
+	 * enchant.js environment variables.
+	 * Execution settings can be changed by modifying these before calling new Core().
+	 */
+	enchant.ENV = {
 	    /**
-	     * @constructor
+	     * Version of enchant.js
+	     * @type String
 	     */
-	    init: function() {
-	
-	      var self = this;
-	      
-	      this.gravity        = phina.geom.Vector3(0, 0, 0);
-	      this.acceleration   = phina.geom.Vector3(0, 0, 0);
-	      this.rotation       = phina.geom.Vector3(0, 0, 0);
-	      this.orientation    = phina.geom.Vector3(0, 0, 0);
-	
-	      if (phina.isMobile()) {
-	        phina.global.addEventListener("devicemotion", function(e) {
-	          var acceleration = self.acceleration;
-	          var gravity = self.gravity;
-	          var rotation = self.rotation;
-	          
-	          if (e.acceleration) {
-	            acceleration.x = e.acceleration.x;
-	            acceleration.y = e.acceleration.y;
-	            acceleration.z = e.acceleration.z;
-	          }
-	          if (e.accelerationIncludingGravity) {
-	            gravity.x = e.accelerationIncludingGravity.x;
-	            gravity.y = e.accelerationIncludingGravity.y;
-	            gravity.z = e.accelerationIncludingGravity.z;
-	          }
-	          if (e.rotationRate) {
-	            rotation.x = rotation.beta  = e.rotationRate.beta;
-	            rotation.y = rotation.gamma = e.rotationRate.gamma;
-	            rotation.z = rotation.alpha = e.rotationRate.alpha;
-	          }
-	        });
-	        
-	        phina.global.addEventListener("deviceorientation", function(e) {
-	          var orientation = self.orientation;
-	          orientation.alpha   = e.alpha;  // z(0~360)
-	          orientation.beta    = e.beta;   // x(-180~180)
-	          orientation.gamma   = e.gamma;  // y(-90~90)
-	        });
-	      }
+	    VERSION: '0.8.3',
+	    /**
+	     * Identifier of the current browser.
+	     * @type String
+	     */
+	    BROWSER: (function(ua) {
+	        if (/Eagle/.test(ua)) {
+	            return 'eagle';
+	        } else if (/Opera/.test(ua)) {
+	            return 'opera';
+	        } else if (/MSIE|Trident/.test(ua)) {
+	            return 'ie';
+	        } else if (/Chrome/.test(ua)) {
+	            return 'chrome';
+	        } else if (/(?:Macintosh|Windows).*AppleWebKit/.test(ua)) {
+	            return 'safari';
+	        } else if (/(?:iPhone|iPad|iPod).*AppleWebKit/.test(ua)) {
+	            return 'mobilesafari';
+	        } else if (/Firefox/.test(ua)) {
+	            return 'firefox';
+	        } else if (/Android/.test(ua)) {
+	            return 'android';
+	        } else {
+	            return '';
+	        }
+	    }(navigator.userAgent)),
+	    /**
+	     * The CSS vendor prefix of the current browser.
+	     * @type String
+	     */
+	    VENDOR_PREFIX: (function() {
+	        var ua = navigator.userAgent;
+	        if (ua.indexOf('Opera') !== -1) {
+	            return 'O';
+	        } else if (/MSIE|Trident/.test(ua)) {
+	            return 'ms';
+	        } else if (ua.indexOf('WebKit') !== -1) {
+	            return 'webkit';
+	        } else if (navigator.product === 'Gecko') {
+	            return 'Moz';
+	        } else {
+	            return '';
+	        }
+	    }()),
+	    /**
+	     * Determines if the current browser supports touch.
+	     * True, if touch is enabled.
+	     * @type Boolean
+	     */
+	    TOUCH_ENABLED: (function() {
+	        var div = document.createElement('div');
+	        div.setAttribute('ontouchstart', 'return');
+	        return typeof div.ontouchstart === 'function';
+	    }()),
+	    /**
+	     * Determines if the current browser is an iPhone with a retina display.
+	     * True, if this display is a retina display.
+	     * @type Boolean
+	     */
+	    RETINA_DISPLAY: (function() {
+	        if (navigator.userAgent.indexOf('iPhone') !== -1 && window.devicePixelRatio === 2) {
+	            var viewport = document.querySelector('meta[name="viewport"]');
+	            if (viewport == null) {
+	                viewport = document.createElement('meta');
+	                document.head.appendChild(viewport);
+	            }
+	            viewport.setAttribute('content', 'width=640');
+	            return true;
+	        } else {
+	            return false;
+	        }
+	    }()),
+	    /**
+	     * Determines if for current browser Flash should be used to play 
+	     * sound instead of the native audio class.
+	     * True, if flash should be used.
+	     * @type Boolean
+	     */
+	    USE_FLASH_SOUND: (function() {
+	        var ua = navigator.userAgent;
+	        var vendor = navigator.vendor || "";
+	        // non-local access, not on mobile mobile device, not on safari
+	        return (location.href.indexOf('http') === 0 && ua.indexOf('Mobile') === -1 && vendor.indexOf('Apple') !== -1);
+	    }()),
+	    /**
+	     * If click/touch event occure for these tags the setPreventDefault() method will not be called.
+	     * @type String[]
+	     */
+	    USE_DEFAULT_EVENT_TAGS: ['input', 'textarea', 'select', 'area'],
+	    /**
+	     * Method names of CanvasRenderingContext2D that will be defined as Surface method.
+	     * @type String[]
+	     */
+	    CANVAS_DRAWING_METHODS: [
+	        'putImageData', 'drawImage', 'drawFocusRing', 'fill', 'stroke',
+	        'clearRect', 'fillRect', 'strokeRect', 'fillText', 'strokeText'
+	    ],
+	    /**
+	     * Keybind Table.
+	     * You can use 'left', 'up', 'right', 'down' for preset event.
+	     * @example
+	     * enchant.ENV.KEY_BIND_TABLE = {
+	     *     37: 'left',
+	     *     38: 'up',
+	     *     39: 'right',
+	     *     40: 'down',
+	     *     32: 'a', //-> use 'space' key as 'a button'
+	     * };
+	     * @type Object
+	     */
+	    KEY_BIND_TABLE: {
+	        37: 'left',
+	        38: 'up',
+	        39: 'right',
+	        40: 'down'
 	    },
+	    /**
+	     * If keydown event occure for these keycodes the setPreventDefault() method will be called.
+	     * @type Number[]
+	     */
+	    PREVENT_DEFAULT_KEY_CODES: [37, 38, 39, 40],
+	    /**
+	     * Determines if Sound is enabled on Mobile Safari.
+	     * @type Boolean
+	     */
+	    SOUND_ENABLED_ON_MOBILE_SAFARI: true,
+	    /**
+	     * Determines if "touch to start" scene is enabled.
+	     * It is necessary on Mobile Safari because WebAudio Sound is
+	     * muted by browser until play any sound in touch event handler.
+	     * If set it to false, you should control this behavior manually.
+	     * @type Boolean
+	     */
+	    USE_TOUCH_TO_START_SCENE: true,
+	    /**
+	     * Determines if WebAudioAPI is enabled. (true: use WebAudioAPI instead of Audio element if possible)
+	     * @type Boolean
+	     */
+	    USE_WEBAUDIO: (function() {
+	        return location.protocol !== 'file:';
+	    }()),
+	    /**
+	     * Determines if animation feature is enabled. (true: Timeline instance will be generated in new Node)
+	     * @type Boolean
+	     */
+	    USE_ANIMATION: true,
+	    /**
+	     * Specifies range of the touch detection.
+	     * The detection area will be (COLOR_DETECTION_LEVEL * 2 + 1)px square.
+	     * @type Boolean
+	     */
+	    COLOR_DETECTION_LEVEL: 2
+	};
 	
-	  });
-	
+	/**
+	 * @scope enchant.Event.prototype
+	 */
+	enchant.Event = enchant.Class.create({
+	    /**
+	     * @name enchant.Event
+	     * @class
+	     * A class for an independent implementation of events similar to DOM Events.
+	     * Does not include phase concepts.
+	     * @param {String} type Event type.
+	     * @constructs
+	     */
+	    initialize: function(type) {
+	        /**
+	         * The type of the event.
+	         * @type String
+	         */
+	        this.type = type;
+	        /**
+	         * The target of the event.
+	         * @type *
+	         */
+	        this.target = null;
+	        /**
+	         * The x-coordinate of the event's occurrence.
+	         * @type Number
+	         */
+	        this.x = 0;
+	        /**
+	         * The y-coordinate of the event's occurrence.
+	         * @type Number
+	         */
+	        this.y = 0;
+	        /**
+	         * The x-coordinate of the event's occurrence relative to the object
+	         * which issued the event.
+	         * @type Number
+	         */
+	        this.localX = 0;
+	        /**
+	         * The y-coordinate of the event's occurrence relative to the object
+	         * which issued the event.
+	         * @type Number
+	         */
+	        this.localY = 0;
+	    },
+	    _initPosition: function(pageX, pageY) {
+	        var core = enchant.Core.instance;
+	        this.x = this.localX = (pageX - core._pageX) / core.scale;
+	        this.y = this.localY = (pageY - core._pageY) / core.scale;
+	    }
 	});
 	
-	phina.namespace(function() {
+	/**
+	 * An event dispatched once the core has finished loading.
+	 *
+	 * When preloading images, it is necessary to wait until preloading is complete
+	 * before starting the game.
+	 * Issued by: {@link enchant.Core}
+	 *
+	 * @example
+	 * var core = new Core(320, 320);
+	 * core.preload('player.gif');
+	 * core.onload = function() {
+	 *     ... // Describes initial core processing
+	 * };
+	 * core.start();
+	 * @type String
+	 */
+	enchant.Event.LOAD = 'load';
 	
+	/**
+	 * An event dispatched when an error occurs.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Surface}, {@link enchant.WebAudioSound}, {@link enchant.DOMSound}
+	 */
+	enchant.Event.ERROR = 'error';
 	
-	  phina.define('phina.app.Updater', {
+	/**
+	 * An event dispatched when the display size is changed.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 @type String
+	 */
+	enchant.Event.CORE_RESIZE = 'coreresize';
 	
-	    init: function(app) {
-	      this.app = app;
+	/**
+	 * An event dispatched while the core is loading.
+	 * Dispatched each time an image is preloaded.
+	 * Issued by: {@link enchant.LoadingScene}
+	 * @type String
+	 */
+	enchant.Event.PROGRESS = 'progress';
+	
+	/**
+	 * An event which is occurring when a new frame is beeing processed.
+	 * Issued object: {@link enchant.Core}, {@link enchant.Node}
+	 * @type String
+	 */
+	enchant.Event.ENTER_FRAME = 'enterframe';
+	
+	/**
+	 * An event dispatched at the end of processing a new frame.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Node}
+	 * @type String
+	 */
+	enchant.Event.EXIT_FRAME = 'exitframe';
+	
+	/**
+	 * An event dispatched when a Scene begins.
+	 * Issued by: {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.ENTER = 'enter';
+	
+	/**
+	 * An event dispatched when a Scene ends.
+	 * Issued by: {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.EXIT = 'exit';
+	
+	/**
+	 * An event dispatched when a Child is added to a Node.
+	 * Issued by: {@link enchant.Group}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.CHILD_ADDED = 'childadded';
+	
+	/**
+	 * An event dispatched when a Node is added to a Group.
+	 * Issued by: {@link enchant.Node}
+	 * @type String
+	 */
+	enchant.Event.ADDED = 'added';
+	
+	/**
+	 * An event dispatched when a Node is added to a Scene.
+	 * Issued by: {@link enchant.Node}
+	 * @type String
+	 */
+	enchant.Event.ADDED_TO_SCENE = 'addedtoscene';
+	
+	/**
+	 * An event dispatched when a Child is removed from a Node.
+	 * Issued by: {@link enchant.Group}, {@link enchant.Scene}
+	 * @type String
+	 * @type String
+	 */
+	enchant.Event.CHILD_REMOVED = 'childremoved';
+	
+	/**
+	 * An event dispatched when a Node is deleted from a Group.
+	 * Issued by: {@link enchant.Node}
+	 * @type String
+	 */
+	enchant.Event.REMOVED = 'removed';
+	
+	/**
+	 * An event dispatched when a Node is deleted from a Scene.
+	 * Issued by: {@link enchant.Node}
+	 * @type String
+	 */
+	enchant.Event.REMOVED_FROM_SCENE = 'removedfromscene';
+	
+	/**
+	 * An event dispatched when a touch event intersecting a Node begins.
+	 * A mouse event counts as a touch event. Issued by: {@link enchant.Node}
+	 * @type String
+	 */
+	enchant.Event.TOUCH_START = 'touchstart';
+	
+	/**
+	 * An event dispatched when a touch event intersecting the Node has been moved.
+	 * A mouse event counts as a touch event. Issued by: {@link enchant.Node}
+	 * @type String
+	 */
+	enchant.Event.TOUCH_MOVE = 'touchmove';
+	
+	/**
+	 * An event dispatched when a touch event intersecting the Node ends.
+	 * A mouse event counts as a touch event. Issued by: {@link enchant.Node}
+	 * @type String
+	 */
+	enchant.Event.TOUCH_END = 'touchend';
+	
+	/**
+	 * An event dispatched when an Entity is rendered.
+	 * Issued by: {@link enchant.Entity}
+	 * @type String
+	 */
+	enchant.Event.RENDER = 'render';
+	
+	/**
+	 * An event dispatched when a button is pressed.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.INPUT_START = 'inputstart';
+	
+	/**
+	 * An event dispatched when button inputs change.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.INPUT_CHANGE = 'inputchange';
+	
+	/**
+	 * An event dispatched when button input ends.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.INPUT_END = 'inputend';
+	
+	/**
+	 * An internal event which is occurring when a input changes.
+	 * Issued object: {@link enchant.InputSource}
+	 * @type String
+	 */
+	enchant.Event.INPUT_STATE_CHANGED = 'inputstatechanged';
+	
+	/**
+	 * An event dispatched when the 'left' button is pressed.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.LEFT_BUTTON_DOWN = 'leftbuttondown';
+	
+	/**
+	 * An event dispatched when the 'left' button is released.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.LEFT_BUTTON_UP = 'leftbuttonup';
+	
+	/**
+	 * An event dispatched when the 'right' button is pressed.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.RIGHT_BUTTON_DOWN = 'rightbuttondown';
+	
+	/**
+	 * An event dispatched when the 'right' button is released.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.RIGHT_BUTTON_UP = 'rightbuttonup';
+	
+	/**
+	 * An event dispatched when the 'up' button is pressed.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.UP_BUTTON_DOWN = 'upbuttondown';
+	
+	/**
+	 * An event dispatched when the 'up' button is released.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.UP_BUTTON_UP = 'upbuttonup';
+	
+	/**
+	 * An event dispatched when the 'down' button is pressed.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.DOWN_BUTTON_DOWN = 'downbuttondown';
+	
+	/**
+	 * An event dispatched when the 'down' button is released.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.DOWN_BUTTON_UP = 'downbuttonup';
+	
+	/**
+	 * An event dispatched when the 'a' button is pressed.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.A_BUTTON_DOWN = 'abuttondown';
+	
+	/**
+	 * An event dispatched when the 'a' button is released.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.A_BUTTON_UP = 'abuttonup';
+	
+	/**
+	 * An event dispatched when the 'b' button is pressed.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.B_BUTTON_DOWN = 'bbuttondown';
+	
+	/**
+	 * An event dispatched when the 'b' button is released.
+	 * Issued by: {@link enchant.Core}, {@link enchant.Scene}
+	 * @type String
+	 */
+	enchant.Event.B_BUTTON_UP = 'bbuttonup';
+	
+	/**
+	 * An event dispatched when an Action is added to a Timeline.
+	 * When looped, an Action is removed from the Timeline and added back into it.
+	 * @type String
+	 */
+	enchant.Event.ADDED_TO_TIMELINE = "addedtotimeline";
+	
+	/**
+	 * An event dispatched when an Action is removed from a Timeline.
+	 * When looped, an Action is removed from the timeline and added back into it.
+	 * @type String
+	 */
+	enchant.Event.REMOVED_FROM_TIMELINE = "removedfromtimeline";
+	
+	/**
+	 * An event dispatched when an Action begins.
+	 * @type String
+	 */
+	enchant.Event.ACTION_START = "actionstart";
+	
+	/**
+	 * An event dispatched when an Action finishes.
+	 * @type String
+	 */
+	enchant.Event.ACTION_END = "actionend";
+	
+	/**
+	 * An event dispatched when an Action has gone through one frame.
+	 * @type String
+	 */
+	enchant.Event.ACTION_TICK = "actiontick";
+	
+	/**
+	 * An event dispatched to the Timeline when an Action is added.
+	 * @type String
+	 */
+	enchant.Event.ACTION_ADDED = "actionadded";
+	
+	/**
+	 * An event dispatched to the Timeline when an Action is removed.
+	 * @type String
+	 */
+	enchant.Event.ACTION_REMOVED = "actionremoved";
+	
+	/**
+	 * An event dispatched when an animation finishes, meaning null element was encountered
+	 * Issued by: {@link enchant.Sprite}
+	 * @type String
+	 */
+	enchant.Event.ANIMATION_END = "animationend";
+	
+	/**
+	 * @scope enchant.EventTarget.prototype
+	 */
+	enchant.EventTarget = enchant.Class.create({
+	    /**
+	     * @name enchant.EventTarget
+	     * @class
+	     * A class for implementation of events similar to DOM Events.
+	     * However, it does not include the concept of phases.
+	     * @constructs
+	     */
+	    initialize: function() {
+	        this._listeners = {};
 	    },
+	    /**
+	     * Add a new event listener which will be executed when the event
+	     * is dispatched.
+	     * @param {String} type Type of the events.
+	     * @param {Function(e:enchant.Event)} listener Event listener to be added.
+	     */
+	    addEventListener: function(type, listener) {
+	        var listeners = this._listeners[type];
+	        if (listeners == null) {
+	            this._listeners[type] = [listener];
+	        } else if (listeners.indexOf(listener) === -1) {
+	            listeners.unshift(listener);
 	
-	    update: function(root) {
-	      this._updateElement(root);
+	        }
 	    },
-	
-	    _updateElement: function(element) {
-	      var app = this.app;
-	
-	      // 更新するかを判定
-	      if (element.awake === false) return ;
-	
-	      // エンターフレームイベント
-	      if (element.has('enterframe')) {
-	        element.flare('enterframe', {
-	          app: this.app,
-	        });
-	      }
-	
-	      // 更新
-	      if (element.update) element.update(app);
-	
-	      // タッチ判定
-	      // this._checkPoint(element);
-	
-	      // 子供を更新
-	      var len = element.children.length;
-	      if (element.children.length > 0) {
-	        var tempChildren = element.children.slice();
-	        for (var i=0; i<len; ++i) {
-	          this._updateElement(tempChildren[i]);
-	        }
-	      }
+	    /**
+	     * Synonym for addEventListener.
+	     * @param {String} type Type of the events.
+	     * @param {Function(e:enchant.Event)} listener Event listener to be added.
+	     * @see enchant.EventTarget#addEventListener
+	     */
+	    on: function() {
+	        this.addEventListener.apply(this, arguments);
 	    },
-	
-	    _checkPoint: function(obj) {
-	
-	      this.app.pointers.forEach(function(p) {
-	        if (p.id !== null) {
-	          this.__checkPoint(obj, p);
+	    /**
+	     * Delete an event listener.
+	     * @param {String} [type] Type of the events.
+	     * @param {Function(e:enchant.Event)} listener Event listener to be deleted.
+	     */
+	    removeEventListener: function(type, listener) {
+	        var listeners = this._listeners[type];
+	        if (listeners != null) {
+	            var i = listeners.indexOf(listener);
+	            if (i !== -1) {
+	                listeners.splice(i, 1);
+	            }
 	        }
-	      }, this);
 	    },
-	
-	    __checkPoint: function(obj, p) {
-	      if (!obj.interactive) return ;
-	
-	      var prevOverFlag = obj._overFlags[p.id];
-	      var overFlag = obj.hitTest2(p.x, p.y);
-	      obj._overFlags[p.id] = overFlag;
-	
-	      if (!prevOverFlag && overFlag) {
-	        obj.flare('pointover', {
-	          pointer: p,
-	        });
-	      }
-	      if (prevOverFlag && !overFlag) {
-	        obj.flare('pointout');
-	      }
-	
-	      if (overFlag) {
-	        if (p.getPointingStart()) {
-	          obj._touchFlags[p.id] = true;
-	          obj.flare('pointstart');
+	    /**
+	     * Clear all defined event listeners of a given type.
+	     * If no type is given, all listeners will be removed.
+	     * @param {String} type Type of the events.
+	     */
+	    clearEventListener: function(type) {
+	        if (type != null) {
+	            delete this._listeners[type];
+	        } else {
+	            this._listeners = {};
 	        }
-	      }
-	
-	      if (obj._touchFlags[p.id]) {
-	        obj.flare('pointstay');
-	        if (p._moveFlag) {
-	          obj.flare('pointmove');
-	        }
-	      }
-	
-	      if (obj._touchFlags[p.id]===true && p.getPointingEnd()) {
-	        obj._touchFlags[p.id] = false;
-	        obj.flare('pointend');
-	
-	        if (obj._overFlags[p.id]) {
-	          obj._overFlags[p.id] = false;
-	          obj.flare('pointout');
-	        }
-	      }
 	    },
-	
-	  });
-	
-	  
+	    /**
+	     * Issue an event.
+	     * @param {enchant.Event} e Event to be issued.
+	     */
+	    dispatchEvent: function(e) {
+	        e.target = this;
+	        e.localX = e.x - this._offsetX;
+	        e.localY = e.y - this._offsetY;
+	        if (this['on' + e.type] != null){
+	            this['on' + e.type](e);
+	        }
+	        var listeners = this._listeners[e.type];
+	        if (listeners != null) {
+	            listeners = listeners.slice();
+	            for (var i = 0, len = listeners.length; i < len; i++) {
+	                listeners[i].call(this, e);
+	            }
+	        }
+	    }
 	});
 	
-	phina.namespace(function() {
-	
-	
-	  phina.define('phina.app.Interactive', {
-	
-	    init: function(app) {
-	      this.app = app;
-	      this._enable = true;
-	      this.multiTouch = true;
-	      this.cursor = {
-	        normal: '',
-	        hover: 'pointer',
-	      };
-	
-	      this._holds = [];
-	      this.app.on('changescene', function() {
-	        this._holds.clear();
-	      }.bind(this));
-	    },
-	
-	    enable: function() {
-	      this._enable = true;
-	      return this;
-	    },
-	    disable: function() {
-	      this._enable = false;
-	      return this;
-	    },
-	
-	    check: function(root) {
-	      // カーソルのスタイルを反映
-	      if (this.app.domElement) {
-	        if (this._holds.length > 0) {
-	          this.app.domElement.style.cursor = this.cursor.hover;
-	        }
-	        else {
-	          this.app.domElement.style.cursor = this.cursor.normal;
-	        }
-	      }
-	
-	      if (!this._enable || !this.app.pointers) return ;
-	      this._checkElement(root);
-	    },
-	
-	    _checkElement: function(element) {
-	      var app = this.app;
-	
-	      // 更新するかを判定
-	      if (element.awake === false) return ;
-	
-	      // 子供を更新
-	      var len = element.children.length;
-	      if (element.children.length > 0) {
-	        var tempChildren = element.children.slice();
-	        for (var i=0; i<len; ++i) {
-	          this._checkElement(tempChildren[i]);
-	        }
-	      }
-	
-	      // タッチ判定
-	      this._checkPoint(element);
-	    },
-	
-	    _checkPoint: function(obj) {
-	      if (this.multiTouch) {
-	        this.app.pointers.forEach(function(p) {
-	          if (p.id !== null) {
-	            this.__checkPoint(obj, p);
-	          }
-	        }, this);
-	      }
-	      else {
-	        this.__checkPoint(obj, this.app.pointer);
-	      }
-	    },
-	
-	    __checkPoint: function(obj, p) {
-	      if (!obj.interactive) return ;
-	
-	      var prevOverFlag = obj._overFlags[p.id];
-	      var overFlag = obj.hitTest(p.x, p.y);
-	      obj._overFlags[p.id] = overFlag;
-	
-	      var e = {
-	        pointer: p,
-	        interactive: this,
-	      };
-	
-	      if (!prevOverFlag && overFlag) {
-	        obj.flare('pointover', e);
-	
-	        if (obj.boundingType && obj.boundingType !== 'none') {
-	          this._holds.push(obj);
-	        }
-	      }
-	      if (prevOverFlag && !overFlag) {
-	        obj.flare('pointout', e);
-	        this._holds.erase(obj);
-	      }
-	
-	      if (overFlag) {
-	        if (p.getPointingStart()) {
-	          obj._touchFlags[p.id] = true;
-	          obj.flare('pointstart', e);
-	          // クリックフラグを立てる
-	          obj._clicked = true;
-	        }
-	      }
-	
-	      if (obj._touchFlags[p.id]) {
-	        obj.flare('pointstay', e);
-	        if (p._moveFlag) {
-	          obj.flare('pointmove', e);
-	        }
-	      }
-	
-	      if (obj._touchFlags[p.id]===true && p.getPointingEnd()) {
-	        obj._touchFlags[p.id] = false;
-	        obj.flare('pointend', e);
-	
-	        if (obj._overFlags[p.id]) {
-	          obj._overFlags[p.id] = false;
-	          obj.flare('pointout', e);
-	        }
-	      }
-	    },
-	  });
-	
-	  
-	});
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.app.BaseApp
-	   * ベースとなるアプリケーションクラス
-	   */
-	  phina.define('phina.app.BaseApp', {
-	    superClass: 'phina.util.EventDispatcher',
-	
-	    /** awake */
-	    awake: null,
-	    /** fps */
-	    fps: null,
-	    /** frame */
-	    frame: null,
-	
+	(function() {
+	    var core;
 	    /**
-	     * @constructor
+	     * @scope enchant.Core.prototype
 	     */
-	    init: function() {
-	      this.superInit();
-	      this._scenes = [phina.app.Scene()];
-	      this._sceneIndex = 0;
+	    enchant.Core = enchant.Class.create(enchant.EventTarget, {
+	        /**
+	         * @name enchant.Core
+	         * @class
+	         * A class for controlling the core’s main loop and scenes.
+	         *
+	         * There can be only one instance at a time. When the
+	         * constructor is executed while an instance exists, the
+	         * existing instance will be overwritten. The existing instance
+	         * can be accessed from {@link enchant.Core.instance}.
+	         *
+	         * @param {Number} [width=320] The width of the core viewport.
+	         * @param {Number} [height=320] The height of the core viewport.
+	         * @constructs
+	         * @extends enchant.EventTarget
+	         */
+	        initialize: function(width, height) {
+	            if (window.document.body === null) {
+	                // @TODO postpone initialization after window.onload
+	                throw new Error("document.body is null. Please excute 'new Core()' in window.onload.");
+	            }
 	
-	      this.updater = phina.app.Updater(this);
-	      this.interactive = phina.app.Interactive(this);
+	            enchant.EventTarget.call(this);
+	            var initial = true;
+	            if (core) {
+	                initial = false;
+	                core.stop();
+	            }
+	            core = enchant.Core.instance = this;
 	
-	      this.awake = true;
-	      this.ticker = phina.util.Ticker();
-	    },
+	            this._calledTime = 0;
+	            this._mousedownID = 0;
+	            this._surfaceID = 0;
+	            this._soundID = 0;
 	
-	    run: function() {
-	      var self = this;
+	            this._scenes = [];
 	
-	      this.ticker.tick(function() {
-	        self._loop();
-	      });
+	            width = width || 320;
+	            height = height || 320;
 	
-	      this.ticker.start();
+	            var stage = document.getElementById('enchant-stage');
+	            var scale, sWidth, sHeight;
+	            if (!stage) {
+	                stage = document.createElement('div');
+	                stage.id = 'enchant-stage';
+	                stage.style.position = 'absolute';
 	
-	      return this;
-	    },
+	                if (document.body.firstChild) {
+	                    document.body.insertBefore(stage, document.body.firstChild);
+	                } else {
+	                    document.body.appendChild(stage);
+	                }
+	                scale = Math.min(
+	                    window.innerWidth / width,
+	                    window.innerHeight / height
+	                );
+	                this._pageX = stage.getBoundingClientRect().left;
+	                this._pageY = stage.getBoundingClientRect().top;
+	            } else {
+	                var style = window.getComputedStyle(stage);
+	                sWidth = parseInt(style.width, 10);
+	                sHeight = parseInt(style.height, 10);
+	                if (sWidth && sHeight) {
+	                    scale = Math.min(
+	                        sWidth / width,
+	                        sHeight / height
+	                    );
+	                } else {
+	                    scale = 1;
+	                }
+	                while (stage.firstChild) {
+	                    stage.removeChild(stage.firstChild);
+	                }
+	                stage.style.position = 'relative';
 	
-	    replaceScene: function(scene) {
-	      this.flare('replace');
-	      this.flare('changescene');
+	                var bounding = stage.getBoundingClientRect();
+	                this._pageX = Math.round(window.scrollX || window.pageXOffset + bounding.left);
+	                this._pageY = Math.round(window.scrollY || window.pageYOffset + bounding.top);
+	            }
+	            stage.style.fontSize = '12px';
+	            stage.style.webkitTextSizeAdjust = 'none';
+	            stage.style.webkitTapHighlightColor = 'rgba(0, 0, 0, 0)';
+	            this._element = stage;
 	
-	      var e = null;
-	      if (this.currentScene) {
-	        this.currentScene.app = null;
-	      }
-	      this.currentScene = scene;
-	      this.currentScene.app = this;
-	      this.currentScene.flare('enter', {
-	        app: this,
-	      });
+	            this.addEventListener('coreresize', this._oncoreresize);
 	
-	      return this;
-	    },
+	            this._width = width;
+	            this._height = height;
+	            this.scale = scale;
 	
-	    pushScene: function(scene) {
-	      this.flare('push');
-	      this.flare('changescene');
+	            /**
+	             * The frame rate of the core.
+	             * @type Number
+	             */
+	            this.fps = 30;
+	            /**
+	             * The number of frames processed since the core was started.
+	             * @type Number
+	             */
+	            this.frame = 0;
+	            /**
+	             * Indicates whether or not the core can be executed.
+	             * @type Boolean
+	             */
+	            this.ready = false;
+	            /**
+	             * Indicates whether or not the core is currently running.
+	             * @type Boolean
+	             */
+	            this.running = false;
+	            /**
+	             * Object which stores loaded assets using their paths as keys.
+	             * @type Object
+	             */
+	            this.assets = {};
+	            var assets = this._assets = [];
+	            (function detectAssets(module) {
+	                if (module.assets) {
+	                    enchant.Core.instance.preload(module.assets);
+	                }
+	                for (var prop in module) {
+	                    if (module.hasOwnProperty(prop)) {
+	                        if (typeof module[prop] === 'object' && module[prop] !== null && Object.getPrototypeOf(module[prop]) === Object.prototype) {
+	                            detectAssets(module[prop]);
+	                        }
+	                    }
+	                }
+	            }(enchant));
 	
-	      this.currentScene.flare('pause', {
-	        app: this,
-	      });
-	      
-	      this._scenes.push(scene);
-	      ++this._sceneIndex;
+	            /**
+	             * The Scene which is currently displayed. This Scene is on top of the Scene stack.
+	             * @type enchant.Scene
+	             */
+	            this.currentScene = null;
+	            /**
+	             * The root Scene. The Scene at the bottom of the Scene stack.
+	             * @type enchant.Scene
+	             */
+	            this.rootScene = new enchant.Scene();
+	            this.pushScene(this.rootScene);
+	            /**
+	             * The Scene to be displayed during loading.
+	             * @type enchant.Scene
+	             */
+	            this.loadingScene = new enchant.LoadingScene();
 	
-	      this.flare('pushed');
-	      
-	      scene.app = this;
-	      scene.flare('enter', {
-	        app: this,
-	      });
+	            /**
+	             [/lang:ja]
+	             * Indicates whether or not {@link enchant.Core#start} has been called.
+	             [/lang]
+	             * @type Boolean
+	             * @private
+	             */
+	            this._activated = false;
 	
-	      return this;
-	    },
+	            this._offsetX = 0;
+	            this._offsetY = 0;
 	
-	    /**
-	     * シーンをポップする(ポーズやオブション画面などで使用)
-	     */
-	    popScene: function() {
-	      this.flare('pop');
-	      this.flare('changescene');
+	            /**
+	             * Object that saves the current input state for the core.
+	             * @type Object
+	             */
+	            this.input = {};
 	
-	      var scene = this._scenes.pop();
-	      --this._sceneIndex;
+	            this.keyboardInputManager = new enchant.KeyboardInputManager(window.document, this.input);
+	            this.keyboardInputManager.addBroadcastTarget(this);
+	            this._keybind = this.keyboardInputManager._binds;
 	
-	      scene.flare('exit', {
-	        app: this,
-	      });
-	      scene.app = null;
+	            if (!enchant.ENV.KEY_BIND_TABLE) {
+	                enchant.ENV.KEY_BIND_TABLE = {};
+	            }
 	
-	      this.flare('poped');
-	      
-	      // 
-	      this.currentScene.flare('resume', {
-	        app: this,
-	        prevScene: scene,
-	      });
-	      
-	      return scene;
-	    },
+	            for (var prop in enchant.ENV.KEY_BIND_TABLE) {
+	                this.keybind(prop, enchant.ENV.KEY_BIND_TABLE[prop]);
+	            }
 	
-	    /**
-	     * シーンのupdateを実行するようにする
-	     */
-	    start: function() {
-	      this.awake = true;
+	            if (initial) {
+	                stage = enchant.Core.instance._element;
+	                var evt;
+	                document.addEventListener('keydown', function(e) {
+	                    core.dispatchEvent(new enchant.Event('keydown'));
+	                    if (enchant.ENV.PREVENT_DEFAULT_KEY_CODES.indexOf(e.keyCode) !== -1) {
+	                        e.preventDefault();
+	                        e.stopPropagation();
+	                    }
+	                }, true);
 	
-	      return this;
-	    },
-	    
-	    /**
-	     * シーンのupdateを実行しないようにする
-	     */
-	    stop: function() {
-	      this.awake = false;
+	                if (enchant.ENV.TOUCH_ENABLED) {
+	                    stage.addEventListener('touchstart', function(e) {
+	                        var tagName = (e.target.tagName).toLowerCase();
+	                        if (enchant.ENV.USE_DEFAULT_EVENT_TAGS.indexOf(tagName) === -1) {
+	                            e.preventDefault();
+	                            if (!core.running) {
+	                                e.stopPropagation();
+	                            }
+	                        }
+	                    }, true);
+	                    stage.addEventListener('touchmove', function(e) {
+	                        var tagName = (e.target.tagName).toLowerCase();
+	                        if (enchant.ENV.USE_DEFAULT_EVENT_TAGS.indexOf(tagName) === -1) {
+	                            e.preventDefault();
+	                            if (!core.running) {
+	                                e.stopPropagation();
+	                            }
+	                        }
+	                    }, true);
+	                    stage.addEventListener('touchend', function(e) {
+	                        var tagName = (e.target.tagName).toLowerCase();
+	                        if (enchant.ENV.USE_DEFAULT_EVENT_TAGS.indexOf(tagName) === -1) {
+	                            e.preventDefault();
+	                            if (!core.running) {
+	                                e.stopPropagation();
+	                            }
+	                        }
+	                    }, true);
+	                }
+	                stage.addEventListener('mousedown', function(e) {
+	                    var tagName = (e.target.tagName).toLowerCase();
+	                    if (enchant.ENV.USE_DEFAULT_EVENT_TAGS.indexOf(tagName) === -1) {
+	                        e.preventDefault();
+	                        core._mousedownID++;
+	                        if (!core.running) {
+	                            e.stopPropagation();
+	                        }
+	                    }
+	                }, true);
+	                stage.addEventListener('mousemove', function(e) {
+	                    var tagName = (e.target.tagName).toLowerCase();
+	                    if (enchant.ENV.USE_DEFAULT_EVENT_TAGS.indexOf(tagName) === -1) {
+	                        e.preventDefault();
+	                        if (!core.running) {
+	                            e.stopPropagation();
+	                        }
+	                    }
+	                }, true);
+	                stage.addEventListener('mouseup', function(e) {
+	                    var tagName = (e.target.tagName).toLowerCase();
+	                    if (enchant.ENV.USE_DEFAULT_EVENT_TAGS.indexOf(tagName) === -1) {
+	                        e.preventDefault();
+	                        if (!core.running) {
+	                            e.stopPropagation();
+	                        }
+	                    }
+	                }, true);
+	                core._touchEventTarget = {};
+	                if (enchant.ENV.TOUCH_ENABLED) {
+	                    stage.addEventListener('touchstart', function(e) {
+	                        var core = enchant.Core.instance;
+	                        var evt = new enchant.Event(enchant.Event.TOUCH_START);
+	                        var touches = e.changedTouches;
+	                        var touch, target;
+	                        for (var i = 0, l = touches.length; i < l; i++) {
+	                            touch = touches[i];
+	                            evt._initPosition(touch.pageX, touch.pageY);
+	                            target = core.currentScene._determineEventTarget(evt);
+	                            core._touchEventTarget[touch.identifier] = target;
+	                            target.dispatchEvent(evt);
+	                        }
+	                    }, false);
+	                    stage.addEventListener('touchmove', function(e) {
+	                        var core = enchant.Core.instance;
+	                        var evt = new enchant.Event(enchant.Event.TOUCH_MOVE);
+	                        var touches = e.changedTouches;
+	                        var touch, target;
+	                        for (var i = 0, l = touches.length; i < l; i++) {
+	                            touch = touches[i];
+	                            target = core._touchEventTarget[touch.identifier];
+	                            if (target) {
+	                                evt._initPosition(touch.pageX, touch.pageY);
+	                                target.dispatchEvent(evt);
+	                            }
+	                        }
+	                    }, false);
+	                    stage.addEventListener('touchend', function(e) {
+	                        var core = enchant.Core.instance;
+	                        var evt = new enchant.Event(enchant.Event.TOUCH_END);
+	                        var touches = e.changedTouches;
+	                        var touch, target;
+	                        for (var i = 0, l = touches.length; i < l; i++) {
+	                            touch = touches[i];
+	                            target = core._touchEventTarget[touch.identifier];
+	                            if (target) {
+	                                evt._initPosition(touch.pageX, touch.pageY);
+	                                target.dispatchEvent(evt);
+	                                delete core._touchEventTarget[touch.identifier];
+	                            }
+	                        }
+	                    }, false);
+	                }
+	                stage.addEventListener('mousedown', function(e) {
+	                    var core = enchant.Core.instance;
+	                    var evt = new enchant.Event(enchant.Event.TOUCH_START);
+	                    evt._initPosition(e.pageX, e.pageY);
+	                    var target = core.currentScene._determineEventTarget(evt);
+	                    core._touchEventTarget[core._mousedownID] = target;
+	                    target.dispatchEvent(evt);
+	                }, false);
+	                stage.addEventListener('mousemove', function(e) {
+	                    var core = enchant.Core.instance;
+	                    var evt = new enchant.Event(enchant.Event.TOUCH_MOVE);
+	                    evt._initPosition(e.pageX, e.pageY);
+	                    var target = core._touchEventTarget[core._mousedownID];
+	                    if (target) {
+	                        target.dispatchEvent(evt);
+	                    }
+	                }, false);
+	                stage.addEventListener('mouseup', function(e) {
+	                    var core = enchant.Core.instance;
+	                    var evt = new enchant.Event(enchant.Event.TOUCH_END);
+	                    evt._initPosition(e.pageX, e.pageY);
+	                    var target = core._touchEventTarget[core._mousedownID];
+	                    if (target) {
+	                        target.dispatchEvent(evt);
+	                    }
+	                    delete core._touchEventTarget[core._mousedownID];
+	                }, false);
+	            }
+	        },
+	        /**
+	         * The width of the core screen.
+	         * @type Number
+	         */
+	        width: {
+	            get: function() {
+	                return this._width;
+	            },
+	            set: function(w) {
+	                this._width = w;
+	                this._dispatchCoreResizeEvent();
+	            }
+	        },
+	        /**
+	         * The height of the core screen.
+	         * @type Number
+	         */
+	        height: {
+	            get: function() {
+	                return this._height;
+	            },
+	            set: function(h) {
+	                this._height = h;
+	                this._dispatchCoreResizeEvent();
+	            }
+	        },
+	        /**
+	         * The scaling of the core rendering.
+	         * @type Number
+	         */
+	        scale: {
+	            get: function() {
+	                return this._scale;
+	            },
+	            set: function(s) {
+	                this._scale = s;
+	                this._dispatchCoreResizeEvent();
+	            }
+	        },
+	        _dispatchCoreResizeEvent: function() {
+	            var e = new enchant.Event('coreresize');
+	            e.width = this._width;
+	            e.height = this._height;
+	            e.scale = this._scale;
+	            this.dispatchEvent(e);
+	        },
+	        _oncoreresize: function(e) {
+	            this._element.style.width = Math.floor(this._width * this._scale) + 'px';
+	            this._element.style.height = Math.floor(this._height * this._scale) + 'px';
+	            var scene;
+	            for (var i = 0, l = this._scenes.length; i < l; i++) {
+	                scene = this._scenes[i];
+	                scene.dispatchEvent(e);
+	            }
+	        },
+	        /**
+	         * File preloader.
+	         *
+	         * Loads the files specified in the parameters when
+	         * {@link enchant.Core#start} is called.
+	         * When all files are loaded, a {@link enchant.Event.LOAD}
+	         * event is dispatched from the Core object. Depending on the
+	         * type of each file, different objects will be created and
+	         * stored in {@link enchant.Core#assets} Variable.
+	         *
+	         * When an image file is loaded, a {@link enchant.Surface} is
+	         * created. If a sound file is loaded, an {@link enchant.Sound}
+	         * object is created. Any other file type will be accessible
+	         * as a string.
+	         *
+	         * In addition, because this Surface object is created with
+	         * {@link enchant.Surface.load}, it is not possible to
+	         * manipulate the image directly.
+	         * Refer to the {@link enchant.Surface.load} documentation.
+	         *
+	         * @example
+	         * core.preload('player.gif');
+	         * core.onload = function() {
+	         *     var sprite = new Sprite(32, 32);
+	         *     sprite.image = core.assets['player.gif']; // Access via path
+	         *     ...
+	         * };
+	         * core.start();
+	         *
+	         * @param {...String|String[]} assets Path of images to be preloaded.
+	         * Multiple settings possible.
+	         * @return {enchant.Core} this
+	         */
+	        preload: function(assets) {
+	            var a;
+	            if (!(assets instanceof Array)) {
+	                if (typeof assets === 'object') {
+	                    a = [];
+	                    for (var name in assets) {
+	                        if (assets.hasOwnProperty(name)) {
+	                            a.push([ assets[name], name ]);
+	                        }
+	                    }
+	                    assets = a;
+	                } else {
+	                    assets = Array.prototype.slice.call(arguments);
+	                }
+	            }
+	            Array.prototype.push.apply(this._assets, assets);
+	            return this;
+	        },
+	        /**
+	         * Loads a file.
+	         *
+	         * @param {String} src File path of the resource to be loaded.
+	         * @param {String} [alias] Name you want to designate for the resource to be loaded.
+	         * @param {Function} [callback] Function to be called if the file loads successfully.
+	         * @param {Function} [onerror] Function to be called if the file fails to load.
+	         * @return {enchant.Deferred}
+	         */
+	        load: function(src, alias, callback, onerror) {
+	            var assetName;
+	            if (typeof arguments[1] === 'string') {
+	                assetName = alias;
+	                callback = callback || function() {};
+	                onerror = onerror || function() {};
+	            } else {
+	                assetName = src;
+	                var tempCallback = callback;
+	                callback = arguments[1] || function() {};
+	                onerror = tempCallback || function() {};
+	            }
 	
-	      return this;
-	    },
+	            var ext = enchant.Core.findExt(src);
 	
-	    enableStats: function() {
-	      if (phina.global.Stats) {
-	        this.stats = new Stats();
-	        document.body.appendChild(this.stats.domElement);
-	      }
-	      else {
-	        // console.warn("not defined stats.");
-	        var STATS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/stats.js/r14/Stats.js';
-	        var script = document.createElement('script');
-	        script.src = STATS_URL;
-	        document.body.appendChild(script);
-	        script.onload = function() {
-	          this.enableStats();
-	        }.bind(this);
-	      }
-	      return this;
-	    },
+	            return enchant.Deferred.next(function() {
+	                var d = new enchant.Deferred();
+	                var _callback = function(e) {
+	                    d.call(e);
+	                    callback.call(this, e);
+	                };
+	                var _onerror = function(e) {
+	                    d.fail(e);
+	                    onerror.call(this, e);
+	                };
+	                if (enchant.Core._loadFuncs[ext]) {
+	                    enchant.Core.instance.assets[assetName] = enchant.Core._loadFuncs[ext](src, ext, _callback, _onerror);
+	                } else {
+	                    var req = new XMLHttpRequest();
+	                    req.open('GET', src, true);
+	                    req.onreadystatechange = function() {
+	                        if (req.readyState === 4) {
+	                            if (req.status !== 200 && req.status !== 0) {
+	                                // throw new Error(req.status + ': ' + 'Cannot load an asset: ' + src);
+	                                var e = new enchant.Event('error');
+	                                e.message = req.status + ': ' + 'Cannot load an asset: ' + src;
+	                                _onerror.call(enchant.Core.instance, e);
+	                            }
 	
-	    enableDatGUI: function(callback) {
-	      if (phina.global.dat) {
-	        var gui = new phina.global.dat.GUI();
-	        callback(gui);
-	      }
-	      else {
-	        // console.warn("not defined dat.GUI.");
-	        var URL = 'https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.js';
-	        var script = document.createElement('script');
-	        script.src = URL;
-	        document.body.appendChild(script);
-	        script.onload = function() {
-	          var gui = new phina.global.dat.GUI();
-	          callback(gui);
-	        }.bind(this);
-	      }
-	      return this;
-	    },
+	                            var type = req.getResponseHeader('Content-Type') || '';
+	                            if (type.match(/^image/)) {
+	                                core.assets[assetName] = enchant.Surface.load(src, _callback, _onerror);
+	                            } else if (type.match(/^audio/)) {
+	                                core.assets[assetName] = enchant.Sound.load(src, type, _callback, _onerror);
+	                            } else {
+	                                core.assets[assetName] = req.responseText;
+	                                _callback.call(enchant.Core.instance, new enchant.Event('load'));
+	                            }
+	                        }
+	                    };
+	                    req.send(null);
+	                }
+	                return d;
+	            });
+	        },
+	        /**
+	         * Start the core.
+	         *
+	         * Sets the framerate of the {@link enchant.Core#currentScene}
+	         * according to the value stored in {@link enchant.core#fps}. If
+	         * there are images to preload, loading will begin and the
+	         * loading screen will be displayed.
+	         * @return {enchant.Deferred}
+	         */
+	        start: function(deferred) {
+	            var onloadTimeSetter = function() {
+	                this.frame = 0;
+	                this.removeEventListener('load', onloadTimeSetter);
+	            };
+	            this.addEventListener('load', onloadTimeSetter);
 	
-	    _loop: function() {
-	      this._update();
-	      this._draw();
+	            this.currentTime = window.getTime();
+	            this.running = true;
+	            this.ready = true;
 	
-	      this.interactive.check(this.currentScene);
+	            if (!this._activated) {
+	                this._activated = true;
+	                if (enchant.ENV.BROWSER === 'mobilesafari' &&
+	                    enchant.ENV.USE_WEBAUDIO &&
+	                    enchant.ENV.USE_TOUCH_TO_START_SCENE) {
+	                    var d = new enchant.Deferred();
+	                    var scene = this._createTouchToStartScene();
+	                    scene.addEventListener(enchant.Event.TOUCH_START, function waitTouch() {
+	                        this.removeEventListener(enchant.Event.TOUCH_START, waitTouch);
+	                        var a = new enchant.WebAudioSound();
+	                        a.buffer = enchant.WebAudioSound.audioContext.createBuffer(1, 1, 48000);
+	                        a.play();
+	                        core.removeScene(scene);
+	                        core.start(d);
+	                    }, false);
+	                    core.pushScene(scene);
+	                    return d;
+	                }
+	            }
 	
-	      // stats update
-	      if (this.stats) this.stats.update();
-	    },
+	            this._requestNextFrame(0);
 	
-	    _update: function() {
-	      if (this.awake) {
-	        // エンターフレームイベント
-	        if (this.has('enterframe')) {
-	          this.flare('enterframe');
+	            var ret = this._requestPreload()
+	                .next(function() {
+	                    enchant.Core.instance.loadingScene.dispatchEvent(new enchant.Event(enchant.Event.LOAD));
+	                });
+	
+	            if (deferred) {
+	                ret.next(function(arg) {
+	                    deferred.call(arg);
+	                })
+	                .error(function(arg) {
+	                    deferred.fail(arg);
+	                });
+	            }
+	
+	            return ret;
+	        },
+	        _requestPreload: function() {
+	            var o = {};
+	            var loaded = 0,
+	                len = 0,
+	                loadFunc = function() {
+	                    var e = new enchant.Event('progress');
+	                    e.loaded = ++loaded;
+	                    e.total = len;
+	                    core.loadingScene.dispatchEvent(e);
+	                };
+	            this._assets
+	                .reverse()
+	                .forEach(function(asset) {
+	                    var src, name;
+	                    if (asset instanceof Array) {
+	                        src = asset[0];
+	                        name = asset[1];
+	                    } else {
+	                        src = name = asset;
+	                    }
+	                    if (!o[name]) {
+	                        o[name] = this.load(src, name, loadFunc);
+	                        len++;
+	                    }
+	                }, this);
+	
+	            this.pushScene(this.loadingScene);
+	            return enchant.Deferred.parallel(o);
+	        },
+	        _createTouchToStartScene: function() {
+	            var label = new enchant.Label('Touch to Start'),
+	                size = Math.round(core.width / 10),
+	                scene = new enchant.Scene();
+	
+	            label.color = '#fff';
+	            label.font = (size - 1) + 'px bold Helvetica,Arial,sans-serif';
+	            label.textAlign = 'center';
+	            label.width = core.width;
+	            label.height = label._boundHeight;
+	            label.y = (core.height - label.height) / 2;
+	
+	            scene.backgroundColor = '#000';
+	            scene.addChild(label);
+	
+	            return scene;
+	        },
+	        /**
+	         * Start application in debug mode.
+	         *
+	         * Core debug mode can be turned on even if the
+	         * {@link enchant.Core#_debug} flag is already set to true.
+	         * @return {enchant.Deferred}
+	         */
+	        debug: function() {
+	            this._debug = true;
+	            return this.start();
+	        },
+	        actualFps: {
+	            get: function() {
+	                return this._actualFps || this.fps;
+	            }
+	        },
+	        /**
+	         * Requests the next frame.
+	         * @param {Number} delay Amount of time to delay before calling requestAnimationFrame.
+	         * @private
+	         */
+	        _requestNextFrame: function(delay) {
+	            if (!this.ready) {
+	                return;
+	            }
+	            if (this.fps >= 60 || delay <= 16) {
+	                this._calledTime = window.getTime();
+	                window.requestAnimationFrame(this._callTick);
+	            } else {
+	                setTimeout(function() {
+	                    var core = enchant.Core.instance;
+	                    core._calledTime = window.getTime();
+	                    window.requestAnimationFrame(core._callTick);
+	                }, Math.max(0, delay));
+	            }
+	        },
+	        /**
+	         * Calls {@link enchant.Core#_tick}.
+	         * @param {Number} time
+	         * @private
+	         */
+	        _callTick: function(time) {
+	            enchant.Core.instance._tick(time);
+	        },
+	        _tick: function(time) {
+	            var e = new enchant.Event('enterframe');
+	            var now = window.getTime();
+	            var elapsed = e.elapsed = now - this.currentTime;
+	            this.currentTime = now;
+	
+	            this._actualFps = elapsed > 0 ? (1000 / elapsed) : 0;
+	
+	            var nodes = this.currentScene.childNodes.slice();
+	            var push = Array.prototype.push;
+	            while (nodes.length) {
+	                var node = nodes.pop();
+	                node.age++;
+	                node.dispatchEvent(e);
+	                if (node.childNodes) {
+	                    push.apply(nodes, node.childNodes);
+	                }
+	            }
+	
+	            this.currentScene.age++;
+	            this.currentScene.dispatchEvent(e);
+	            this.dispatchEvent(e);
+	
+	            this.dispatchEvent(new enchant.Event('exitframe'));
+	            this.frame++;
+	            now = window.getTime();
+	            
+	            this._requestNextFrame(1000 / this.fps - (now - this._calledTime));
+	        },
+	        getTime: function() {
+	            return window.getTime();
+	        },
+	        /**
+	         * Stops the core.
+	         *
+	         * The frame will not be updated, and player input will not be accepted anymore.
+	         * Core can be restarted using {@link enchant.Core#resume}.
+	         */
+	        stop: function() {
+	            this.ready = false;
+	            this.running = false;
+	        },
+	        /**
+	         * Stops the core.
+	         *
+	         * The frame will not be updated, and player input will not be accepted anymore.
+	         * Core can be started again using {@link enchant.Core#resume}.
+	         */
+	        pause: function() {
+	            this.ready = false;
+	        },
+	        /**
+	         * Resumes core operations.
+	         */
+	        resume: function() {
+	            if (this.ready) {
+	                return;
+	            }
+	            this.currentTime = window.getTime();
+	            this.ready = true;
+	            this.running = true;
+	            this._requestNextFrame(0);
+	        },
+	
+	        /**
+	         * Switches to a new Scene.
+	         *
+	         * Scenes are controlled using a stack, with the top scene on
+	         * the stack being the one displayed.
+	         * When {@link enchant.Core#pushScene} is executed, the Scene is
+	         * placed top of the stack. Frames will be only updated for the
+	         * Scene which is on the top of the stack.
+	         *
+	         * @param {enchant.Scene} scene The new scene to display.
+	         * @return {enchant.Scene} The new Scene.
+	         */
+	        pushScene: function(scene) {
+	            this._element.appendChild(scene._element);
+	            if (this.currentScene) {
+	                this.currentScene.dispatchEvent(new enchant.Event('exit'));
+	            }
+	            this.currentScene = scene;
+	            this.currentScene.dispatchEvent(new enchant.Event('enter'));
+	            return this._scenes.push(scene);
+	        },
+	        /**
+	         * Ends the current Scene and returns to the previous Scene.
+	         *
+	         * Scenes are controlled using a stack, with the top scene on
+	         * the stack being the one displayed.
+	         * When {@link enchant.Core#popScene} is executed, the Scene at
+	         * the top of the stack is removed and returned.
+	         *
+	         * @return {enchant.Scene} Removed Scene.
+	         */
+	        popScene: function() {
+	            if (this.currentScene === this.rootScene) {
+	                return this.currentScene;
+	            }
+	            this._element.removeChild(this.currentScene._element);
+	            this.currentScene.dispatchEvent(new enchant.Event('exit'));
+	            this.currentScene = this._scenes[this._scenes.length - 2];
+	            this.currentScene.dispatchEvent(new enchant.Event('enter'));
+	            return this._scenes.pop();
+	        },
+	        /**
+	         * Overwrites the current Scene with a new Scene.
+	         *
+	         * Executes {@link enchant.Core#popScene} and {@link enchant.Core#pushScene}
+	         * one after another to replace the current scene with the new scene.
+	         *
+	         * @param {enchant.Scene} scene The new scene with which to replace the current scene.
+	         * @return {enchant.Scene} The new Scene.
+	         */
+	        replaceScene: function(scene) {
+	            this.popScene();
+	            return this.pushScene(scene);
+	        },
+	        /**
+	         * Removes a Scene from the Scene stack.
+	         *
+	         * If the scene passed in as a parameter is not the current
+	         * scene, the stack will be searched for the given scene.
+	         * If the given scene does not exist anywhere in the stack,
+	         * this method returns null.
+	         *
+	         * @param {enchant.Scene} scene Scene to be removed.
+	         * @return {enchant.Scene} The deleted Scene.
+	         */
+	        removeScene: function(scene) {
+	            if (this.currentScene === scene) {
+	                return this.popScene();
+	            } else {
+	                var i = this._scenes.indexOf(scene);
+	                if (i !== -1) {
+	                    this._scenes.splice(i, 1);
+	                    this._element.removeChild(scene._element);
+	                    return scene;
+	                } else {
+	                    return null;
+	                }
+	            }
+	        },
+	        _buttonListener: function(e) {
+	            this.currentScene.dispatchEvent(e);
+	        },
+	        /**
+	         * Bind a key code to an enchant.js button.
+	         *
+	         * Binds the given key code to the given enchant.js button
+	         * ('left', 'right', 'up', 'down', 'a', 'b').
+	         *
+	         * @param {Number} key Key code for the button to be bound.
+	         * @param {String} button An enchant.js button.
+	         * @return {enchant.Core} this
+	         */
+	        keybind: function(key, button) {
+	            this.keyboardInputManager.keybind(key, button);
+	            this.addEventListener(button + 'buttondown', this._buttonListener);
+	            this.addEventListener(button + 'buttonup', this._buttonListener);
+	            return this;
+	        },
+	        /**
+	         * Delete the key binding for the given key.
+	         *
+	         * @param {Number} key Key code whose binding is to be deleted.
+	         * @return {enchant.Core} this
+	         */
+	        keyunbind: function(key) {
+	            var button = this._keybind[key];
+	            this.keyboardInputManager.keyunbind(key);
+	            this.removeEventListener(button + 'buttondown', this._buttonListener);
+	            this.removeEventListener(button + 'buttonup', this._buttonListener);
+	            return this;
+	        },
+	        changeButtonState: function(button, bool) {
+	            this.keyboardInputManager.changeState(button, bool);
+	        },
+	        /**
+	         * Get the core time (not actual) elapsed since {@link enchant.Core#start} was called.
+	         * @return {Number} Time elapsed (in seconds).
+	         */
+	        getElapsedTime: function() {
+	            return this.frame / this.fps;
 	        }
-	
-	        this.update && this.update();
-	        this.updater.update(this.currentScene);
-	      }
-	    },
+	    });
 	
 	    /**
-	     * 描画用仮想関数
+	     * Functions for loading assets of the corresponding file type.
+	     * The loading functions must take the file path, extension and
+	     * callback function as arguments, then return the appropriate
+	     * class instance.
+	     * @static
 	     * @private
+	     * @type Object
 	     */
-	    _draw: function() {},
-	
-	    _accessor: {
-	      currentScene: {
-	        "get": function()   { return this._scenes[this._sceneIndex]; },
-	        "set": function(v)  { this._scenes[this._sceneIndex] = v; },
-	      },
-	
-	      rootScene: {
-	        "get": function()   { return this._scenes[0]; },
-	        "set": function(v)  { this._scenes[0] = v; },
-	      },
-	
-	      frame: {
-	        "get": function () { return this.ticker.frame; },
-	        "set": function (v) { this.ticker.frame = v; },
-	      },
-	
-	      fps: {
-	        "get": function () { return this.ticker.fps; },
-	        "set": function (v) { this.ticker.fps = v; },
-	      },
-	
-	      deltaTime: {
-	        "get": function () { return this.ticker.deltaTime; },
-	      },
-	
-	      elapsedTime: {
-	        "get": function () { return this.ticker.elapsedTime; },
-	      },
-	
-	      currentTime: {
-	        "get": function () { return this.ticker.currentTime; },
-	      },
-	
-	      startTime: {
-	        "get": function () { return this.ticker.startTime; },
-	      },
-	    },
-	
-	  });
-	
-	  
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.app.Element
-	   * @extends phina.util.EventDispatcher
-	   */
-	  phina.define('phina.app.Element', {
-	    superClass: 'phina.util.EventDispatcher',
-	
-	    /// 親
-	    parent: null,
-	
-	    /// 子供
-	    children: null,
-	
-	    /// 有効化どうか
-	    awake: true,
+	    enchant.Core._loadFuncs = {};
+	    enchant.Core._loadFuncs['jpg'] =
+	        enchant.Core._loadFuncs['jpeg'] =
+	            enchant.Core._loadFuncs['gif'] =
+	                enchant.Core._loadFuncs['png'] =
+	                    enchant.Core._loadFuncs['bmp'] = function(src, ext, callback, onerror) {
+	                        return enchant.Surface.load(src, callback, onerror);
+	                    };
+	    enchant.Core._loadFuncs['mp3'] =
+	        enchant.Core._loadFuncs['aac'] =
+	            enchant.Core._loadFuncs['m4a'] =
+	                enchant.Core._loadFuncs['wav'] =
+	                    enchant.Core._loadFuncs['ogg'] = function(src, ext, callback, onerror) {
+	                        return enchant.Sound.load(src, 'audio/' + ext, callback, onerror);
+	                    };
 	
 	    /**
-	     * @constructor
+	     * Get the file extension from a path.
+	     * @param {String} path file path.
+	     * @return {*}
 	     */
-	    init: function() {
-	      this.superInit();
-	      this.children = [];
-	    },
-	
-	    addChild: function(child) {
-	      if (child.parent) child.remove();
-	
-	      child.parent = this;
-	      this.children.push(child);
-	
-	      child.has('added') && child.flare('added');
-	
-	      return child;
-	    },
-	
-	    addChildTo: function(parent) {
-	      parent.addChild(this);
-	
-	      return this;
-	    },
-	
-	    addChildAt: function(child, index) {
-	      if (child.parent) child.remove();
-	
-	      child.parent = this;
-	      this.children.splice(index, 0, child);
-	
-	      child.has('added') && child.flare('added');
-	
-	      return child;
-	    },
-	
-	    getChildAt: function(index) {
-	      return this.children.at(index);
-	    },
-	
-	    getChildByName: function(name) {
-	      // TODO: 
-	    },
-	
-	    getChildIndex: function(child) {
-	      return this.children.indexOf(child);
-	    },
-	
-	    getParent: function() {
-	      return this.parent;
-	    },
-	
-	    getRoot: function() {
-	      var elm = this;
-	      for (elm=this.parent; elm.parent != null; elm = elm.parent) {
-	
-	      }
-	      return elm;
-	    },
-	
-	    removeChild: function(child) {
-	      var index = this.children.indexOf(child);
-	      if (index !== -1) {
-	        this.children.splice(index, 1);
-	        child.has('removed') && child.flare('removed');
-	      }
-	      return this;
-	    },
-	
-	    remove: function() {
-	      if (!this.parent) return ;
-	
-	      this.parent.removeChild(this);
-	      this.parent = null;
-	      
-	      return this;
-	    },
-	
-	    isAwake: function() {
-	      return this.awake;
-	    },
-	
-	    wakeUp: function() {
-	      this.awake = true;
-	      return this;
-	    },
-	
-	    sleep: function() {
-	      this.awake = false;
-	      return this;
-	    },
-	
-	    fromJSON: function(json) {
-	
-	      var createChildren = function(name, data) {
-	        // 
-	        var args = data.arguments;
-	        args = (args instanceof Array) ? args : [args];
-	        // 
-	        var _class = phina.using(data.className);
-	        // 
-	        var element = _class.apply(null, args);
-	        
-	        element.name = name;
-	        this[name] = element;
-	
-	        element.fromJSON(data);
-	        element.addChildTo(this)
-	      }.bind(this);
-	
-	      json.forIn(function(key, value) {
-	        if (key === 'children') {
-	          value.forIn(function(name, data) {
-	            createChildren(name, data);
-	          });
+	    enchant.Core.findExt = function(path) {
+	        var matched = path.match(/\.\w+$/);
+	        if (matched && matched.length > 0) {
+	            return matched[0].slice(1).toLowerCase();
 	        }
-	        else {
-	          if (key !== 'type' && key !== 'className') {
-	            this[key] = value;
-	          }
+	
+	        // for data URI
+	        if (path.indexOf('data:') === 0) {
+	            return path.split(/[\/;]/)[1].toLowerCase();
 	        }
-	      }, this);
+	        return null;
+	    };
 	
-	      return this;
+	    /**
+	     * The current Core instance.
+	     * @type enchant.Core
+	     * @static
+	     */
+	    enchant.Core.instance = null;
+	}());
+	
+	/**
+	 * @name enchant.Game
+	 * @class
+	 * enchant.Game is moved to {@link enchant.Core} from v0.6
+	 * @deprecated
+	 */
+	enchant.Game = enchant.Core;
+	
+	/**
+	 * @scope enchant.InputManager.prototype
+	 */
+	enchant.InputManager = enchant.Class.create(enchant.EventTarget, {
+	    /**
+	     * @name enchant.InputManager
+	     * @class
+	     * Class for managing input.
+	     * @param {*} valueStore object that store input state.
+	     * @param {*} [source=this] source that will be added to event object.
+	     * @constructs
+	     * @extends enchant.EventTarget
+	     */
+	    initialize: function(valueStore, source) {
+	        enchant.EventTarget.call(this);
+	
+	        /**
+	         * Array that store event target.
+	         * @type enchant.EventTarget[]
+	         */
+	        this.broadcastTarget = [];
+	        /**
+	         * Object that store input state.
+	         * @type Object
+	         */
+	        this.valueStore = valueStore;
+	        /**
+	         * source that will be added to event object.
+	         * @type Object
+	         */
+	        this.source = source || this;
+	
+	        this._binds = {};
+	
+	        this._stateHandler = function(e) {
+	            var id = e.source.identifier;
+	            var name = this._binds[id];
+	            this.changeState(name, e.data);
+	        }.bind(this);
 	    },
+	    /**
+	     * Name specified input.
+	     * Input can be watched by flag or event.
+	     * @param {enchant.InputSource} inputSource input source.
+	     * @param {String} name input name.
+	     */
+	    bind: function(inputSource, name) {
+	        inputSource.addEventListener(enchant.Event.INPUT_STATE_CHANGED, this._stateHandler);
+	        this._binds[inputSource.identifier] = name;
+	    },
+	    /**
+	     * Remove binded name.
+	     * @param {enchant.InputSource} inputSource input source.
+	     */
+	    unbind: function(inputSource) {
+	        inputSource.removeEventListener(enchant.Event.INPUT_STATE_CHANGED, this._stateHandler);
+	        delete this._binds[inputSource.identifier];
+	    },
+	    /**
+	     * Add event target.
+	     * @param {enchant.EventTarget} eventTarget broadcast target.
+	     */
+	    addBroadcastTarget: function(eventTarget) {
+	        var i = this.broadcastTarget.indexOf(eventTarget);
+	        if (i === -1) {
+	            this.broadcastTarget.push(eventTarget);
+	        }
+	    },
+	    /**
+	     * Remove event target.
+	     * @param {enchant.EventTarget} eventTarget broadcast target.
+	     */
+	    removeBroadcastTarget: function(eventTarget) {
+	        var i = this.broadcastTarget.indexOf(eventTarget);
+	        if (i !== -1) {
+	            this.broadcastTarget.splice(i, 1);
+	        }
+	    },
+	    /**
+	     * Dispatch event to {@link enchant.InputManager#broadcastTarget}.
+	     * @param {enchant.Event} e event.
+	     */
+	    broadcastEvent: function(e) {
+	        var target = this.broadcastTarget;
+	        for (var i = 0, l = target.length; i < l; i++) {
+	            target[i].dispatchEvent(e);
+	        }
+	    },
+	    /**
+	     * Change state of input.
+	     * @param {String} name input name.
+	     * @param {*} data input state.
+	     */
+	    changeState: function(name, data) {
+	    }
+	});
 	
-	    toJSON: function() {
-	      var json = {};
+	/**
+	 * @scope enchant.InputSource.prototype
+	 */
+	enchant.InputSource = enchant.Class.create(enchant.EventTarget, {
+	    /**
+	     * @name enchant.InputSource
+	     * @class
+	     * Class that wrap input.
+	     * @param {String} identifier identifier of InputSource.
+	     * @constructs
+	     * @extends enchant.EventTarget
+	     */
+	    initialize: function(identifier) {
+	        enchant.EventTarget.call(this);
+	        /**
+	         * identifier of InputSource.
+	         * @type String
+	         */
+	        this.identifier = identifier;
+	    },
+	    /**
+	     * Notify state change by event.
+	     * @param {*} data state.
+	     */
+	    notifyStateChange: function(data) {
+	        var e = new enchant.Event(enchant.Event.INPUT_STATE_CHANGED);
+	        e.data = data;
+	        e.source = this;
+	        this.dispatchEvent(e);
+	    }
+	});
 	
-	      // this.forIn(function(key, value) {
-	      //   if (key[0] === '_') return ;
-	      //   json[key] = value;
-	      // });
+	/**
+	 * @scope enchant.BinaryInputManager.prototype
+	 */
+	enchant.BinaryInputManager = enchant.Class.create(enchant.InputManager, {
+	    /**
+	     * @name enchant.BinaryInputManager
+	     * @class
+	     * Class for managing input.
+	     * @param {*} flagStore object that store input flag.
+	     * @param {String} activeEventNameSuffix event name suffix.
+	     * @param {String} inactiveEventNameSuffix event name suffix.
+	     * @param {*} [source=this] source that will be added to event object.
+	     * @constructs
+	     * @extends enchant.InputManager
+	     */
+	    initialize: function(flagStore, activeEventNameSuffix, inactiveEventNameSuffix, source) {
+	        enchant.InputManager.call(this, flagStore, source);
+	        /**
+	         * The number of active inputs.
+	         * @type Number
+	         */
+	        this.activeInputsNum = 0;
+	        /**
+	         * event name suffix that dispatched by BinaryInputManager.
+	         * @type String
+	         */
+	        this.activeEventNameSuffix = activeEventNameSuffix;
+	        /**
+	         * event name suffix that dispatched by BinaryInputManager.
+	         * @type String
+	         */
+	        this.inactiveEventNameSuffix = inactiveEventNameSuffix;
+	    },
+	    /**
+	     * Name specified input.
+	     * @param {enchant.BinaryInputSource} inputSource input source.
+	     * @param {String} name input name.
+	     * @see enchant.InputManager#bind
+	     */
+	    bind: function(binaryInputSource, name) {
+	        enchant.InputManager.prototype.bind.call(this, binaryInputSource, name);
+	        this.valueStore[name] = false;
+	    },
+	    /**
+	     * Remove binded name.
+	     * @param {enchant.BinaryInputSource} inputSource input source.
+	     * @see enchant.InputManager#unbind
+	     */
+	    unbind: function(binaryInputSource) {
+	        var name = this._binds[binaryInputSource.identifier];
+	        enchant.InputManager.prototype.unbind.call(this, binaryInputSource);
+	        delete this.valueStore[name];
+	    },
+	    /**
+	     * Change state of input.
+	     * @param {String} name input name.
+	     * @param {Boolean} bool input state.
+	     */
+	    changeState: function(name, bool) {
+	        if (bool) {
+	            this._down(name);
+	        } else {
+	            this._up(name);
+	        }
+	    },
+	    _down: function(name) {
+	        var inputEvent;
+	        if (!this.valueStore[name]) {
+	            this.valueStore[name] = true;
+	            inputEvent = new enchant.Event((this.activeInputsNum++) ? 'inputchange' : 'inputstart');
+	            inputEvent.source = this.source;
+	            this.broadcastEvent(inputEvent);
+	        }
+	        var downEvent = new enchant.Event(name + this.activeEventNameSuffix);
+	        downEvent.source = this.source;
+	        this.broadcastEvent(downEvent);
+	    },
+	    _up: function(name) {
+	        var inputEvent;
+	        if (this.valueStore[name]) {
+	            this.valueStore[name] = false;
+	            inputEvent = new enchant.Event((--this.activeInputsNum) ? 'inputchange' : 'inputend');
+	            inputEvent.source = this.source;
+	            this.broadcastEvent(inputEvent);
+	        }
+	        var upEvent = new enchant.Event(name + this.inactiveEventNameSuffix);
+	        upEvent.source = this.source;
+	        this.broadcastEvent(upEvent);
+	    }
+	});
 	
-	      var keys = [
-	        'x', 'y',
-	        'rotation',
-	        'scaleX', 'scaleY',
-	        'originX', 'originY',
-	        'className',
-	        'name',
-	      ];
+	/**
+	 * @scope enchant.BinaryInputSource.prototype
+	 */
+	enchant.BinaryInputSource = enchant.Class.create(enchant.InputSource, {
+	    /**
+	     * @name enchant.BinaryInputSource
+	     * @class
+	     * Class that wrap binary input.
+	     * @param {String} identifier identifier of BinaryInputSource.
+	     * @constructs
+	     * @extends enchant.InputSource
+	     */
+	    initialize: function(identifier) {
+	        enchant.InputSource.call(this, identifier);
+	    }
+	});
 	
-	      keys.each(function(key) {
-	        json[key] = this[key];
-	      }, this);
+	/**
+	 * @scope enchant.KeyboardInputManager.prototype
+	 */
+	enchant.KeyboardInputManager = enchant.Class.create(enchant.BinaryInputManager, {
+	    /**
+	     * @name enchant.KeyboardInputManager
+	     * @class
+	     * Class that manage keyboard input.
+	     * @param {HTMLElement} dom element that will be watched.
+	     * @param {*} flagStore object that store input flag.
+	     * @constructs
+	     * @extends enchant.BinaryInputManager
+	     */
+	    initialize: function(domElement, flagStore) {
+	        enchant.BinaryInputManager.call(this, flagStore, 'buttondown', 'buttonup');
+	        this._attachDOMEvent(domElement, 'keydown', true);
+	        this._attachDOMEvent(domElement, 'keyup', false);
+	    },
+	    /**
+	     * Call {@link enchant.BinaryInputManager#bind} with BinaryInputSource equivalent of key code.
+	     * @param {Number} keyCode key code.
+	     * @param {String} name input name.
+	     */
+	    keybind: function(keyCode, name) {
+	        this.bind(enchant.KeyboardInputSource.getByKeyCode('' + keyCode), name);
+	    },
+	    /**
+	     * Call {@link enchant.BinaryInputManager#unbind} with BinaryInputSource equivalent of key code.
+	     * @param {Number} keyCode key code.
+	     */
+	    keyunbind: function(keyCode) {
+	        this.unbind(enchant.KeyboardInputSource.getByKeyCode('' + keyCode));
+	    },
+	    _attachDOMEvent: function(domElement, eventType, state) {
+	        domElement.addEventListener(eventType, function(e) {
+	            var core = enchant.Core.instance;
+	            if (!core || !core.running) {
+	                return;
+	            }
+	            var code = e.keyCode;
+	            var source = enchant.KeyboardInputSource._instances[code];
+	            if (source) {
+	                source.notifyStateChange(state);
+	            }
+	        }, true);
+	    }
+	});
 	
-	      var children = this.children.map(function(child) {
-	        return child.toJSON();
-	      });
+	/**
+	 * @scope enchant.KeyboardInputSource.prototype
+	 */
+	enchant.KeyboardInputSource = enchant.Class.create(enchant.BinaryInputSource, {
+	    /**
+	     * @name enchant.KeyboardInputSource
+	     * @class
+	     * @param {String} keyCode key code of BinaryInputSource.
+	     * @constructs
+	     * @extends enchant.BinaryInputSource
+	     */
+	    initialize: function(keyCode) {
+	        enchant.BinaryInputSource.call(this, keyCode);
+	    }
+	});
+	/**
+	 * @private
+	 */
+	enchant.KeyboardInputSource._instances = {};
+	/**
+	 * @static
+	 * Get the instance by key code.
+	 * @param {Number} keyCode key code.
+	 * @return {enchant.KeyboardInputSource} instance.
+	 */
+	enchant.KeyboardInputSource.getByKeyCode = function(keyCode) {
+	    if (!this._instances[keyCode]) {
+	        this._instances[keyCode] = new enchant.KeyboardInputSource(keyCode);
+	    }
+	    return this._instances[keyCode];
+	};
 	
-	      if (children.length) {
-	        json.children = {};
-	        children.each(function(child) {
-	          json.children[child.name] = child;
+	/**
+	 * @scope enchant.Node.prototype
+	 */
+	enchant.Node = enchant.Class.create(enchant.EventTarget, {
+	    /**
+	     * @name enchant.Node
+	     * @class
+	     * Base class for objects in the display tree which is rooted at a Scene.
+	     * Not to be used directly.
+	     * @constructs
+	     * @extends enchant.EventTarget
+	     */
+	    initialize: function() {
+	        enchant.EventTarget.call(this);
+	
+	        this._dirty = false;
+	
+	        this._matrix = [ 1, 0, 0, 1, 0, 0 ];
+	
+	        this._x = 0;
+	        this._y = 0;
+	        this._offsetX = 0;
+	        this._offsetY = 0;
+	
+	        /**
+	         * The age (frames) of this node which will be increased before this node receives {@link enchant.Event.ENTER_FRAME} event.
+	         * @type Number
+	         */
+	        this.age = 0;
+	
+	        /**
+	         * Parent Node of this Node.
+	         * @type enchant.Group
+	         */
+	        this.parentNode = null;
+	        /**
+	         * Scene to which Node belongs.
+	         * @type enchant.Scene
+	         */
+	        this.scene = null;
+	
+	        this.addEventListener('touchstart', function(e) {
+	            if (this.parentNode) {
+	                this.parentNode.dispatchEvent(e);
+	            }
 	        });
-	      }
+	        this.addEventListener('touchmove', function(e) {
+	            if (this.parentNode) {
+	                this.parentNode.dispatchEvent(e);
+	            }
+	        });
+	        this.addEventListener('touchend', function(e) {
+	            if (this.parentNode) {
+	                this.parentNode.dispatchEvent(e);
+	            }
+	        });
 	
-	      return json;
+	        // Nodeが生成される際に, tl プロパティに Timeline オブジェクトを追加している.
+	        if (enchant.ENV.USE_ANIMATION) {
+	            this.tl = new enchant.Timeline(this);
+	        }
 	    },
-	  });
-	  
-	});
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.app.Object2D
-	   * Object2D
-	   * @extends phina.app.Element
-	   */
-	  phina.define('phina.app.Object2D', {
-	    superClass: 'phina.app.Element',
-	
-	    /** 位置 */
-	    position: null,
-	    /** 回転 */
-	    rotation: 0,
-	    /** スケール */
-	    scale: null,
-	    /** 基準位置 */
-	    origin: null,
-	
 	    /**
-	     * @constructor
+	     * Move the Node to the given target location.
+	     * @param {Number} x Target x coordinates.
+	     * @param {Number} y Target y coordinates.
 	     */
-	    init: function(options) {
-	      this.superInit();
-	
-	      options = ({}).$safe(options, phina.app.Object2D.defaults);
-	
-	      this.position = phina.geom.Vector2(options.x, options.y);
-	      this.scale    = phina.geom.Vector2(options.scaleX, options.scaleY);
-	      this.rotation = options.rotation;
-	      this.origin   = phina.geom.Vector2(options.originX, options.originY);
-	
-	      this._matrix = phina.geom.Matrix33().identity();
-	      this._worldMatrix = phina.geom.Matrix33().identity();
-	
-	      this.interactive = false;
-	      this._overFlags = {};
-	      this._touchFlags = {};
-	
-	      this.width = options.width;
-	      this.height = options.height;
-	      this.radius = options.radius;
-	      this.boundingType = options.boundingType;
-	    },
-	
-	    /**
-	     * 点と衝突しているかを判定
-	     * @param {Number} x
-	     * @param {Number} y
-	     */
-	    hitTest: function(x, y) {
-	      if (this.boundingType === 'rect') {
-	        return this.hitTestRect(x, y);
-	      }
-	      else if (this.boundingType === 'circle') {
-	        return this.hitTestCircle(x, y);
-	      }
-	      else {
-	        // none の場合
-	        return true;
-	      }
-	    },
-	
-	    hitTestRect: function(x, y) {
-	      var p = this.globalToLocal(phina.geom.Vector2(x, y));
-	
-	      var left   = -this.width*this.originX;
-	      var right  = +this.width*(1-this.originX);
-	      var top    = -this.height*this.originY;
-	      var bottom = +this.height*(1-this.originY);
-	
-	      return ( left < p.x && p.x < right ) && ( top  < p.y && p.y < bottom );
-	    },
-	
-	    hitTestCircle: function(x, y) {
-	      // 円判定
-	      var p = this.globalToLocal(phina.geom.Vector2(x, y));
-	      if (((p.x)*(p.x)+(p.y)*(p.y)) < (this.radius*this.radius)) {
-	          return true;
-	      }
-	      return false;
-	    },
-	
-	    /**
-	     * 要素と衝突しているかを判定
-	     * @param {Object} elm
-	     */
-	    hitTestElement: function(elm) {
-	      var rect0 = this;
-	      var rect1 = elm;
-	      return (rect0.left < rect1.right) && (rect0.right > rect1.left) &&
-	             (rect0.top < rect1.bottom) && (rect0.bottom > rect1.top);
-	    },
-	
-	
-	    globalToLocal: function(p) {
-	      var matrix = this._worldMatrix.clone();
-	      matrix.invert();
-	      // matrix.transpose();
-	
-	      var temp = matrix.multiplyVector2(p);
-	
-	      return temp;
-	    },
-	
-	    setInteractive: function(flag, type) {
-	      this.interactive = flag;
-	      if (type) {
-	        this.boundingType = type;
-	      }
-	
-	      return this;
-	    },
-	
-	    /**
-	     * X 座標値をセット
-	     * @param {Number} x
-	     */
-	    setX: function(x) {
-	      this.position.x = x;
-	      return this;
-	    },
-	    
-	    /**
-	     * Y 座標値をセット
-	     * @param {Number} y
-	     */
-	    setY: function(y) {
-	      this.position.y = y;
-	      return this;
-	    },
-	    
-	    /**
-	     * XY 座標をセット
-	     * @param {Number} x
-	     * @param {Number} y
-	     */
-	    setPosition: function(x, y) {
-	      this.position.x = x;
-	      this.position.y = y;
-	      return this;
-	    },
-	
-	    /**
-	     * 回転をセット
-	     * @param {Number} rotation
-	     */
-	    setRotation: function(rotation) {
-	      this.rotation = rotation;
-	      return this;
-	    },
-	
-	    /**
-	     * スケールをセット
-	     * @param {Number} x
-	     * @param {Number} y
-	     */
-	    setScale: function(x, y) {
-	      this.scale.x = x;
-	      if (arguments.length <= 1) {
-	          this.scale.y = x;
-	      } else {
-	          this.scale.y = y;
-	      }
-	      return this;
-	    },
-	    
-	    /**
-	     * 基準点をセット
-	     * @param {Number} x
-	     * @param {Number} y
-	     */
-	    setOrigin: function(x, y) {
-	      this.origin.x = x;
-	      this.origin.y = y;
-	      return this;
-	    },
-	    
-	    /**
-	     * 幅をセット
-	     * @param {Number} width
-	     */
-	    setWidth: function(width) {
-	      this.width = width;
-	      return this;
-	    },
-	    
-	    /**
-	     * 高さをセット
-	     * @param {Number} height
-	     */
-	    setHeight: function(height) {
-	      this.height = height;
-	      return this;
-	    },
-	    
-	    /**
-	     * サイズ(幅, 高さ)をセット
-	     * @param {Number} width
-	     * @param {Number} height
-	     */
-	    setSize: function(width, height) {
-	      this.width  = width;
-	      this.height = height;
-	      return this;
-	    },
-	
-	    setBoundingType: function(type) {
-	      this.boundingType = type;
-	      return this;
-	    },
-	
 	    moveTo: function(x, y) {
-	      this.position.x = x;
-	      this.position.y = y;
-	      return this;
+	        this.x = x;
+	        this.y = y;
 	    },
-	
+	    /**
+	     * Move the Node relative to its current position.
+	     * @param {Number} x x axis movement distance.
+	     * @param {Number} y y axis movement distance.
+	     */
 	    moveBy: function(x, y) {
-	      this.position.x += x;
-	      this.position.y += y;
-	      return this;
+	        this.x += x;
+	        this.y += y;
 	    },
-	
-	    _calcWorldMatrix: function() {
-	      if (!this.parent) return ;
-	
-	      // cache check
-	      if (this.rotation != this._cachedRotation) {
-	        this._cachedRotation = this.rotation;
-	
-	        var r = this.rotation*(Math.PI/180);
-	        this._sr = Math.sin(r);
-	        this._cr = Math.cos(r);
-	      }
-	
-	      var local = this._matrix;
-	      var parent = this.parent._worldMatrix || phina.geom.Matrix33.IDENTITY;
-	      var world = this._worldMatrix;
-	
-	      // ローカルの行列を計算
-	      local.m00 = this._cr * this.scale.x;
-	      local.m01 =-this._sr * this.scale.y;
-	      local.m10 = this._sr * this.scale.x;
-	      local.m11 = this._cr * this.scale.y;
-	      local.m02 = this.position.x;
-	      local.m12 = this.position.y;
-	
-	      // cache
-	      var a00 = local.m00; var a01 = local.m01; var a02 = local.m02;
-	      var a10 = local.m10; var a11 = local.m11; var a12 = local.m12;
-	      var b00 = parent.m00; var b01 = parent.m01; var b02 = parent.m02;
-	      var b10 = parent.m10; var b11 = parent.m11; var b12 = parent.m12;
-	
-	      // 親の行列と掛け合わせる
-	      world.m00 = b00 * a00 + b01 * a10;
-	      world.m01 = b00 * a01 + b01 * a11;
-	      world.m02 = b00 * a02 + b01 * a12 + b02;
-	
-	      world.m10 = b10 * a00 + b11 * a10;
-	      world.m11 = b10 * a01 + b11 * a11;
-	      world.m12 = b10 * a02 + b11 * a12 + b12;
-	
-	      return this;
-	    },
-	
-	    _accessor: {
-	      /**
-	       * @property    x
-	       * x座標値
-	       */
-	      x: {
-	        "get": function()   { return this.position.x; },
-	        "set": function(v)  { this.position.x = v; }
-	      },
-	      /**
-	       * @property    y
-	       * y座標値
-	       */
-	      y: {
-	        "get": function()   { return this.position.y; },
-	        "set": function(v)  { this.position.y = v; }
-	      },
-	
-	      /**
-	       * @property    originX
-	       * x座標値
-	       */
-	      originX: {
-	        "get": function()   { return this.origin.x; },
-	        "set": function(v)  { this.origin.x = v; }
-	      },
-	      
-	      /**
-	       * @property    originY
-	       * y座標値
-	       */
-	      originY: {
-	        "get": function()   { return this.origin.y; },
-	        "set": function(v)  { this.origin.y = v; }
-	      },
-	      
-	      /**
-	       * @property    scaleX
-	       * スケールX値
-	       */
-	      scaleX: {
-	        "get": function()   { return this.scale.x; },
-	        "set": function(v)  { this.scale.x = v; }
-	      },
-	      
-	      /**
-	       * @property    scaleY
-	       * スケールY値
-	       */
-	      scaleY: {
-	        "get": function()   { return this.scale.y; },
-	        "set": function(v)  { this.scale.y = v; }
-	      },
-	      
-	      /**
-	       * @property    width
-	       * width
-	       */
-	      width: {
-	        "get": function()   {
-	          return (this.boundingType === 'rect') ?
-	            this._width : this._diameter;
-	        },
-	        "set": function(v)  { this._width = v; }
-	      },
-	      /**
-	       * @property    height
-	       * height
-	       */
-	      height: {
-	        "get": function()   {
-	          return (this.boundingType === 'rect') ?
-	            this._height : this._diameter;
-	        },
-	        "set": function(v)  { this._height = v; }
-	      },
-	
-	      /**
-	       * @property    radius
-	       * 半径
-	       */
-	      radius: {
-	        "get": function()   {
-	          return (this.boundingType === 'rect') ?
-	            (this.width+this.height)/4 : this._radius;
-	        },
-	        "set": function(v)  {
-	          this._radius = v;
-	          this._diameter = v*2;
-	        },
-	      },
-	      
-	      /**
-	       * @property    top
-	       * 左
-	       */
-	      top: {
-	        "get": function()   { return this.y - this.height*this.originY; },
-	        "set": function(v)  { this.y = v + this.height*this.originY; },
-	      },
-	   
-	      /**
-	       * @property    right
-	       * 左
-	       */
-	      right: {
-	        "get": function()   { return this.x + this.width*(1-this.originX); },
-	        "set": function(v)  { this.x = v - this.width*(1-this.originX); },
-	      },
-	   
-	      /**
-	       * @property    bottom
-	       * 左
-	       */
-	      bottom: {
-	        "get": function()   { return this.y + this.height*(1-this.originY); },
-	        "set": function(v)  { this.y = v - this.height*(1-this.originY); },
-	      },
-	   
-	      /**
-	       * @property    left
-	       * 左
-	       */
-	      left: {
-	        "get": function()   { return this.x - this.width*this.originX; },
-	        "set": function(v)  { this.x = v + this.width*this.originX; },
-	      },
-	
-	      /**
-	       * @property    centerX
-	       * centerX
-	       */
-	      centerX: {
-	        "get": function()   { return this.x + this.width/2 - this.width*this.originX; },
-	        "set": function(v)  {
-	          // TODO: どうしようかな??
-	        }
-	      },
-	   
-	      /**
-	       * @property    centerY
-	       * centerY
-	       */
-	      centerY: {
-	        "get": function()   { return this.y + this.height/2 - this.height*this.originY; },
-	        "set": function(v)  {
-	          // TODO: どうしようかな??
-	        }
-	      },
-	    },
-	    _static: {
-	      defaults: {
-	        x: 0,
-	        y: 0,
-	        scaleX: 1,
-	        scaleY: 1,
-	        rotation: 0,
-	        originX: 0.5,
-	        originY: 0.5,
-	        
-	        width: 64,
-	        height: 64,
-	        radius: 32,
-	        boundingType: 'rect',
-	      },
-	    },
-	
-	  });
-	
-	  
-	});
-	
-	phina.namespace(function() {
-	
-	
-	  phina.define('phina.app.Scene', {
-	    superClass: 'phina.app.Element',
-	
-	    init: function() {
-	      this.superInit();
-	    },
-	
-	    exit: function(nextLabel, nextArguments) {
-	      if (!this.app) return ;
-	
-	      if (arguments.length > 0) {
-	        if (typeof arguments[0] === 'object') {
-	          nextLabel = arguments[0].nextLabel || this.nextLabel;
-	          nextArguments = arguments[0];
-	        }
-	
-	        this.nextLabel = nextLabel;
-	        this.nextArguments = nextArguments;
-	      }
-	
-	      this.app.popScene();
-	
-	      return this;
-	    },
-	  });
-	  
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.accessory.Accessory
-	   */
-	  phina.define('phina.accessory.Accessory', {
-	    superClass: 'phina.util.EventDispatcher',
-	
 	    /**
-	     * @constructor
+	     * x coordinates of the Node.
+	     * @type Number
 	     */
-	    init: function(target) {
-	      this.superInit();
-	
-	      this.target = target;
+	    x: {
+	        get: function() {
+	            return this._x;
+	        },
+	        set: function(x) {
+	            if(this._x !== x) {
+	                this._x = x;
+	                this._dirty = true;
+	            }
+	        }
 	    },
-	    setTarget: function(target) {
-	      if (this.target === target) return ;
-	
-	      this.target = target;
-	      return this;
+	    /**
+	     * y coordinates of the Node.
+	     * @type Number
+	     */
+	    y: {
+	        get: function() {
+	            return this._y;
+	        },
+	        set: function(y) {
+	            if(this._y !== y) {
+	                this._y = y;
+	                this._dirty = true;
+	            }
+	        }
 	    },
-	    getTarget: function() {
-	      return this.target;
-	    },
-	    isAttached: function() {
-	      return !!this.target;
-	    },
-	    attachTo: function(element) {
-	      element.attach(this);
-	      this.setTarget(element);
-	      return this;
+	    _updateCoordinate: function() {
+	        var node = this;
+	        var tree = [ node ];
+	        var parent = node.parentNode;
+	        var scene = this.scene;
+	        while (parent && node._dirty) {
+	            tree.unshift(parent);
+	            node = node.parentNode;
+	            parent = node.parentNode;
+	        }
+	        var matrix = enchant.Matrix.instance;
+	        var stack = matrix.stack;
+	        var mat = [];
+	        var newmat, ox, oy;
+	        stack.push(tree[0]._matrix);
+	        for (var i = 1, l = tree.length; i < l; i++) {
+	            node = tree[i];
+	            newmat = [];
+	            matrix.makeTransformMatrix(node, mat);
+	            matrix.multiply(stack[stack.length - 1], mat, newmat);
+	            node._matrix = newmat;
+	            stack.push(newmat);
+	            ox = (typeof node._originX === 'number') ? node._originX : node._width / 2 || 0;
+	            oy = (typeof node._originY === 'number') ? node._originY : node._height / 2 || 0;
+	            var vec = [ ox, oy ];
+	            matrix.multiplyVec(newmat, vec, vec);
+	            node._offsetX = vec[0] - ox;
+	            node._offsetY = vec[1] - oy;
+	            node._dirty = false;
+	        }
+	        matrix.reset();
 	    },
 	    remove: function() {
-	      this.target.detach(this);
-	      this.target = null;
-	    },
-	  });
-	
-	  phina.app.Element.prototype.$method('attach', function(accessory) {
-	    if (!this.accessories) {
-	      this.accessories = [];
-	      this.on('enterframe', function(e) {
-	        this.accessories.each(function(accessory) {
-	          accessory.update && accessory.update(e.app);
-	        });
-	      });
-	    }
-	
-	    this.accessories.push(accessory);
-	    accessory.setTarget(this);
-	    accessory.flare('attached');
-	
-	    return this;
-	  });
-	
-	  phina.app.Element.prototype.$method('detach', function(accessory) {
-	    if (this.accessories) {
-	      this.accessories.erase(accessory);
-	      accessory.setTarget(null);
-	      accessory.flare('detached');
-	    }
-	
-	    return this;
-	  });
-	
-	});
-	
-	
-	
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.accessory.Tweener
-	   * Tweener
-	   */
-	  var Tweener = phina.define('phina.accessory.Tweener', {
-	    superClass: 'phina.accessory.Accessory',
-	
-	    updateType: 'normal',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(target) {
-	      this.superInit(target);
-	
-	      this._init();
-	    },
-	
-	    _init: function() {
-	      this._loop = false;
-	      this._tasks = [];
-	      this._index = 0;
-	      this.playing = true;
-	      this._update = this._updateTask;
-	    },
-	
-	    update: function(app) {
-	      this._update(app);
-	    },
-	
-	    setUpdateType: function(type) {
-	      this.updateType = type;
-	      return this;
-	    },
-	
-	    to: function(props, duration, easing) {
-	      this._add({
-	        type: 'tween',
-	        mode: 'to',
-	        props: props,
-	        duration: duration,
-	        easing: easing,
-	      });
-	      return this;
-	    },
-	
-	    by: function(props, duration, easing) {
-	      this._add({
-	        type: 'tween',
-	        mode: 'by',
-	        props: props,
-	        duration: duration,
-	        easing: easing,
-	      });
-	
-	      return this;
-	    },
-	
-	    from: function(props, duration, easing) {
-	      this._add({
-	        type: 'tween',
-	        mode: 'from',
-	        props: props,
-	        duration: duration,
-	        easing: easing,
-	      });
-	      return this;
-	    },
-	
-	    wait: function(time) {
-	      this._add({
-	        type: 'wait',
-	        data: {
-	          limit: time,
-	        },
-	      });
-	      return this;
-	    },
-	
-	    call: function(func, self, args) {
-	      this._add({
-	        type: 'call',
-	        data: {
-	          func: func,
-	          self: self || this,
-	          args: args,
-	        },
-	      });
-	      return this;
-	    },
-	
-	    /**
-	     * プロパティをセット
-	     * @param {Object} key
-	     * @param {Object} value
-	     */
-	    set: function(key, value) {
-	      var values = null;
-	      if (arguments.length == 2) {
-	        values = {};
-	        values[key] = value;
-	      }
-	      else {
-	        values = key;
-	      }
-	      this._tasks.push({
-	        type: "set",
-	        data: {
-	          values: values
+	        if (this.parentNode) {
+	            this.parentNode.removeChild(this);
 	        }
-	      });
-	
-	      return this;
-	    },
-	
-	    moveTo: function(x, y, duration, easing) {
-	      return this.to({ x: x, y: y }, duration, easing);
-	    },
-	    moveBy: function(x, y, duration, easing) {
-	      return this.by({ x: x, y: y }, duration, easing);
-	    },
-	
-	    rotateTo: function(rotation, duration, easing) {
-	      return this.to({ rotation: rotation }, duration, easing);
-	    },
-	    rotateBy: function(rotation, duration, easing) {
-	      return this.by({ rotation: rotation }, duration, easing);
-	    },
-	
-	    scaleTo: function(scale, duration, easing) {
-	      return this.to({ scaleX: scale, scaleY: scale }, duration, easing);
-	    },
-	    scaleBy: function(scale, duration, easing) {
-	      return this.by({ scaleX: scale, scaleY: scale }, duration, easing);
-	    },
-	
-	    fade: function(value, duration, easing) {
-	      return this.to({ alpha: value }, duration, easing);
-	    },
-	
-	    fadeOut: function(duration, easing) {
-	      return this.fade(0.0, duration, easing);
-	    },
-	
-	    fadeIn: function(duration, easing) {
-	      return this.fade(1.0, duration, easing);
-	    },
-	
-	    /**
-	     * アニメーション開始
-	     */
-	    play: function() {
-	      this.playing = true;
-	      return this;
-	    },
-	
-	    /**
-	     * アニメーションを一時停止
-	     */
-	    pause: function() {
-	      this.playing = false;
-	      return this;
-	    },
-	
-	    stop: function() {
-	      this.playing = false;
-	      this.rewind();
-	      return this;
-	    },
-	
-	    /**
-	     * アニメーションを巻き戻す
-	     */
-	    rewind: function() {
-	      this._update = this._updateTask;
-	      this._index = 0;
-	      return this;
-	    },
-	
-	    yoyo: function() {
-	      // TODO: 最初の値が分からないので反転できない...
-	      this._update = this._updateTask;
-	      this._index = 0;
-	      this._tasks.each(function(task) {
-	        if (task.type === 'tween') {
-	
+	        if (this.childNodes) {
+	            var childNodes = this.childNodes.slice();
+	            for(var i = childNodes.length-1; i >= 0; i--) {
+	                childNodes[i].remove();
+	            }
 	        }
-	      });
-	      this.play();
-	
-	      return this;
-	    },
-	
-	    /**
-	     * アニメーションループ設定
-	     * @param {Boolean} flag
-	     */
-	    setLoop: function(flag) {
-	      this._loop = flag;
-	      return this;
-	    },
-	
-	    /**
-	     * アニメーションをクリア
-	     */
-	    clear: function() {
-	      this._init();
-	      return this;
-	    },
-	
-	    fromJSON: function(json) {
-	      if (json.loop !== undefined) {
-	        this.setLoop(json.loop);
-	      }
-	
-	      json.tweens.each(function(t) {
-	        t = t.clone();
-	        var method = t.shift();
-	        this[method].apply(this, t);
-	      }, this);
-	
-	      return this;
-	    },
-	
-	    _add: function(params) {
-	      this._tasks.push(params);
-	    },
-	
-	    _updateTask: function(app) {
-	      if (!this.playing) return ;
-	
-	      var task = this._tasks[this._index];
-	      if (!task) {
-	        if (this._loop) {
-	          this.rewind();
-	          this._update(app);
-	        }
-	        else {
-	          this.playing = false;
-	        }
-	        return ;
-	      }
-	      else {
-	        ++this._index;
-	      }
-	
-	      if (task.type === 'tween') {
-	        this._tween = phina.util.Tween();
-	
-	        var duration = task.duration || this._getDefaultDuration();
-	        if (task.mode === 'to') {
-	          this._tween.to(this.target, task.props, duration, task.easing);
-	        }
-	        else if (task.mode === 'by') {
-	          this._tween.by(this.target, task.props, duration, task.easing);
-	        }
-	        else {
-	          this._tween.from(this.target, task.props, duration, task.easing);
-	        }
-	        this._update = this._updateTween;
-	        this._update(app);
-	      }
-	      else if (task.type === 'wait') {
-	        this._wait = {
-	          time: 0,
-	          limit: task.data.limit,
-	        };
-	
-	        this._update = this._updateWait;
-	        this._update(app);
-	      }
-	      else if (task.type === 'call') {
-	        task.data.func.apply(task.data.self, task.data.args);
-	        // 1フレーム消費しないよう再帰
-	        this._update(app);
-	      }
-	      else if (task.type === 'set') {
-	        this.target.$extend(task.data.values);
-	        // 1フレーム消費しないよう再帰
-	        this._update(app);
-	      }
-	    },
-	
-	    _updateTween: function(app) {
-	      var tween = this._tween;
-	      var time = this._getUnitTime(app);
-	
-	      tween.forward(time);
-	      this.flare('tween');
-	
-	      if (tween.time >= tween.duration) {
-	        delete this._tween;
-	        this._tween = null;
-	        this._update = this._updateTask;
-	      }
-	    },
-	
-	    _updateWait: function(app) {
-	      var wait = this._wait;
-	      var time = this._getUnitTime(app);
-	      wait.time += time;
-	
-	      if (wait.time >= wait.limit) {
-	        delete this._wait;
-	        this._wait = null;
-	        this._update = this._updateTask;
-	      }
-	    },
-	
-	    _getUnitTime: function(app) {
-	      var obj = UPDATE_MAP[this.updateType];
-	      if (obj) {
-	        return obj.func(app);
-	      }
-	      else {
-	        return 1000 / app.fps;
-	      }
-	    },
-	
-	    _getDefaultDuration: function() {
-	      var obj = UPDATE_MAP[this.updateType];
-	      return obj && obj.duration;
-	    },
-	
-	    _static: {
-	      UPDATE_MAP: {
-	        normal: {
-	          func: function(app) {
-	            return 1000 / app.fps;
-	          },
-	          duration: 1000,
-	        },
-	
-	        delta: {
-	          func: function(app) {
-	            return app.ticker.deltaTime;
-	          },
-	          duration: 1000,
-	        },
-	
-	        fps: {
-	          func: function(app) {
-	            return 1;
-	          },
-	          duration: 30,
-	        },
-	
-	      }
-	    }
-	  });
-	
-	  var UPDATE_MAP = Tweener.UPDATE_MAP;
-	
-	  phina.app.Element.prototype.getter('tweener', function() {
-	    if (!this._tweener) {
-	      this._tweener = phina.accessory.Tweener().attachTo(this);
-	    }
-	    return this._tweener;
-	  });
-	  
-	});
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.accessory.Draggable
-	   * Draggable
-	   */
-	  phina.define('phina.accessory.Draggable', {
-	    superClass: 'phina.accessory.Accessory',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(target) {
-	      this.superInit(target);
-	
-	      this.initialPosition = phina.geom.Vector2(0, 0);
-	      var self = this;
-	
-	      this.on('attached', function() {
-	        this.target.setInteractive(true);
-	
-	        this._dragging = false;
-	
-	        this.target.on('pointstart', function(e) {
-	          if (phina.accessory.Draggable._lock) return ;
-	
-	          this._dragging = true;
-	          self.initialPosition.x = this.x;
-	          self.initialPosition.y = this.y;
-	          self.flare('dragstart');
-	          this.flare('dragstart');
-	        });
-	        this.target.on('pointmove', function(e) {
-	          if (!this._dragging) return ;
-	
-	          this.x += e.pointer.dx;
-	          this.y += e.pointer.dy;
-	          self.flare('drag');
-	          this.flare('drag');
-	        });
-	
-	        this.target.on('pointend', function(e) {
-	          if (!this._dragging) return ;
-	
-	          this._dragging = false;
-	          self.flare('dragend');
-	          this.flare('dragend');
-	        });
-	      });
-	    },
-	
-	    back: function(time, easing) {
-	      if (time) {
-	        var t = this.target;
-	        t.setInteractive(false);
-	        var tweener = phina.accessory.Tweener().attachTo(t);
-	        tweener
-	          .to({
-	            x: this.initialPosition.x,
-	            y: this.initialPosition.y,
-	          }, time, easing || 'easeOutElastic')
-	          .call(function() {
-	            tweener.remove();
-	
-	            t.setInteractive(true);
-	            this.flare('backend');
-	          }, this);
-	      }
-	      else {
-	        this.target.x = this.initialPosition.x;
-	        this.target.y = this.initialPosition.y;
-	        this.flare('backend');
-	      }
-	    },
-	
-	    enable: function() {
-	      this._enable = true;
-	    },
-	
-	    _static: {
-	      _lock: false,
-	      lock: function() {
-	        this._lock = true;
-	      },
-	      unlock: function() {
-	        this._lock = false;
-	      },
-	    }
-	
-	  });
-	
-	  phina.app.Element.prototype.getter('draggable', function() {
-	    if (!this._draggable) {
-	      this._draggable = phina.accessory.Draggable().attachTo(this);
-	    }
-	    return this._draggable;
-	  });
-	  
-	});
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.accessory.Flickable
-	   * Flickable
-	   */
-	  phina.define('phina.accessory.Flickable', {
-	    superClass: 'phina.accessory.Accessory',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(target) {
-	      this.superInit(target);
-	
-	      this.initialPosition = phina.geom.Vector2(0, 0);
-	      var self = this;
-	
-	      this.friction = 0.9;
-	      this.velocity = phina.geom.Vector2(0, 0);
-	      this.vertical = true;
-	      this.horizontal = true;
-	
-	      this.cacheList = [];
-	
-	      this.on('attached', function() {
-	        this.target.setInteractive(true);
-	
-	        this.target.on('pointstart', function(e) {
-	          self.initialPosition.set(this.x, this.y);
-	          self.velocity.set(0, 0);
-	        });
-	        this.target.on('pointstay', function(e) {
-	          if (self.horizontal) {
-	            this.x += e.pointer.dx;
-	          }
-	          if (self.vertical) {
-	            this.y += e.pointer.dy;
-	          }
-	
-	          if (self.cacheList.length > 3) self.cacheList.shift();
-	          self.cacheList.push(e.pointer.deltaPosition.clone());
-	        });
-	
-	        this.target.on('pointend', function(e) {
-	          // 動きのある delta position を後ろから検索　
-	          var delta = self.cacheList.reverse().find(function(v) {
-	            return v.lengthSquared() > 10;
-	          });
-	          self.cacheList.clear();
-	
-	          if (delta) {
-	            self.velocity.x = delta.x;
-	            self.velocity.y = delta.y;
-	
-	            self.flare('flickstart', {
-	              direction: delta.normalize(),
-	            });
-	          }
-	          else {
-	            self.flare('flickcancel');
-	          }
-	
-	          // self.flare('flick');
-	          // self.flare('flickend');
-	        });
-	      });
-	    },
-	
-	    update: function() {
-	      if (!this.target) return ;
-	
-	      this.velocity.x *= this.friction;
-	      this.velocity.y *= this.friction;
-	
-	      if (this.horizontal) {
-	        this.target.position.x += this.velocity.x;
-	      }
-	      if (this.vertical) {
-	        this.target.position.y += this.velocity.y;
-	      }
-	    },
-	
-	    cancel: function() {
-	      this.target.x = this.initialPosition.x;
-	      this.target.y = this.initialPosition.y;
-	      this.velocity.set(0, 0);
-	
-	      // TODO: 
-	      // this.setInteractive(false);
-	      // this.tweener.clear()
-	      //     .move(this.initialX, this.initialY, 500, "easeOutElastic")
-	      //     .call(function () {
-	      //         this.setInteractive(true);
-	      //         this.fire(tm.event.Event("backend"));
-	      //     }.bind(this));
-	    },
-	
-	    enable: function() {
-	      this._enable = true;
-	    },
-	
-	  });
-	
-	  phina.app.Element.prototype.getter('flickable', function() {
-	    if (!this._flickable) {
-	      this._flickable = phina.accessory.Flickable().attachTo(this);
-	    }
-	    return this._flickable;
-	  });
-	  
-	});
-	/*
-	 * frameanimation.js
-	 */
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.accessory.FrameAnimation
-	   * FrameAnimation
-	   */
-	  phina.define('phina.accessory.FrameAnimation', {
-	    superClass: 'phina.accessory.Accessory',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(ss) {
-	      this.superInit();
-	
-	      this.ss = phina.asset.AssetManager.get('spritesheet', ss);
-	      this.paused = true;
-	      this.finished = false;
-	      this.fit = true;
-	    },
-	
-	    update: function() {
-	      if (this.paused) return ;
-	      if (!this.currentAnimation) return ;
-	
-	      if (this.finished) {
-	        this.finished = false;
-	        this.currentFrameIndex = 0;
-	        return ;
-	      }
-	
-	      ++this.frame;
-	      if (this.frame%this.currentAnimation.frequency === 0) {
-	        ++this.currentFrameIndex;
-	        this._updateFrame();
-	      }
-	    },
-	
-	    gotoAndPlay: function(name) {
-	      this.frame = 0;
-	      this.currentFrameIndex = 0;
-	      this.currentAnimation = this.ss.getAnimation(name);
-	      this._updateFrame();
-	
-	      this.paused = false;
-	
-	      return this;
-	    },
-	
-	    gotoAndStop: function(name) {
-	      this.frame = 0;
-	      this.currentFrameIndex = 0;
-	      this.currentAnimation = this.ss.getAnimation(name);
-	      this._updateFrame();
-	
-	      this.paused = true;
-	
-	      return this;
-	    },
-	
-	    _updateFrame: function() {
-	      var anim = this.currentAnimation;
-	      if (anim) {
-	        if (this.currentFrameIndex >= anim.frames.length) {
-	          if (anim.next) {
-	            this.gotoAndPlay(anim.next);
-	            return ;
-	          }
-	          else {
-	            this.paused = true;
-	            this.finished = true;
-	            return ;
-	          }
-	        }
-	      }
-	
-	      var index = anim.frames[this.currentFrameIndex];
-	      var frame = this.ss.getFrame(index);
-	      this.target.srcRect.set(frame.x, frame.y, frame.width, frame.height);
-	
-	      if (this.fit) {
-	        this.target.width = frame.width;
-	        this.target.height = frame.height;
-	      }
-	    },
-	  });
-	});
-	/*
-	 *
-	 */
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.accessory.Physical
-	   * 本物ではないので名前変えるかも*
-	   * FakePhysical or MarioPhysical or LiePhysical
-	   * RetroPysical or PysicaLike
-	   */
-	  phina.define('phina.accessory.Physical', {
-	    superClass: 'phina.accessory.Accessory',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(target) {
-	      this.superInit(target);
-	
-	      this.velocity = phina.geom.Vector2(0, 0);
-	      this.gravity = phina.geom.Vector2(0, 0);
-	
-	      this.friction = 1.0;
-	    },
-	
-	    update: function() {
-	      var t = this.target;
-	
-	      this.velocity.x *= this.friction;
-	      this.velocity.y *= this.friction;
-	
-	      this.velocity.x += this.gravity.x;
-	      this.velocity.y += this.gravity.y;
-	
-	      t.position.x += this.velocity.x;
-	      t.position.y += this.velocity.y;
-	    },
-	
-	    force: function(x, y) {
-	      this.velocity.set(x, y);
-	      return this;
-	    },
-	
-	    addForce: function(x, y) {
-	      this.velocity.x += x;
-	      this.velocity.y += y;
-	      return this;
-	    },
-	
-	    setGravity: function(x, y) {
-	      this.gravity.set(x, y);
-	      return this;
-	    },
-	
-	    setFriction: function(fr) {
-	      this.friction = fr;
-	      return this;
-	    },
-	  });
-	
-	  phina.app.Element.prototype.getter('physical', function() {
-	    if (!this._physical) {
-	      this._physical = phina.accessory.Physical().attachTo(this);
-	    }
-	    return this._physical;
-	  });
-	
-	
-	});
-	
-	
-	
-	
-	
-	(function() {
-	
-	  if (!phina.global.Event) return ;
-	
-	  /**
-	   * @class global.Event
-	   * 既存のEventオブジェクト拡張
-	   */
-	    
-	  /**
-	   * @method stop
-	   * イベントのデフォルト処理 & 伝達を止める
-	   */
-	  Event.prototype.stop = function() {
-	    // イベントキャンセル
-	    this.preventDefault();
-	    // イベント伝達を止める
-	    this.stopPropagation();
-	  };
-	
-	})();
-	
-	(function() {
-	
-	  if (!phina.global.MouseEvent) return ;
-	
-	  /**
-	   * @class global.MouseEvent
-	   * MouseEvent クラス
-	   */
-	  
-	  /**
-	   * @method    pointX
-	   * マウスのX座標.
-	   */
-	  MouseEvent.prototype.getter("pointX", function() {
-	    return this.clientX - this.target.getBoundingClientRect().left;
-	    // return this.pageX - this.target.getBoundingClientRect().left - window.scrollX;
-	  });
-	  
-	  /**
-	   * @method    pointY
-	   * マウスのY座標.
-	   */
-	  MouseEvent.prototype.getter("pointY", function() {
-	    return this.clientY - this.target.getBoundingClientRect().top;
-	    // return this.pageY - this.target.getBoundingClientRect().top - window.scrollY;
-	  });
-	    
-	})();
-	
-	
-	(function() {
-	    
-	  if (!phina.global.TouchEvent) return ;
-	  
-	  
-	  /**
-	   * @class global.TouchEvent
-	   * TouchEvent クラス
-	   */
-	  
-	  /**
-	   * @method    pointX
-	   * タッチイベント.
-	   */
-	  TouchEvent.prototype.getter("pointX", function() {
-	      return this.touches[0].clientX - this.target.getBoundingClientRect().left;
-	      // return this.touches[0].pageX - this.target.getBoundingClientRect().left - tm.global.scrollX;
-	  });
-	  
-	  /**
-	   * @method    pointY
-	   * タッチイベント.
-	   */
-	  TouchEvent.prototype.getter("pointY", function() {
-	      return this.touches[0].clientY - this.target.getBoundingClientRect().top;
-	      // return this.touches[0].pageY - this.target.getBoundingClientRect().top - tm.global.scrollY;
-	  });  
-	    
-	})();
-	
-	
-	(function() {
-	    
-	  if (!phina.global.Touch) return ;
-	  
-	  /**
-	   * @class global.Touch
-	   * TouchEvent クラス
-	   */
-	  
-	  /**
-	   * @method    pointX
-	   * タッチイベント.
-	   */
-	  Touch.prototype.getter("pointX", function() {
-	      return this.clientX - this.target.getBoundingClientRect().left;
-	  });
-	
-	  /**
-	   * @method    pointY
-	   * タッチイベント.
-	   */
-	  Touch.prototype.getter("pointY", function() {
-	      return this.clientY - this.target.getBoundingClientRect().top;
-	  });
-	    
-	})();
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.graphics.Canvas
-	   * キャンバス拡張クラス
-	   */
-	  phina.define('phina.graphics.Canvas', {
-	    domElement: null,
-	    canvas: null,
-	    context: null,
-	
-	    /**
-	     * 初期化
-	     */
-	    init: function(canvas) {
-	      if (typeof canvas === 'string') {
-	        this.canvas = document.querySelector(canvas);
-	      }
-	      else {
-	        this.canvas = canvas || document.createElement('canvas');
-	      }
-	
-	      this.domElement = this.canvas;
-	      this.context = this.canvas.getContext('2d');
-	      this.context.lineCap = 'round';
-	      this.context.lineJoin = 'round';
-	    },
-	
-	    /**
-	     * サイズをセット
-	     */
-	    setSize: function(width, height) {
-	      this.canvas.width   = width;
-	      this.canvas.height  = height;
-	      return this;
-	    },
-	
-	    setSizeToScreen: function() {
-	      this.canvas.style.position  = "fixed";
-	      this.canvas.style.margin    = "0px";
-	      this.canvas.style.padding   = "0px";
-	      this.canvas.style.left      = "0px";
-	      this.canvas.style.top       = "0px";
-	      return this.setSize(window.innerWidth, window.innerHeight);
-	    },
-	
-	    fitScreen: function(isEver) {
-	      isEver = isEver === undefined ? true : isEver;
-	
-	      var _fitFunc = function() {
-	        var e = this.domElement;
-	        var s = e.style;
 	        
-	        s.position = "absolute";
-	        s.margin = "auto";
-	        s.left = "0px";
-	        s.top  = "0px";
-	        s.bottom = "0px";
-	        s.right = "0px";
-	
-	        var rateWidth = e.width/window.innerWidth;
-	        var rateHeight= e.height/window.innerHeight;
-	        var rate = e.height/e.width;
-	        
-	        if (rateWidth > rateHeight) {
-	          s.width  = Math.floor(innerWidth)+"px";
-	          s.height = Math.floor(innerWidth*rate)+"px";
-	        }
-	        else {
-	          s.width  = Math.floor(innerHeight/rate)+"px";
-	          s.height = Math.floor(innerHeight)+"px";
-	        }
-	      }.bind(this);
-	      
-	      // 一度実行しておく
-	      _fitFunc();
-	
-	      // リサイズ時のリスナとして登録しておく
-	      if (isEver) {
-	        phina.global.addEventListener("resize", _fitFunc, false);
-	      }
-	    },
-	
-	    /**
-	     * クリア
-	     */
-	    clear: function(x, y, width, height) {
-	      x = x || 0;
-	      y = y || 0;
-	      width = width || this.width;
-	      height= height|| this.height;
-	      this.context.clearRect(x, y, width, height);
-	      return this;
-	    },
-	
-	    clearColor: function(fillStyle, x, y, width, height) {
-	      x = x || 0;
-	      y = y || 0;
-	      width = width || this.width;
-	      height= height|| this.height;
-	
-	      var context = this.context;
-	
-	      context.save();
-	      context.setTransform(1.0, 0.0, 0.0, 1.0, 0.0, 0.0); // 行列初期化
-	      context.fillStyle = fillStyle;     // 塗りつぶしスタイルセット
-	      context.fillRect(x, y, width, height);
-	      context.restore();
-	
-	      return this;
-	    },
-	
-	
-	    /**
-	     * パスを開始(リセット)
-	     */
-	    beginPath: function() {
-	      this.context.beginPath();
-	      return this;
-	    },
-	
-	    /**
-	     *  パスを閉じる
-	     */
-	    closePath: function() {
-	      this.context.closePath();
-	      return this;
-	    },
-	
-	
-	    /**
-	     *  新規パス生成
-	     */
-	    moveTo: function(x, y) {
-	      this.context.moveTo(x, y);
-	      return this;
-	    },
-	
-	    /**
-	     * パスに追加
-	     */
-	    lineTo: function(x, y) {
-	      this.context.lineTo(x, y);
-	      return this;
-	    },
-	
-	    quadraticCurveTo: function() {
-	      this.context.quadraticCurveTo.apply(this.context, arguments);
-	      return this;
-	    },
-	
-	    bezierCurveTo: function() {
-	      this.context.bezierCurveTo.apply(this.context, arguments);
-	      return this;
-	    },
-	
-	    /**
-	     * パス内を塗りつぶす
-	     */
-	    fill: function() {
-	      this.context.fill();
-	      return this;
-	    },
-	
-	    /**
-	     * パス上にラインを引く
-	     */
-	    stroke: function() {
-	      this.context.stroke();
-	      return this;
-	    },
-	
-	    /**
-	     * クリップ
-	     */
-	    clip: function() {
-	      this.context.clip();
-	      return this;
-	    },
-	
-	        
-	    /**
-	     * 点描画
-	     */
-	    drawPoint: function(x, y) {
-	      return this.strokeRect(x, y, 1, 1);
-	    },
-	
-	    /**
-	     * ラインパスを作成
-	     */
-	    line: function(x0, y0, x1, y1) {
-	      return this.moveTo(x0, y0).lineTo(x1, y1);
-	    },
-	    
-	    /**
-	     * ラインを描画
-	     */
-	    drawLine: function(x0, y0, x1, y1) {
-	      return this.beginPath().line(x0, y0, x1, y1).stroke();
-	    },
-	
-	    /**
-	     * ダッシュラインを描画
-	     */
-	    drawDashLine: function(x0, y0, x1, y1, pattern) {
-	      var patternTable = null;
-	      if (typeof(pattern) == "string") {
-	        patternTable = pattern;
-	      }
-	      else {
-	        pattern = pattern || 0xf0f0;
-	        patternTable = pattern.toString(2);
-	      }
-	      patternTable = patternTable.padding(16, '1');
-	      
-	      var vx = x1-x0;
-	      var vy = y1-y0;
-	      var len = Math.sqrt(vx*vx + vy*vy);
-	      vx/=len; vy/=len;
-	      
-	      var x = x0;
-	      var y = y0;
-	      for (var i=0; i<len; ++i) {
-	        if (patternTable[i%16] == '1') {
-	          this.drawPoint(x, y);
-	          // this.fillRect(x, y, this.context.lineWidth, this.context.lineWidth);
-	        }
-	        x += vx;
-	        y += vy;
-	      }
-	      
-	      return this;
-	    },
-	
-	    /**
-	     * v0(x0, y0), v1(x1, y1) から角度を求めて矢印を描画
-	     * http://hakuhin.jp/as/rotation.html
-	     */
-	    drawArrow: function(x0, y0, x1, y1, arrowRadius) {
-	      var vx = x1-x0;
-	      var vy = y1-y0;
-	      var angle = Math.atan2(vy, vx)*180/Math.PI;
-	      
-	      this.drawLine(x0, y0, x1, y1);
-	      this.fillPolygon(x1, y1, arrowRadius || 5, 3, angle);
-	      
-	      return this;
-	    },
-	
-	
-	    /**
-	     * lines
-	     */
-	    lines: function() {
-	      this.moveTo(arguments[0], arguments[1]);
-	      for (var i=1,len=arguments.length/2; i<len; ++i) {
-	        this.lineTo(arguments[i*2], arguments[i*2+1]);
-	      }
-	      return this;
-	    },
-	
-	    /**
-	     * ラインストローク描画
-	     */
-	    strokeLines: function() {
-	      this.beginPath();
-	      this.lines.apply(this, arguments);
-	      this.stroke();
-	      return this;
-	    },
-	
-	    /**
-	     * ライン塗りつぶし描画
-	     */
-	    fillLines: function() {
-	      this.beginPath();
-	      this.lines.apply(this, arguments);
-	      this.fill();
-	      return this;
-	    },
-	    
-	    /**
-	     * 四角形パスを作成する
-	     */
-	    rect: function(x, y, width, height) {
-	      this.context.rect.apply(this.context, arguments);
-	      return this;
-	    },
-	    
-	    /**
-	     * 四角形塗りつぶし描画
-	     */
-	    fillRect: function() {
-	      this.context.fillRect.apply(this.context, arguments);
-	      return this;
-	    },
-	    
-	    /**
-	     * 四角形ライン描画
-	     */
-	    strokeRect: function() {
-	      this.context.strokeRect.apply(this.context, arguments);
-	      return this;
-	    },
-	    
-	    /**
-	     * 角丸四角形パス
-	     */
-	    roundRect: function(x, y, width, height, radius) {
-	      var l = x + radius;
-	      var r = x + width - radius;
-	      var t = y + radius;
-	      var b = y + height - radius;
-	      
-	      /*
-	      var ctx = this.context;
-	      ctx.moveTo(l, y);
-	      ctx.lineTo(r, y);
-	      ctx.quadraticCurveTo(x+width, y, x+width, t);
-	      ctx.lineTo(x+width, b);
-	      ctx.quadraticCurveTo(x+width, y+height, r, y+height);
-	      ctx.lineTo(l, y+height);
-	      ctx.quadraticCurveTo(x, y+height, x, b);
-	      ctx.lineTo(x, t);
-	      ctx.quadraticCurveTo(x, y, l, y);
-	      /**/
-	      
-	      this.context.arc(l, t, radius,     -Math.PI, -Math.PI*0.5, false);  // 左上
-	      this.context.arc(r, t, radius, -Math.PI*0.5,            0, false);  // 右上
-	      this.context.arc(r, b, radius,            0,  Math.PI*0.5, false);  // 右下
-	      this.context.arc(l, b, radius,  Math.PI*0.5,      Math.PI, false);  // 左下
-	      this.closePath();
-	      
-	      return this;
-	    },
-	
-	    /**
-	     * 角丸四角形塗りつぶし
-	     */
-	    fillRoundRect: function(x, y, width, height, radius) {
-	      return this.beginPath().roundRect(x, y, width, height, radius).fill();
-	    },
-	
-	    /**
-	     * 角丸四角形ストローク描画
-	     */
-	    strokeRoundRect: function(x, y, width, height, radius) {
-	      return this.beginPath().roundRect(x, y, width, height, radius).stroke();
-	    },
-	
-	    /**
-	     * 円のパスを設定
-	     */
-	    circle: function(x, y, radius) {
-	      this.context.arc(x, y, radius, 0, Math.PI*2, false);
-	      return this;
-	    },
-	    
-	    /**
-	     * 塗りつぶし円を描画
-	     */
-	    fillCircle: function(x, y, radius) {
-	      var c = this.context;
-	      c.beginPath();
-	      c.arc(x, y, radius, 0, Math.PI*2, false);
-	      c.closePath();
-	      c.fill();
-	      return this;
-	    },
-	    
-	    /**
-	     * ストローク円を描画
-	     */
-	    strokeCircle: function(x, y, radius) {
-	      var c = this.context;
-	      c.beginPath();
-	      c.arc(x, y, radius, 0, Math.PI*2, false);
-	      c.closePath();
-	      c.stroke();
-	      return this;
-	    },
-	
-	    /**
-	     * 円弧のパスを設定
-	     */
-	    arc: function(x, y, radius, startAngle, endAngle, anticlockwise) {
-	      this.context.arc(x, y, radius, startAngle, endAngle, anticlockwise);
-	      return this;
-	    },
-	    
-	    /**
-	     * 塗りつぶし円弧を描画
-	     */
-	    fillArc: function(x, y, radius, startAngle, endAngle, anticlockwise) {
-	      return this.beginPath().arc(x, y, radius, startAngle, endAngle, anticlockwise).fill();
-	    },
-	    
-	    /**
-	     * ストローク円弧を描画
-	     */
-	    strokeArc: function(x, y, radius, startAngle, endAngle, anticlockwise) {
-	      return this.beginPath().arc(x, y, radius, startAngle, endAngle, anticlockwise).stroke();
-	    },
-	
-	
-	    pie: function(x, y, radius, startAngle, endAngle, anticlockwise) {
-	      var context = this.context;
-	      context.beginPath();
-	      context.moveTo(0, 0);
-	      context.arc(x, y, radius, startAngle, endAngle, anticlockwise);
-	      context.closePath();
-	      return this;
-	    },
-	    fillPie: function(x, y, radius, startAngle, endAngle, anticlockwise) {
-	      return this.beginPath().pie(x, y, radius, startAngle, endAngle, anticlockwise).fill();
-	    },
-	    strokePie: function(x, y, radius, startAngle, endAngle, anticlockwise) {
-	      return this.beginPath().pie(x, y, radius, startAngle, endAngle, anticlockwise).stroke();
-	    },
-	
-	    
-	    /**
-	     * ポリゴンパス
-	     */
-	    polygon: function(x, y, size, sides, offsetAngle) {
-	      var radDiv = (Math.PI*2)/sides;
-	      var radOffset = (offsetAngle!==undefined) ? offsetAngle*Math.PI/180 : -Math.PI/2;
-	      
-	      this.moveTo(x + Math.cos(radOffset)*size, y + Math.sin(radOffset)*size);
-	      for (var i=1; i<sides; ++i) {
-	        var rad = radDiv*i+radOffset;
-	        this.lineTo(
-	          x + Math.cos(rad)*size,
-	          y + Math.sin(rad)*size
-	        );
-	      }
-	      this.closePath();
-	      return this;
-	    },
-	    /**
-	     * ポリゴン塗りつぶし
-	     */
-	    fillPolygon: function(x, y, radius, sides, offsetAngle) {
-	      return this.beginPath().polygon(x, y, radius, sides, offsetAngle).fill();
-	    },
-	    /**
-	     * ポリゴンストローク描画
-	     */
-	    strokePolygon: function(x, y, radius, sides, offsetAngle) {
-	      return this.beginPath().polygon(x, y, radius, sides, offsetAngle).stroke();
-	    },
-	    
-	    /**
-	     * star
-	     */
-	    star: function(x, y, radius, sides, sideIndent, offsetAngle) {
-	      var x = x || 0;
-	      var y = y || 0;
-	      var radius = radius || 64;
-	      var sides = sides || 5;
-	      var sideIndentRadius = radius * (sideIndent || 0.38);
-	      var radOffset = (offsetAngle) ? offsetAngle*Math.PI/180 : -Math.PI/2;
-	      var radDiv = (Math.PI*2)/sides/2;
-	
-	      this.moveTo(
-	        x + Math.cos(radOffset)*radius,
-	        y + Math.sin(radOffset)*radius
-	      );
-	      for (var i=1; i<sides*2; ++i) {
-	        var rad = radDiv*i + radOffset;
-	        var len = (i%2) ? sideIndentRadius : radius;
-	        this.lineTo(
-	          x + Math.cos(rad)*len,
-	          y + Math.sin(rad)*len
-	        );
-	      }
-	      this.closePath();
-	
-	      return this;
-	    },
-	
-	    /**
-	     * 星を塗りつぶし描画
-	     */
-	    fillStar: function(x, y, radius, sides, sideIndent, offsetAngle) {
-	      this.beginPath().star(x, y, radius, sides, sideIndent, offsetAngle).fill();
-	      return this;
-	    },
-	
-	    /**
-	     * 星をストローク描画
-	     */
-	    strokeStar: function(x, y, radius, sides, sideIndent, offsetAngle) {
-	      this.beginPath().star(x, y, radius, sides, sideIndent, offsetAngle).stroke();
-	      return this;
-	    },
-	
-	    /*
-	     * heart
-	     */
-	    heart: function(x, y, radius, angle) {
-	      var half_radius = radius*0.5;
-	      var rad = (angle === undefined) ? Math.PI/4 : Math.degToRad(angle);
-	
-	      // 半径 half_radius の角度 angle 上の点との接線を求める
-	      var p = Math.cos(rad)*half_radius;
-	      var q = Math.sin(rad)*half_radius;
-	
-	      // 円の接線の方程式 px + qy = r^2 より y = (r^2-px)/q
-	      var x2 = -half_radius;
-	      var y2 = (half_radius*half_radius-p*x2)/q;
-	
-	      // 中心位置調整
-	      var height = y2 + half_radius;
-	      var offsetY = half_radius-height/2;
-	
-	      // パスをセット
-	      this.moveTo(0+x, y2+y+offsetY);
-	
-	      this.arc(-half_radius+x, 0+y+offsetY, half_radius, Math.PI-rad, Math.PI*2);
-	      this.arc(half_radius+x, 0+y+offsetY, half_radius, Math.PI, rad);
-	      this.closePath();
-	
-	      return this;
-	    },
-	
-	    /*
-	     * fill heart
-	     */
-	    fillHeart: function(x, y, radius, angle) {
-	      return this.beginPath().heart(x, y, radius, angle).fill();
-	    },
-	
-	    /*
-	     * stroke heart
-	     */
-	    strokeHeart: function(x, y, radius, angle) {
-	      return this.beginPath().heart(x, y, radius, angle).stroke();
-	    },
-	
-	    /*
-	     * http://stackoverflow.com/questions/14169234/the-relation-of-the-bezier-curve-and-ellipse
-	     */
-	    ellipse: function(x, y, w, h) {
-	      var ctx = this.context;
-	      var kappa = 0.5522848;
-	
-	      var ox = (w / 2) * kappa; // control point offset horizontal
-	      var oy = (h / 2) * kappa; // control point offset vertical
-	      var xe = x + w;           // x-end
-	      var ye = y + h;           // y-end
-	      var xm = x + w / 2;       // x-middle
-	      var ym = y + h / 2;       // y-middle
-	
-	      ctx.moveTo(x, ym);
-	      ctx.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
-	      ctx.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
-	      ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
-	      ctx.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
-	      // ctx.closePath();
-	
-	      return this;
-	    },
-	
-	    fillEllipse: function(x, y, width, height) {
-	      return this.beginPath().ellipse(x, y, width, height).fill();
-	    },
-	    strokeEllipse: function(x, y, width, height) {
-	      return this.beginPath().ellipse(x, y, width, height).stroke();
-	    },
-	
-	    /*
-	     * 画像を描画
-	     */
-	    drawImage: function() {
-	      this.context.drawImage.apply(this.context, arguments);
-	    },
-	
-	    /**
-	     * 行列をセット
-	     */
-	    setTransform: function(m11, m12, m21, m22, dx, dy) {
-	      this.context.setTransform(m11, m12, m21, m22, dx, dy);
-	      return this;
-	    },
-	
-	    /**
-	     * 行列をリセット
-	     */
-	    resetTransform: function() {
-	      this.setTransform(1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
-	      return this;
-	    },
-	    /**
-	     * 中心に移動
-	     */
-	    transformCenter: function() {
-	      this.context.setTransform(1, 0, 0, 1, this.width/2, this.height/2);
-	      return this;
-	    },
-	
-	    /**
-	     * 移動
-	     */
-	    translate: function(x, y) {
-	      this.context.translate(x, y);
-	      return this;
-	    },
-	    
-	    /**
-	     * 回転
-	     */
-	    rotate: function(rotation) {
-	      this.context.rotate(rotation);
-	      return this;
-	    },
-	    
-	    /**
-	     * スケール
-	     */
-	    scale: function(scaleX, scaleY) {
-	      this.context.scale(scaleX, scaleY);
-	      return this;
-	    },
-	
-	    /**
-	     * 状態を保存
-	     */
-	    save: function() {
-	      this.context.save();
-	      return this;
-	    },
-	
-	    /**
-	     * 状態を復元
-	     */
-	    restore: function() {
-	      this.context.restore();
-	      return this;
-	    },
-	
-	    /**
-	     * 画像として保存
-	     */
-	    saveAsImage: function(mime_type) {
-	      mime_type = mime_type || "image/png";
-	      var data_url = this.canvas.toDataURL(mime_type);
-	      // data_url = data_url.replace(mime_type, "image/octet-stream");
-	      window.open(data_url, "save");
-	      
-	      // toDataURL を使えば下記のようなツールが作れるかも!!
-	      // TODO: プログラムで絵をかいて保存できるツール
-	    },
-	
-	
-	    _accessor: {
-	      /**
-	       * 幅
-	       */
-	      width: {
-	        "get": function()   { return this.canvas.width; },
-	        "set": function(v)  { this.canvas.width = v; }
-	      },
-	
-	      /**
-	       * 高さ
-	       */
-	      height: {
-	        "get": function()   { return this.canvas.height; },
-	        "set": function(v)  { this.canvas.height = v; }
-	      },
-	
-	      fillStyle: {
-	        "get": function()   { return this.context.fillStyle; },
-	        "set": function(v)  { this.context.fillStyle = v; }
-	      },
-	
-	      strokeStyle: {
-	        "get": function()   { return this.context.strokeStyle; },
-	        "set": function(v)  { this.context.strokeStyle = v; }
-	      },
-	
-	      globalAlpha: {
-	        "get": function()   { return this.context.globalAlpha; },
-	        "set": function(v)  { this.context.globalAlpha = v; }
-	      },
-	
-	      globalCompositeOperation: {
-	        "get": function()   { return this.context.globalCompositeOperation; },
-	        "set": function(v)  { this.context.globalCompositeOperation = v; }
-	      },
-	
-	      shadowBlur: {
-	        "get": function()   { return this.context.shadowBlur; },
-	        "set": function(v)  { this.context.shadowBlur = v; }
-	      },
-	
-	      shadowColor: {
-	        "get": function()   { return this.context.shadowColor; },
-	        "set": function(v)  { this.context.shadowColor = v; }
-	      },
-	
-	      shadowOffsetX: {
-	        "get": function()   { return this.context.shadowOffsetX; },
-	        "set": function(v)  { this.context.shadowOffsetX = v; }
-	      },
-	
-	      shadowOffsetY: {
-	        "get": function()   { return this.context.shadowOffsetY; },
-	        "set": function(v)  { this.context.shadowOffsetY = v; }
-	      },
-	
-	      lineCap: {
-	        "get": function()   { return this.context.lineCap; },
-	        "set": function(v)  { this.context.lineCap = v; }
-	      },
-	
-	      lineJoin: {
-	        "get": function()   { return this.context.lineJoin; },
-	        "set": function(v)  { this.context.lineJoin = v; }
-	      },
-	
-	      miterLimit: {
-	        "get": function()   { return this.context.miterLimit; },
-	        "set": function(v)  { this.context.miterLimit = v; }
-	      },
-	
-	      lineWidth: {
-	        "get": function()   { return this.context.lineWidth; },
-	        "set": function(v)  { this.context.lineWidth = v; }
-	      },
-	
-	      font: {
-	        "get": function()   { return this.context.font; },
-	        "set": function(v)  { this.context.font = v; }
-	      },
-	
-	      textAlign: {
-	        "get": function()   { return this.context.textAlign; },
-	        "set": function(v)  { this.context.textAlign = v; }
-	      },
-	
-	      textBaseline: {
-	        "get": function()   { return this.context.textBaseline; },
-	        "set": function(v)  { this.context.textBaseline = v; }
-	      },
-	
-	      imageSmoothingEnabled: {
-	        "get": function()   { return this.context.imageSmoothingEnabled; },
-	        "set": function(v)  {
-	          this.context.imageSmoothingEnabled = v;
-	          this.context.webkitImageSmoothingEnabled = v;
-	          this.context.mozImageSmoothingEnabled = v;
-	        }
-	      },
-	    },
-	
-	    _static: {
-	      _context: (function() {
-	        if (phina.util.Support.canvas) {
-	          return document.createElement('canvas').getContext('2d');
-	        }
-	        else {
-	          return null;
-	        }
-	      })(),
-	
-	      measureText: function(font, text) {
-	        this._context.font = font;
-	        return this._context.measureText(text);
-	      },
-	
-	      createLinearGradient: function() {
-	        return this._context.createLinearGradient.apply(this._context, arguments);
-	      },
-	    },
-	  });
+	        this.clearEventListener();
+	    }
 	});
 	
-	/*
-	 *
+	var _intersectBetweenClassAndInstance = function(Class, instance) {
+	    var ret = [];
+	    var c;
+	    for (var i = 0, l = Class.collection.length; i < l; i++) {
+	        c = Class.collection[i];
+	        if (instance._intersectOne(c)) {
+	            ret.push(c);
+	        }
+	    }
+	    return ret;
+	};
+	
+	var _intersectBetweenClassAndClass = function(Class1, Class2) {
+	    var ret = [];
+	    var c1, c2;
+	    for (var i = 0, l = Class1.collection.length; i < l; i++) {
+	        c1 = Class1.collection[i];
+	        for (var j = 0, ll = Class2.collection.length; j < ll; j++) {
+	            c2 = Class2.collection[j];
+	            if (c1._intersectOne(c2)) {
+	                ret.push([ c1, c2 ]);
+	            }
+	        }
+	    }
+	    return ret;
+	};
+	
+	var _intersectStrictBetweenClassAndInstance = function(Class, instance) {
+	    var ret = [];
+	    var c;
+	    for (var i = 0, l = Class.collection.length; i < l; i++) {
+	        c = Class.collection[i];
+	        if (instance._intersectStrictOne(c)) {
+	            ret.push(c);
+	        }
+	    }
+	    return ret;
+	};
+	
+	var _intersectStrictBetweenClassAndClass = function(Class1, Class2) {
+	    var ret = [];
+	    var c1, c2;
+	    for (var i = 0, l = Class1.collection.length; i < l; i++) {
+	        c1 = Class1.collection[i];
+	        for (var j = 0, ll = Class2.collection.length; j < ll; j++) {
+	            c2 = Class2.collection[j];
+	            if (c1._intersectStrictOne(c2)) {
+	                ret.push([ c1, c2 ]);
+	            }
+	        }
+	    }
+	    return ret;
+	};
+	
+	var _staticIntersect = function(other) {
+	    if (other instanceof enchant.Entity) {
+	        return _intersectBetweenClassAndInstance(this, other);
+	    } else if (typeof other === 'function' && other.collection) {
+	        return _intersectBetweenClassAndClass(this, other);
+	    }
+	    return false;
+	};
+	
+	var _staticIntersectStrict = function(other) {
+	    if (other instanceof enchant.Entity) {
+	        return _intersectStrictBetweenClassAndInstance(this, other);
+	    } else if (typeof other === 'function' && other.collection) {
+	        return _intersectStrictBetweenClassAndClass(this, other);
+	    }
+	    return false;
+	};
+	
+	var _nodePrototypeClearEventListener = enchant.Node.prototype.clearEventListener;
+	
+	/**
+	 * @scope enchant.Entity.prototype
 	 */
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.graphics.CanvasRecorder
-	   * Reference <https://github.com/jnordberg/gif.js/>
-	   */
-	  phina.define('phina.graphics.CanvasRecorder', {
-	
-	    superClass: 'phina.util.EventDispatcher',
-	
-	    _id: null,
-	    objectURL: null,
-	
-	    init: function(canvas, options) {
-	      this.superInit();
-	
-	      this.canvas = canvas;
-	
-	      this.gif = new GIF((options || {}).$safe({
-	        workers: 4,
-	        quality: 10,
-	        width: canvas.width,
-	        height: canvas.height,
-	      }));
-	
-	      this.gif.on('finished', function(blob) {
-	        this.objectURL = URL.createObjectURL(blob);
-	        this.flare('finished');
-	      }.bind(this));
-	    },
-	
+	enchant.Entity = enchant.Class.create(enchant.Node, {
 	    /**
-	     * key と value はアクセサを参照
+	     * @name enchant.Entity
+	     * @class
+	     * A class with objects displayed as DOM elements. Not to be used directly.
+	     * @constructs
+	     * @extends enchant.Node
 	     */
-	    setOption: function(key, value) {
-	      this.gif.setOption(key, value);
-	      return this;
-	    },
+	    initialize: function() {
+	        var core = enchant.Core.instance;
+	        enchant.Node.call(this);
 	
-	    /**
-	     * key と value はアクセサを参照
-	     */
-	    setOptions: function(options) {
-	      this.gif.setOptions(options);
-	      return this;
-	    },
+	        this._rotation = 0;
+	        this._scaleX = 1;
+	        this._scaleY = 1;
 	
-	    start: function(fps, recordingTime) {
-	      fps = fps || 30;
-	      recordingTime = recordingTime || 2000;
-	      var frameTime = 1000 / fps;
-	      var time = 0;
-	      this._id = setInterval(function() {
-	        var ctx = this.canvas.context;
-	        this.gif.addFrame(ctx, {
-	          copy: true,
-	          delay: frameTime,
+	        this._touchEnabled = true;
+	        this._clipping = false;
+	
+	        this._originX = null;
+	        this._originY = null;
+	
+	        this._width = 0;
+	        this._height = 0;
+	        this._backgroundColor = null;
+	        this._debugColor = '#0000ff';
+	        this._opacity = 1;
+	        this._visible = true;
+	        this._buttonMode = null;
+	
+	        this._style = {};
+	        this.__styleStatus = {};
+	
+	        this._isContainedInCollection = false;
+	
+	        /**
+	         * @type String
+	         */
+	        this.compositeOperation = null;
+	
+	        /**
+	         * Defines this Entity as a button.
+	         * When touched or clicked the corresponding button event is dispatched.
+	         * Valid buttonModes are: left, right, up, down, a, b. 
+	         * @type String
+	         */
+	        this.buttonMode = null;
+	        /**
+	         * Indicates if this Entity is being clicked.
+	         * Only works when {@link enchant.Entity.buttonMode} is set.
+	         * @type Boolean
+	         */
+	        this.buttonPressed = false;
+	        this.addEventListener('touchstart', function() {
+	            if (!this.buttonMode) {
+	                return;
+	            }
+	            this.buttonPressed = true;
+	            this.dispatchEvent(new enchant.Event(this.buttonMode + 'buttondown'));
+	            core.changeButtonState(this.buttonMode, true);
+	        });
+	        this.addEventListener('touchend', function() {
+	            if (!this.buttonMode) {
+	                return;
+	            }
+	            this.buttonPressed = false;
+	            this.dispatchEvent(new enchant.Event(this.buttonMode + 'buttonup'));
+	            core.changeButtonState(this.buttonMode, false);
 	        });
 	
-	        time += frameTime;
-	
-	        if (time > recordingTime) {
-	          this.stop();
-	        }
-	      }.bind(this), frameTime);
-	
-	      return this;
+	        this.enableCollection();
 	    },
-	
-	    stop: function() {
-	      if (this._id === null) return this;
-	      clearInterval(this._id);
-	
-	      // レンダリング
-	      this.gif.render();
-	      this._id = null;
-	      return this;
-	    },
-	
-	    open: function() {
-	      window.open(this.objectURL);
-	    },
-	
-	    _accessor: {
-	
-	      width: {
+	    /**
+	     * The width of the Entity.
+	     * @type Number
+	     */
+	    width: {
 	        get: function() {
-	          return this.gif.options.width || this.canvas.width;
+	            return this._width;
 	        },
 	        set: function(width) {
-	          this.setOption('width', width);
-	        },
-	      },
-	
-	      height: {
+	            if(this._width !== width) {
+	                this._width = width;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**
+	     * The height of the Entity.
+	     * @type Number
+	     */
+	    height: {
 	        get: function() {
-	          return this.gif.options.height || this.canvas.height;
+	            return this._height;
 	        },
 	        set: function(height) {
-	          this.setOption('height', height);
-	        },
-	      },
-	
-	      // GIF のクオリティ。低いほどハイクオリティ
-	      quality: {
+	            if(this._height !== height) {
+	                this._height = height;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**
+	     * The Entity background color.
+	     * Must be provided in the same format as the CSS 'color' property.
+	     * @type String
+	     */
+	    backgroundColor: {
 	        get: function() {
-	          return this.gif.options.quality;
+	            return this._backgroundColor;
 	        },
-	        set: function(quality) {
-	          this.setOption('quality', quality);
-	        },
-	      },
-	
-	      // Worker の URL デフォルトで gif.worker.js
-	      workerScript: {
+	        set: function(color) {
+	            this._backgroundColor = color;
+	        }
+	    },
+	    /**
+	     * The Entity debug color.
+	     * Must be provided in the same format as the CSS 'color' property.
+	     * @type String
+	     */
+	    debugColor: {
 	        get: function() {
-	          return this.gif.options.workerScript;
+	            return this._debugColor;
 	        },
-	        set: function(workerScript) {
-	          this.setOption('workerScript', workerScript);
-	        },
-	      },
-	
-	      // 起動する Worker の数
-	      workers: {
+	        set: function(color) {
+	            this._debugColor = color;
+	        }
+	    },
+	    /**
+	     * The transparency of this entity.
+	     * Defines the transparency level from 0 to 1
+	     * (0 is completely transparent, 1 is completely opaque).
+	     * @type Number
+	     */
+	    opacity: {
 	        get: function() {
-	          return this.gif.options.workers;
+	            return this._opacity;
 	        },
-	        set: function(workers) {
-	          this.setOption('workers', workers);
-	        },
-	      },
-	
-	      // ループするか 0 でループ -1 でループしない
-	      repeat: {
+	        set: function(opacity) {
+	            this._opacity = parseFloat(opacity);
+	        }
+	    },
+	    /**
+	     * Indicates whether or not to display this Entity.
+	     * @type Boolean
+	     */
+	    visible: {
 	        get: function() {
-	          return this.gif.options.repeat;
+	            return this._visible;
 	        },
-	        set: function(repeat) {
-	          this.setOption('repeat', repeat);
-	        },
-	      },
-	
-	      // true で ループ false でループしない
-	      loop: {
+	        set: function(visible) {
+	            this._visible = visible;
+	        }
+	    },
+	    /**
+	     * Indicates whether or not this Entity can be touched.
+	     * @type Boolean
+	     */
+	    touchEnabled: {
 	        get: function() {
-	          return this.gif.options.repeat === 0;
+	            return this._touchEnabled;
 	        },
-	        set: function(loop) {
-	          this.setOption('repeat', loop ? 0 : -1);
-	        },
-	      },
-	
-	      // 透過する色 ? transparent hex color, 0x00FF00 = green
-	      transparent: {
+	        set: function(enabled) {
+	            this._touchEnabled = enabled;
+	            if (enabled) {
+	                this._style.pointerEvents = 'all';
+	            } else {
+	                this._style.pointerEvents = 'none';
+	            }
+	        }
+	    },
+	    /**
+	     * Performs a collision detection based on whether or not the bounding rectangles are intersecting.
+	     * @param {*} other An object like Entity, with the properties x, y, width, height, which are used for the 
+	     * collision detection.
+	     * @return {Boolean} True, if a collision was detected.
+	     */
+	    intersect: function(other) {
+	        if (other instanceof enchant.Entity) {
+	            return this._intersectOne(other);
+	        } else if (typeof other === 'function' && other.collection) {
+	            return _intersectBetweenClassAndInstance(other, this);
+	        }
+	        return false;
+	    },
+	    _intersectOne: function(other) {
+	        if (this._dirty) {
+	            this._updateCoordinate();
+	        } if (other._dirty) {
+	            other._updateCoordinate();
+	        }
+	        return this._offsetX < other._offsetX + other.width && other._offsetX < this._offsetX + this.width &&
+	            this._offsetY < other._offsetY + other.height && other._offsetY < this._offsetY + this.height;
+	    },
+	    intersectStrict: function(other) {
+	        if (other instanceof enchant.Entity) {
+	            return this._intersectStrictOne(other);
+	        } else if (typeof other === 'function' && other.collection) {
+	            return _intersectStrictBetweenClassAndInstance(other, this);
+	        }
+	        return false;
+	    },
+	    _intersectStrictOne: function(other) {
+	        if (this._dirty) {
+	            this._updateCoordinate();
+	        } if (other._dirty) {
+	            other._updateCoordinate();
+	        }
+	        var rect1 = this.getOrientedBoundingRect(),
+	            rect2 = other.getOrientedBoundingRect(),
+	            lt1 = rect1.leftTop, rt1 = rect1.rightTop,
+	            lb1 = rect1.leftBottom, rb1 = rect1.rightBottom,
+	            lt2 = rect2.leftTop, rt2 = rect2.rightTop,
+	            lb2 = rect2.leftBottom, rb2 = rect2.rightBottom,
+	            ltx1 = lt1[0], lty1 = lt1[1], rtx1 = rt1[0], rty1 = rt1[1],
+	            lbx1 = lb1[0], lby1 = lb1[1], rbx1 = rb1[0], rby1 = rb1[1],
+	            ltx2 = lt2[0], lty2 = lt2[1], rtx2 = rt2[0], rty2 = rt2[1],
+	            lbx2 = lb2[0], lby2 = lb2[1], rbx2 = rb2[0], rby2 = rb2[1],
+	            t1 = [ rtx1 - ltx1, rty1 - lty1 ],
+	            r1 = [ rbx1 - rtx1, rby1 - rty1 ],
+	            b1 = [ lbx1 - rbx1, lby1 - rby1 ],
+	            l1 = [ ltx1 - lbx1, lty1 - lby1 ],
+	            t2 = [ rtx2 - ltx2, rty2 - lty2 ],
+	            r2 = [ rbx2 - rtx2, rby2 - rty2 ],
+	            b2 = [ lbx2 - rbx2, lby2 - rby2 ],
+	            l2 = [ ltx2 - lbx2, lty2 - lby2 ],
+	            cx1 = (ltx1 + rtx1 + lbx1 + rbx1) >> 2,
+	            cy1 = (lty1 + rty1 + lby1 + rby1) >> 2,
+	            cx2 = (ltx2 + rtx2 + lbx2 + rbx2) >> 2,
+	            cy2 = (lty2 + rty2 + lby2 + rby2) >> 2,
+	            i, j, poss1, poss2, dirs1, dirs2, pos1, pos2, dir1, dir2,
+	            px1, py1, px2, py2, dx1, dy1, dx2, dy2, vx, vy, c, c1, c2;
+	        if (t1[0] * (cy2 - lty1) - t1[1] * (cx2 - ltx1) > 0 &&
+	            r1[0] * (cy2 - rty1) - r1[1] * (cx2 - rtx1) > 0 &&
+	            b1[0] * (cy2 - rby1) - b1[1] * (cx2 - rbx1) > 0 &&
+	            l1[0] * (cy2 - lby1) - l1[1] * (cx2 - lbx1) > 0) {
+	            return true;
+	        } else if (t2[0] * (cy1 - lty2) - t2[1] * (cx1 - ltx2) > 0 &&
+	            r2[0] * (cy1 - rty2) - r2[1] * (cx1 - rtx2) > 0 &&
+	            b2[0] * (cy1 - rby2) - b2[1] * (cx1 - rbx2) > 0 &&
+	            l2[0] * (cy1 - lby2) - l2[1] * (cx1 - lbx2) > 0) {
+	            return true;
+	        } else {
+	            poss1 = [ lt1, rt1, rb1, lb1 ];
+	            poss2 = [ lt2, rt2, rb2, lb2 ];
+	            dirs1 = [ t1, r1, b1, l1 ];
+	            dirs2 = [ t2, r2, b2, l2 ];
+	            for (i = 0; i < 4; i++) {
+	                pos1 = poss1[i];
+	                px1 = pos1[0]; py1 = pos1[1];
+	                dir1 = dirs1[i];
+	                dx1 = dir1[0]; dy1 = dir1[1];
+	                for (j = 0; j < 4; j++) {
+	                    pos2 = poss2[j];
+	                    px2 = pos2[0]; py2 = pos2[1];
+	                    dir2 = dirs2[j];
+	                    dx2 = dir2[0]; dy2 = dir2[1];
+	                    c = dx1 * dy2 - dy1 * dx2;
+	                    if (c !== 0) {
+	                        vx = px2 - px1;
+	                        vy = py2 - py1;
+	                        c1 = (vx * dy1 - vy * dx1) / c;
+	                        c2 = (vx * dy2 - vy * dx2) / c;
+	                        if (0 < c1 && c1 < 1 && 0 < c2 && c2 < 1) {
+	                            return true;
+	                        }
+	                    }
+	                }
+	            }
+	            return false;
+	        }
+	    },
+	    /**
+	     * Performs a collision detection based on distance from the Entity's central point.
+	     * @param {*} other An object like Entity, with properties x, y, width, height, which are used for the 
+	     * collision detection.
+	     * @param {Number} [distance] The greatest distance to be considered for a collision.
+	     * The default distance is the average of both objects width and height.
+	     * @return {Boolean} True, if a collision was detected.
+	     */
+	    within: function(other, distance) {
+	        if (this._dirty) {
+	            this._updateCoordinate();
+	        } if (other._dirty) {
+	            other._updateCoordinate();
+	        }
+	        if (distance == null) {
+	            distance = (this.width + this.height + other.width + other.height) / 4;
+	        }
+	        var _;
+	        return (_ = this._offsetX - other._offsetX + (this.width - other.width) / 2) * _ +
+	            (_ = this._offsetY - other._offsetY + (this.height - other.height) / 2) * _ < distance * distance;
+	    },
+	    /**
+	     * Enlarges or shrinks this Entity.
+	     * @param {Number} x Scaling factor on the x axis.
+	     * @param {Number} [y] Scaling factor on the y axis.
+	     */
+	    scale: function(x, y) {
+	        this._scaleX *= x;
+	        this._scaleY *= (y != null) ? y : x;
+	        this._dirty = true;
+	    },
+	    /**
+	     * Rotate this Entity.
+	     * @param {Number} deg Rotation angle (degree).
+	     */
+	    rotate: function(deg) {
+	        this.rotation += deg;
+	    },
+	    /**
+	     * Scaling factor on the x axis of this Entity.
+	     * @type Number
+	     */
+	    scaleX: {
 	        get: function() {
-	          return this.gif.options.transparent;
+	            return this._scaleX;
 	        },
-	        set: function(transparent) {
-	          this.setOption('transparent', transparent);
-	        },
-	      },
-	
-	      // background color where source image is transparent
-	      background: {
+	        set: function(scaleX) {
+	            if(this._scaleX !== scaleX) {
+	                this._scaleX = scaleX;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**
+	     * Scaling factor on the y axis of this Entity.
+	     * @type Number
+	     */
+	    scaleY: {
 	        get: function() {
-	          return this.gif.options.background;
+	            return this._scaleY;
 	        },
-	        set: function(background) {
-	          this.setOption('background', background);
+	        set: function(scaleY) {
+	            if(this._scaleY !== scaleY) {
+	                this._scaleY = scaleY;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**
+	     * Entity rotation angle (degree).
+	     * @type Number
+	     */
+	    rotation: {
+	        get: function() {
+	            return this._rotation;
 	        },
-	      },
+	        set: function(rotation) {
+	            if(this._rotation !== rotation) {
+	                this._rotation = rotation;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**
+	     * The point of origin used for rotation and scaling.
+	     * @type Number
+	     */
+	    originX: {
+	        get: function() {
+	            return this._originX;
+	        },
+	        set: function(originX) {
+	            if(this._originX !== originX) {
+	                this._originX = originX;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**
+	     * The point of origin used for rotation and scaling.
+	     * @type Number
+	     */
+	    originY: {
+	        get: function() {
+	            return this._originY;
+	        },
+	        set: function(originY) {
+	            if(this._originY !== originY) {
+	                this._originY = originY;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**
+	     */
+	    enableCollection: function() {
+	        this.addEventListener('addedtoscene', this._addSelfToCollection);
+	        this.addEventListener('removedfromscene', this._removeSelfFromCollection);
+	        if (this.scene) {
+	            this._addSelfToCollection();
+	        }
+	    },
+	    /**
+	     */
+	    disableCollection: function() {
+	        this.removeEventListener('addedtoscene', this._addSelfToCollection);
+	        this.removeEventListener('removedfromscene', this._removeSelfFromCollection);
+	        if (this.scene) {
+	            this._removeSelfFromCollection();
+	        }
+	    },
+	    /**#nocode+*/
+	    clearEventListener: function() {
+	        _nodePrototypeClearEventListener.apply(this,arguments);
+	        if (this.scene) {
+	            this._removeSelfFromCollection();
+	        }
+	    },
+	    /**#nocode-*/
+	    _addSelfToCollection: function() {
+	        if (this._isContainedInCollection) {
+	            return;
+	        }
+	
+	        var Constructor = this.getConstructor();
+	        Constructor._collectionTarget.forEach(function(C) {
+	            C.collection.push(this);
+	        }, this);
+	
+	        this._isContainedInCollection = true;
+	    },
+	    _removeSelfFromCollection: function() {
+	        if (!this._isContainedInCollection) {
+	            return;
+	        }
+	
+	        var Constructor = this.getConstructor();
+	        Constructor._collectionTarget.forEach(function(C) {
+	            var i = C.collection.indexOf(this);
+	            if (i !== -1) {
+	                C.collection.splice(i, 1);
+	            }
+	        }, this);
+	
+	        this._isContainedInCollection = false;
+	    },
+	    getBoundingRect: function() {
+	        var w = this.width || 0;
+	        var h = this.height || 0;
+	        var mat = this._matrix;
+	        var m11w = mat[0] * w, m12w = mat[1] * w,
+	            m21h = mat[2] * h, m22h = mat[3] * h,
+	            mdx = mat[4], mdy = mat[5];
+	        var xw = [ mdx, m11w + mdx, m21h + mdx, m11w + m21h + mdx ].sort(function(a, b) { return a - b; });
+	        var yh = [ mdy, m12w + mdy, m22h + mdy, m12w + m22h + mdy ].sort(function(a, b) { return a - b; });
+	
+	        return {
+	            left: xw[0],
+	            top: yh[0],
+	            width: xw[3] - xw[0],
+	            height: yh[3] - yh[0]
+	        };
+	    },
+	    getOrientedBoundingRect: function() {
+	        var w = this.width || 0;
+	        var h = this.height || 0;
+	        var mat = this._matrix;
+	        var m11w = mat[0] * w, m12w = mat[1] * w,
+	            m21h = mat[2] * h, m22h = mat[3] * h,
+	            mdx = mat[4], mdy = mat[5];
+	
+	        return {
+	            leftTop: [ mdx, mdy ],
+	            rightTop: [ m11w + mdx, m12w + mdy ],
+	            leftBottom: [ m21h + mdx, m22h + mdy ],
+	            rightBottom: [ m11w + m21h + mdx, m12w + m22h + mdy ]
+	        };
+	    },
+	    getConstructor: function() {
+	        return Object.getPrototypeOf(this).constructor;
 	    }
-	  });
-	
-	
 	});
 	
+	var _collectizeConstructor = function(Constructor) {
+	    if (Constructor._collective) {
+	        return;
+	    }
+	    var rel = enchant.Class.getInheritanceTree(Constructor);
+	    var i = rel.indexOf(enchant.Entity);
+	    if (i !== -1) {
+	        Constructor._collectionTarget = rel.splice(0, i + 1);
+	    } else {
+	        Constructor._collectionTarget = [];
+	    }
+	    Constructor.intersect = _staticIntersect;
+	    Constructor.intersectStrict = _staticIntersectStrict;
+	    Constructor.collection = [];
+	    Constructor._collective = true;
+	};
 	
-	phina.namespace(function() {
+	_collectizeConstructor(enchant.Entity);
 	
-	  /**
-	   * @class phina.display.DisplayElement
-	   * 
-	   */
-	  phina.define('phina.display.DisplayElement', {
-	    superClass: 'phina.app.Object2D',
+	enchant.Entity._inherited = function(subclass) {
+	    _collectizeConstructor(subclass);
+	};
 	
-	    /** 表示フラグ */
-	    visible: true,
-	    /** アルファ */
-	    alpha: 1.0,
-	    /** ブレンドモード */
-	    blendMode: "source-over",
-	
-	    /** 子供を 自分のCanvasRenderer で描画するか */
-	    renderChildBySelf: false,
-	
-	    init: function(options) {
-	      options = (options || {});
-	      
-	      this.superInit(options);
-	
-	      this.visible = true;
-	      this.alpha = 1.0;
-	      this._worldAlpha = 1.0;
-	    },
-	
+	/**
+	 * @scope enchant.Sprite.prototype
+	 */
+	enchant.Sprite = enchant.Class.create(enchant.Entity, {
 	    /**
-	     * 表示/非表示をセット
+	     * @name enchant.Sprite
+	     * @class
+	     * Class which can display images.
+	     * @param {Number} width Sprite width.
+	     * @param {Number} height Sprite height.
+	     *
+	     * @example
+	     * var bear = new Sprite(32, 32);
+	     * bear.image = core.assets['chara1.gif'];
+	     *
+	     * @constructs
+	     * @extends enchant.Entity
 	     */
-	    setVisible: function(flag) {
-	      this.visible = flag;
-	      return this;
-	    },
+	    initialize: function(width, height) {
+	        enchant.Entity.call(this);
 	
+	        this.width = width;
+	        this.height = height;
+	        this._image = null;
+	        this._debugColor = '#ff0000';
+	        this._frameLeft = 0;
+	        this._frameTop = 0;
+	        this._frame = 0;
+	        this._frameSequence = null;
+	    },
 	    /**
-	     * 表示
+	     * Image displayed in the Sprite.
+	     * @type enchant.Surface
 	     */
-	    show: function() {
-	      this.visible = true;
-	      return this;
+	    image: {
+	        get: function() {
+	            return this._image;
+	        },
+	        set: function(image) {
+	            if (image === undefined) {
+	                throw new Error('Assigned value on Sprite.image is undefined. Please double-check image path, and check if the image you want to use is preload before use.');
+	            }
+	            if (image === this._image) {
+	                return;
+	            }
+	            this._image = image;
+	            this._computeFramePosition();
+	        }
 	    },
-	
 	    /**
-	     * 非表示
+	     * Index of the frame to be displayed.
+	     * Frames with the same width and height as Sprite will be arrayed from upper left corner of the 
+	     * {@link enchant.Sprite#image} image. When a sequence of numbers is provided, the displayed frame 
+	     * will switch automatically. At the end of the array the sequence will restart. By setting 
+	     * a value within the sequence to null, the frame switching is stopped.
+	     *
+	     * @example
+	     * var sprite = new Sprite(32, 32);
+	     * sprite.frame = [0, 1, 0, 2]
+	     * //-> 0, 1, 0, 2, 0, 1, 0, 2,..
+	     * sprite.frame = [0, 1, 0, 2, null]
+	     * //-> 0, 1, 0, 2, (2, 2,.. :stop)
+	     *
+	     * @type Number|Array
 	     */
-	    hide: function() {
-	      this.visible = false;
-	      return this;
+	    frame: {
+	        get: function() {
+	            return this._frame;
+	        },
+	        set: function(frame) {
+	            if (((this._frameSequence == null) && (this._frame === frame)) || (this._deepCompareToPreviousFrame(frame))) {
+	                return;
+	            }
+	            if (frame instanceof Array) {
+	                this._frameSequence = frame;
+	            } else {
+	                this._frameSequence = null;
+	                this._frame = frame;
+	                this._computeFramePosition();
+	            }
+	        }
 	    },
+	    _frameSequence: {
+	        get: function() {
+	            return this.__frameSequence;
+	        },
+	        set: function(frameSequence) {
+	            if(frameSequence && !this.__frameSequence) {
+	                this.addEventListener(enchant.Event.ENTER_FRAME, this._rotateFrameSequence);
+	            } else if(!frameSequence && this.__frameSequence) {
+	                this.removeEventListener(enchant.Event.ENTER_FRAME, this._rotateFrameSequence);
+	            }
+	            if(frameSequence) {
+	                this.__frameSequence = frameSequence.slice();
+	                this._originalFrameSequence = frameSequence.slice();
+	                this._rotateFrameSequence();
+	            } else {
+	                this.__frameSequence = null;
+	                this._originalFrameSequence = null;
+	            }
+	        }
+	    },
+	    /**
+	     * If we are setting the same frame Array as animation,
+	     * just continue animating.
+	     * @private
+	     */
+	    _deepCompareToPreviousFrame: function(frameArray) {
+	        if (frameArray === this._originalFrameSequence) {
+	            return true;
+	        }
+	        if (frameArray == null || this._originalFrameSequence == null) {
+	            return false;
+	        }
+	        if (!(frameArray instanceof Array)) {
+	            return false;
+	        }
+	        if (frameArray.length !== this._originalFrameSequence.length) {
+	            return false;
+	        }
+	        for (var i = 0; i < frameArray.length; ++i) {
+	            if (frameArray[i] !== this._originalFrameSequence[i]){
+	                return false;
+	            }
+	        }
+	        return true;
+	    },
+	    /**
+	     * 0 <= frame
+	     * @private
+	     */
+	    _computeFramePosition: function() {
+	        var image = this._image;
+	        var row;
+	        if (image != null) {
+	            row = image.width / this._width | 0;
+	            this._frameLeft = (this._frame % row | 0) * this._width;
+	            this._frameTop = (this._frame / row | 0) * this._height % image.height;
+	        }
+	    },
+	    _rotateFrameSequence: function() {
+	        var frameSequence = this._frameSequence;
+	        if (frameSequence && frameSequence.length !== 0) {
+	            var nextFrame = frameSequence.shift();
+	            if (nextFrame === null) {
+	                this._frameSequence = null;
+	                this.dispatchEvent(new enchant.Event(enchant.Event.ANIMATION_END));
+	            } else {
+	                this._frame = nextFrame;
+	                this._computeFramePosition();
+	                frameSequence.push(nextFrame);
+	            }
+	        }
+	    },
+	    /**#nocode+*/
+	    width: {
+	        get: function() {
+	            return this._width;
+	        },
+	        set: function(width) {
+	            this._width = width;
+	            this._computeFramePosition();
+	            this._dirty = true;
+	        }
+	    },
+	    height: {
+	        get: function() {
+	            return this._height;
+	        },
+	        set: function(height) {
+	            this._height = height;
+	            this._computeFramePosition();
+	            this._dirty = true;
+	        }
+	    },
+	    /**#nocode-*/
+	    cvsRender: function(ctx) {
+	        var image = this._image,
+	            w = this._width, h = this._height,
+	            iw, ih, elem, sx, sy, sw, sh;
+	        if (image && w !== 0 && h !== 0) {
+	            iw = image.width;
+	            ih = image.height;
+	            if (iw < w || ih < h) {
+	                ctx.fillStyle = enchant.Surface._getPattern(image);
+	                ctx.fillRect(0, 0, w, h);
+	            } else {
+	                elem = image._element;
+	                sx = this._frameLeft;
+	                sy = Math.min(this._frameTop, ih - h);
+	                // IE9 doesn't allow for negative or 0 widths/heights when drawing on the CANVAS element
+	                sw = Math.max(0.01, Math.min(iw - sx, w));
+	                sh = Math.max(0.01, Math.min(ih - sy, h));
+	                ctx.drawImage(elem, sx, sy, sw, sh, 0, 0, w, h);
+	            }
+	        }
+	    },
+	    domRender: (function() {
+	        if (enchant.ENV.VENDOR_PREFIX === 'ms') {
+	            return function(element) {
+	                if (this._image) {
+	                    if (this._image._css) {
+	                        this._style['background-image'] = this._image._css;
+	                        this._style['background-position'] =
+	                            -this._frameLeft + 'px ' +
+	                            -this._frameTop + 'px';
+	                    } else if (this._image._element) {
+	                    }
+	                }
+	            };
+	        } else {
+	            return function(element) {
+	                if (this._image) {
+	                    if (this._image._css) {
+	                        this._style['background-image'] = this._image._css;
+	                        this._style['background-position'] =
+	                            -this._frameLeft + 'px ' +
+	                            -this._frameTop + 'px';
+	                    } else if (this._image._element) {
+	                    }
+	                }
+	            };
+	        }
+	    }())
+	});
 	
+	/**
+	 * @scope enchant.Label.prototype
+	 */
+	enchant.Label = enchant.Class.create(enchant.Entity, {
+	    /**
+	     * @name enchant.Label
+	     * @class
+	     * A class for Label object.
+	     * @constructs
+	     * @extends enchant.Entity
+	     */
+	    initialize: function(text) {
+	        enchant.Entity.call(this);
+	
+	        this.text = text || '';
+	        this.width = 300;
+	        this.font = '14px serif';
+	        this.textAlign = 'left';
+	
+	        this._debugColor = '#ff0000';
+	    },
+	    /**#nocode+*/
+	    width: {
+	        get: function() {
+	            return this._width;
+	        },
+	        set: function(width) {
+	            this._width = width;
+	            this._dirty = true;
+	            // issue #164
+	            this.updateBoundArea();
+	        }
+	    },
+	    /**#nocode-*/
+	    /**
+	     * Text to be displayed.
+	     * @type String
+	     */
+	    text: {
+	        get: function() {
+	            return this._text;
+	        },
+	        set: function(text) {
+	            text = '' + text;
+	            if(this._text === text) {
+	                return;
+	            }
+	            this._text = text;
+	            text = text.replace(/<br ?\/?>/gi, '<br/>');
+	            this._splitText = text.split('<br/>');
+	            this.updateBoundArea();
+	            for (var i = 0, l = this._splitText.length; i < l; i++) {
+	                text = this._splitText[i];
+	                var metrics = this.getMetrics(text);
+	                this._splitText[i] = {};
+	                this._splitText[i].text = text;
+	                this._splitText[i].height = metrics.height;
+	                this._splitText[i].width = metrics.width;
+	            }
+	        }
+	    },
+	    /**
+	     * Specifies horizontal alignment of text.
+	     * Can be set according to the format of the CSS 'text-align' property.
+	     * @type String
+	     */
+	    textAlign: {
+	        get: function() {
+	            return this._style['text-align'];
+	        },
+	        set: function(textAlign) {
+	            this._style['text-align'] = textAlign;
+	            this.updateBoundArea();
+	        }
+	    },
+	    /**
+	     * Font settings.
+	     * Can be set according to the format of the CSS 'font' property.
+	     * @type String
+	     */
+	    font: {
+	        get: function() {
+	            return this._style.font;
+	        },
+	        set: function(font) {
+	            this._style.font = font;
+	            this.updateBoundArea();
+	        }
+	    },
+	    /**
+	     * Text color settings.
+	     * Can be set according to the format of the CSS 'color' property.
+	     * @type String
+	     */
+	    color: {
+	        get: function() {
+	            return this._style.color;
+	        },
+	        set: function(color) {
+	            this._style.color = color;
+	        }
+	    },
+	    cvsRender: function(ctx) {
+	        var x, y = 0;
+	        var labelWidth = this.width;
+	        var charWidth, amount, line, text, c, buf, increase, length;
+	        var bufWidth;
+	        if (this._splitText) {
+	            ctx.textBaseline = 'top';
+	            ctx.font = this.font;
+	            ctx.fillStyle = this.color || '#000000';
+	            charWidth = ctx.measureText(' ').width;
+	            amount = labelWidth / charWidth;
+	            for (var i = 0, l = this._splitText.length; i < l; i++) {
+	                line = this._splitText[i];
+	                text = line.text;
+	                c = 0;
+	                while (text.length > c + amount || ctx.measureText(text.slice(c, c + amount)).width > labelWidth) {
+	                    buf = '';
+	                    increase = amount;
+	                    length = 0;
+	                    while (increase > 0) {
+	                        if (ctx.measureText(buf).width < labelWidth) {
+	                            length += increase;
+	                            buf = text.slice(c, c + length);
+	                        } else {
+	                            length -= increase;
+	                            buf = text.slice(c, c + length);
+	                        }
+	                        increase = increase / 2 | 0;
+	                    }
+	                    ctx.fillText(buf, 0, y);
+	                    y += line.height - 1;
+	                    c += length;
+	                }
+	                buf = text.slice(c, c + text.length);
+	                if (this.textAlign === 'right') {
+	                    x = labelWidth - ctx.measureText(buf).width;
+	                } else if (this.textAlign === 'center') {
+	                    x = (labelWidth - ctx.measureText(buf).width) / 2;
+	                } else {
+	                    x = 0;
+	                }
+	                ctx.fillText(buf, x, y);
+	                y += line.height - 1;
+	            }
+	        }
+	    },
+	    domRender: function(element) {
+	        if (element.innerHTML !== this._text) {
+	            element.innerHTML = this._text;
+	        }
+	    },
+	    detectRender: function(ctx) {
+	        ctx.fillRect(this._boundOffset, 0, this._boundWidth, this._boundHeight);
+	    },
+	    updateBoundArea: function() {
+	        var metrics = this.getMetrics();
+	        this._boundWidth = metrics.width;
+	        this._boundHeight = metrics.height;
+	        if (this.textAlign === 'right') {
+	            this._boundOffset = this.width - this._boundWidth;
+	        } else if (this.textAlign === 'center') {
+	            this._boundOffset = (this.width - this._boundWidth) / 2;
+	        } else {
+	            this._boundOffset = 0;
+	        }
+	    },
+	    getMetrics: function(text) {
+	        var ret = {};
+	        var div, width, height;
+	        if (document.body) {
+	            div = document.createElement('div');
+	            for (var prop in this._style) {
+	                if(prop !== 'width' && prop !== 'height') {
+	                    div.style[prop] = this._style[prop];
+	                }
+	            }
+	            text = text || this._text;
+	            div.innerHTML = text.replace(/ /g, '&nbsp;');
+	            div.style.whiteSpace = 'noWrap';
+	            div.style.lineHeight = 1;
+	            document.body.appendChild(div);
+	            var computedStyle = getComputedStyle(div);
+	            ret.height = parseInt(computedStyle.height, 10) + 1;
+	            div.style.position = 'absolute';
+	            ret.width = parseInt(computedStyle.width, 10) + 1;
+	            document.body.removeChild(div);
+	        } else {
+	            ret.width = this.width;
+	            ret.height = this.height;
+	        }
+	        return ret;
+	    }
+	});
+	
+	/**
+	 * @scope enchant.Map.prototype
+	 */
+	enchant.Map = enchant.Class.create(enchant.Entity, {
+	    /**
+	     * @name enchant.Map
+	     * @class
+	     * A class to create and display maps from a tile set.
+	     * @param {Number} tileWidth Tile width.
+	     * @param {Number} tileHeight Tile height.
+	     * @constructs
+	     * @extends enchant.Entity
+	     */
+	    initialize: function(tileWidth, tileHeight) {
+	        var core = enchant.Core.instance;
+	
+	        enchant.Entity.call(this);
+	
+	        var surface = new enchant.Surface(core.width, core.height);
+	        this._surface = surface;
+	        var canvas = surface._element;
+	        canvas.style.position = 'absolute';
+	        if (enchant.ENV.RETINA_DISPLAY && core.scale === 2) {
+	            canvas.width = core.width * 2;
+	            canvas.height = core.height * 2;
+	            this._style.webkitTransformOrigin = '0 0';
+	            this._style.webkitTransform = 'scale(0.5)';
+	        } else {
+	            canvas.width = core.width;
+	            canvas.height = core.height;
+	        }
+	        this._context = canvas.getContext('2d');
+	
+	        this._tileWidth = tileWidth || 0;
+	        this._tileHeight = tileHeight || 0;
+	        this._image = null;
+	        this._data = [
+	            [
+	                []
+	            ]
+	        ];
+	        this._dirty = false;
+	        this._tight = false;
+	
+	        this.touchEnabled = false;
+	
+	        /**
+	         * Two dimensional array to store if collision detection should be performed for a tile.
+	         * @type Number[][]
+	         */
+	        this.collisionData = null;
+	
+	        this._listeners['render'] = null;
+	        this.addEventListener('render', function() {
+	            if(this._dirty) {
+	                this._previousOffsetX = this._previousOffsetY = null;
+	            }
+	        });
+	    },
+	    /**
+	     * Set map data.
+	     * Sets the tile data, whereas the data (two-dimensional array with indizes starting from 0) 
+	     * is mapped on the image starting from the upper left corner.
+	     * When more than one map data array is set, they are displayed in reverse order.
+	     * @param {...Number[][]} data Two-dimensional array of tile indizes. Multiple designations possible.
+	     */
+	    loadData: function(data) {
+	        this._data = Array.prototype.slice.apply(arguments);
+	        this._dirty = true;
+	
+	        this._tight = false;
+	        for (var i = 0, len = this._data.length; i < len; i++) {
+	            var c = 0;
+	            data = this._data[i];
+	            for (var y = 0, l = data.length; y < l; y++) {
+	                for (var x = 0, ll = data[y].length; x < ll; x++) {
+	                    if (data[y][x] >= 0) {
+	                        c++;
+	                    }
+	                }
+	            }
+	            if (c / (data.length * data[0].length) > 0.2) {
+	                this._tight = true;
+	                break;
+	            }
+	        }
+	    },
+	    /**
+	     * Checks what tile is present at the given position.
+	     * @param {Number} x x coordinates of the point on the map.
+	     * @param {Number} y y coordinates of the point on the map.
+	     * @return {*} The tile data for the given position.
+	     */
+	    checkTile: function(x, y) {
+	        if (x < 0 || this.width <= x || y < 0 || this.height <= y) {
+	            return false;
+	        }
+	        var width = this._image.width;
+	        var height = this._image.height;
+	        var tileWidth = this._tileWidth || width;
+	        var tileHeight = this._tileHeight || height;
+	        x = x / tileWidth | 0;
+	        y = y / tileHeight | 0;
+	        //		return this._data[y][x];
+	        var data = this._data[0];
+	        return data[y][x];
+	    },
+	    /**
+	     * Judges whether or not obstacles are on top of Map.
+	     * @param {Number} x x coordinates of detection spot on map.
+	     * @param {Number} y y coordinates of detection spot on map.
+	     * @return {Boolean} True, if there are obstacles.
+	     */
+	    hitTest: function(x, y) {
+	        if (x < 0 || this.width <= x || y < 0 || this.height <= y) {
+	            return false;
+	        }
+	        var width = this._image.width;
+	        var height = this._image.height;
+	        var tileWidth = this._tileWidth || width;
+	        var tileHeight = this._tileHeight || height;
+	        x = x / tileWidth | 0;
+	        y = y / tileHeight | 0;
+	        if (this.collisionData != null) {
+	            return this.collisionData[y] && !!this.collisionData[y][x];
+	        } else {
+	            for (var i = 0, len = this._data.length; i < len; i++) {
+	                var data = this._data[i];
+	                var n;
+	                if (data[y] != null && (n = data[y][x]) != null &&
+	                    0 <= n && n < (width / tileWidth | 0) * (height / tileHeight | 0)) {
+	                    return true;
+	                }
+	            }
+	            return false;
+	        }
+	    },
+	    /**
+	     * Image with which the tile set is displayed on the map.
+	     * @type enchant.Surface
+	     */
+	    image: {
+	        get: function() {
+	            return this._image;
+	        },
+	        set: function(image) {
+	            var core = enchant.Core.instance;
+	
+	            this._image = image;
+	            if (enchant.ENV.RETINA_DISPLAY && core.scale === 2) {
+	                var img = new enchant.Surface(image.width * 2, image.height * 2);
+	                var tileWidth = this._tileWidth || image.width;
+	                var tileHeight = this._tileHeight || image.height;
+	                var row = image.width / tileWidth | 0;
+	                var col = image.height / tileHeight | 0;
+	                for (var y = 0; y < col; y++) {
+	                    for (var x = 0; x < row; x++) {
+	                        img.draw(image, x * tileWidth, y * tileHeight, tileWidth, tileHeight,
+	                            x * tileWidth * 2, y * tileHeight * 2, tileWidth * 2, tileHeight * 2);
+	                    }
+	                }
+	                this._doubledImage = img;
+	            }
+	            this._dirty = true;
+	        }
+	    },
+	    /**
+	     * Map tile width.
+	     * @type Number
+	     */
+	    tileWidth: {
+	        get: function() {
+	            return this._tileWidth;
+	        },
+	        set: function(tileWidth) {
+	            if(this._tileWidth !== tileWidth) {
+	                this._tileWidth = tileWidth;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**
+	     * Map tile height.
+	     * @type Number
+	     */
+	    tileHeight: {
+	        get: function() {
+	            return this._tileHeight;
+	        },
+	        set: function(tileHeight) {
+	            if(this._tileHeight !== tileHeight) {
+	                this._tileHeight = tileHeight;
+	                this._dirty = true;
+	            }
+	        }
+	    },
 	    /**
 	     * @private
 	     */
-	    _calcWorldAlpha: function() {
-	      if (!this.parent) {
-	        this._worldAlpha = this.alpha;
-	        return ;
-	      }
-	      else {
-	        var worldAlpha = (this.parent._worldAlpha !== undefined) ? this.parent._worldAlpha : 1.0; 
-	        // alpha
-	        this._worldAlpha = worldAlpha * this.alpha;
-	      }
-	    },
-	  });
-	
-	});
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.display.PlainElement
-	   *
-	   */
-	  phina.define('phina.display.PlainElement', {
-	    superClass: 'phina.display.DisplayElement',
-	
-	    init: function(options) {
-	      this.superInit(options);
-	      this.canvas = phina.graphics.Canvas();
-	      this.canvas.setSize(this.width, this.height);
-	    },
-	
-	    draw: function(canvas) {
-	      var image = this.canvas.domElement;
-	      var w = image.width;
-	      var h = image.height;
-	
-	      var x = -w*this.origin.x;
-	      var y = -h*this.origin.y;
-	
-	      canvas.context.drawImage(image,
-	        0, 0, w, h,
-	        x, y, w, h
-	        );
-	    },
-	  });
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.display.Shape
-	   *
-	   */
-	  var Shape = phina.define('phina.display.Shape', {
-	    superClass: 'phina.display.PlainElement',
-	
-	    init: function(options) {
-	      options = ({}).$safe(options, {
-	        width: 64,
-	        height: 64,
-	        padding: 8,
-	
-	        backgroundColor: '#aaa',
-	        fill: '#00a',
-	        stroke: '#aaa',
-	        strokeWidth: 4,
-	
-	        shadow: false,
-	        shadowBlur: 4,
-	      });
-	      this.superInit(options);
-	
-	      this.padding = options.padding;
-	
-	      this.backgroundColor = options.backgroundColor;
-	      this.fill = options.fill;
-	      this.stroke = options.stroke;
-	      this.strokeWidth = options.strokeWidth;
-	
-	      this.shadow = options.shadow;
-	      this.shadowBlur = options.shadowBlur;
-	
-	      this.watchDraw = true;
-	      this._dirtyDraw = true;
-	
-	      this.on('enterframe', function() {
-	        // render
-	        if (this.watchDraw && this._dirtyDraw === true) {
-	          this.render(this.canvas);
-	          this._dirtyDraw = false;
+	    width: {
+	        get: function() {
+	            return this._tileWidth * this._data[0][0].length;
 	        }
-	      });
 	    },
-	
-	    calcCanvasWidth: function() {
-	      return this.width + this.padding*2;
-	    },
-	
-	    calcCanvasHeight: function() {
-	      return this.height + this.padding*2;
-	    },
-	
-	    calcCanvasSize: function () {
-	      return {
-	        width: this.calcCanvasWidth(),
-	        height: this.calcCanvasHeight(),
-	      };
-	    },
-	
-	    isStrokable: function() {
-	      return this.stroke && 0 < this.strokeWidth;
-	    },
-	
-	    prerender: function(canvas) {
-	
-	    },
-	    postrender: function(canvas) {
-	
-	    },
-	    renderFill: function(canvas) {
-	      canvas.fill();
-	    },
-	    renderStroke: function(canvas) {
-	      canvas.stroke();
-	    },
-	
-	    render: function(canvas) {
-	      var context = canvas.context;
-	      // リサイズ
-	      var size = this.calcCanvasSize();
-	      canvas.setSize(size.width, size.height);
-	      // クリアカラー
-	      canvas.clearColor(this.backgroundColor);
-	      // 中心に座標を移動
-	      canvas.transformCenter();
-	
-	      // 描画前処理
-	      this.prerender(this.canvas);
-	
-	      // ストローク描画
-	      if (this.isStrokable()) {
-	        context.strokeStyle = this.stroke;
-	        context.lineWidth = this.strokeWidth;
-	        context.lineJoin = "round";
-	        context.shadowBlur = 0;
-	        this.renderStroke(canvas);
-	      }
-	
-	      // 塗りつぶし描画
-	      if (this.fill) {
-	        context.fillStyle = this.fill;
-	
-	        // shadow の on/off
-	        if (this.shadow) {
-	          context.shadowColor = this.shadow;
-	          context.shadowBlur = this.shadowBlur;
+	    /**
+	     * @private
+	     */
+	    height: {
+	        get: function() {
+	            return this._tileHeight * this._data[0].length;
 	        }
-	        else {
-	          context.shadowBlur = 0;
+	    },
+	    /**
+	     * @private
+	     */
+	    redraw: function(x, y, width, height) {
+	        if (this._image == null) {
+	            return;
 	        }
 	
-	        this.renderFill(canvas);
-	      }
+	        var image, tileWidth, tileHeight, dx, dy;
+	        if (this._doubledImage) {
+	            image = this._doubledImage;
+	            tileWidth = this._tileWidth * 2;
+	            tileHeight = this._tileHeight * 2;
+	            dx = -this._offsetX * 2;
+	            dy = -this._offsetY * 2;
+	            x *= 2;
+	            y *= 2;
+	            width *= 2;
+	            height *= 2;
+	        } else {
+	            image = this._image;
+	            tileWidth = this._tileWidth;
+	            tileHeight = this._tileHeight;
+	            dx = -this._offsetX;
+	            dy = -this._offsetY;
+	        }
+	        var row = image.width / tileWidth | 0;
+	        var col = image.height / tileHeight | 0;
+	        var left = Math.max((x + dx) / tileWidth | 0, 0);
+	        var top = Math.max((y + dy) / tileHeight | 0, 0);
+	        var right = Math.ceil((x + dx + width) / tileWidth);
+	        var bottom = Math.ceil((y + dy + height) / tileHeight);
 	
-	      // 描画後処理
-	      this.postrender(this.canvas);
-	
-	      return this;
+	        var source = image._element;
+	        var context = this._context;
+	        var canvas = context.canvas;
+	        context.clearRect(x, y, width, height);
+	        for (var i = 0, len = this._data.length; i < len; i++) {
+	            var data = this._data[i];
+	            var r = Math.min(right, data[0].length);
+	            var b = Math.min(bottom, data.length);
+	            for (y = top; y < b; y++) {
+	                for (x = left; x < r; x++) {
+	                    var n = data[y][x];
+	                    if (0 <= n && n < row * col) {
+	                        var sx = (n % row) * tileWidth;
+	                        var sy = (n / row | 0) * tileHeight;
+	                        context.drawImage(source, sx, sy, tileWidth, tileHeight,
+	                            x * tileWidth - dx, y * tileHeight - dy, tileWidth, tileHeight);
+	                    }
+	                }
+	            }
+	        }
 	    },
+	    /**
+	     * @private
+	     */
+	    updateBuffer: function() {
+	        if (this._visible === undefined || this._visible) {
+	            var core = enchant.Core.instance;
+	            if (this._dirty || this._previousOffsetX == null) {
+	                this.redraw(0, 0, core.width, core.height);
+	            } else if (this._offsetX !== this._previousOffsetX ||
+	                    this._offsetY !== this._previousOffsetY) {
+	                if (this._tight) {
+	                    var x = -this._offsetX;
+	                    var y = -this._offsetY;
+	                    var px = -this._previousOffsetX;
+	                    var py = -this._previousOffsetY;
+	                    var w1 = x - px + core.width;
+	                    var w2 = px - x + core.width;
+	                    var h1 = y - py + core.height;
+	                    var h2 = py - y + core.height;
+	                    if (w1 > this._tileWidth && w2 > this._tileWidth &&
+	                            h1 > this._tileHeight && h2 > this._tileHeight) {
+	                        var sx, sy, dx, dy, sw, sh;
+	                        if (w1 < w2) {
+	                            sx = 0;
+	                            dx = px - x;
+	                            sw = w1;
+	                        } else {
+	                            sx = x - px;
+	                            dx = 0;
+	                            sw = w2;
+	                        }
+	                        if (h1 < h2) {
+	                            sy = 0;
+	                            dy = py - y;
+	                            sh = h1;
+	                        } else {
+	                            sy = y - py;
+	                            dy = 0;
+	                            sh = h2;
+	                        }
 	
-	    _static: {
-	      watchRenderProperty: function(key) {
-	        this.prototype.$watch(key, function(newVal, oldVal) {
-	          if (newVal !== oldVal) {
-	            this._dirtyDraw = true;
-	          }
-	        });
-	      },
-	      watchRenderProperties: function(keys) {
-	        var watchRenderProperty = this.watchRenderProperty || Shape.watchRenderProperty;
-	        keys.each(function(key) {
-	          watchRenderProperty.call(this, key);
-	        }, this);
-	      },
+	                        if (core._buffer == null) {
+	                            core._buffer = document.createElement('canvas');
+	                            core._buffer.width = this._context.canvas.width;
+	                            core._buffer.height = this._context.canvas.height;
+	                        }
+	                        var context = core._buffer.getContext('2d');
+	                        if (this._doubledImage) {
+	                            context.clearRect(0, 0, sw * 2, sh * 2);
+	                            context.drawImage(this._context.canvas,
+	                                    sx * 2, sy * 2, sw * 2, sh * 2, 0, 0, sw * 2, sh * 2);
+	                            context = this._context;
+	                            context.clearRect(dx * 2, dy * 2, sw * 2, sh * 2);
+	                            context.drawImage(core._buffer,
+	                                    0, 0, sw * 2, sh * 2, dx * 2, dy * 2, sw * 2, sh * 2);
+	                        } else {
+	                            context.clearRect(0, 0, sw, sh);
+	                            context.drawImage(this._context.canvas,
+	                                    sx, sy, sw, sh, 0, 0, sw, sh);
+	                            context = this._context;
+	                            context.clearRect(dx, dy, sw, sh);
+	                            context.drawImage(core._buffer,
+	                                    0, 0, sw, sh, dx, dy, sw, sh);
+	                        }
+	
+	                        if (dx === 0) {
+	                            this.redraw(sw, 0, core.width - sw, core.height);
+	                        } else {
+	                            this.redraw(0, 0, core.width - sw, core.height);
+	                        }
+	                        if (dy === 0) {
+	                            this.redraw(0, sh, core.width, core.height - sh);
+	                        } else {
+	                            this.redraw(0, 0, core.width, core.height - sh);
+	                        }
+	                    } else {
+	                        this.redraw(0, 0, core.width, core.height);
+	                    }
+	                } else {
+	                    this.redraw(0, 0, core.width, core.height);
+	                }
+	            }
+	            this._previousOffsetX = this._offsetX;
+	            this._previousOffsetY = this._offsetY;
+	        }
 	    },
-	
-	    _defined: function() {
-	      this.watchRenderProperties([
-	        'width',
-	        'height',
-	        'radius',
-	        'padding',
-	        'backgroundColor',
-	        'fill',
-	        'stroke',
-	        'strokeWidth',
-	        'shadow',
-	        'shadowBlur',
-	      ]);
+	    cvsRender: function(ctx) {
+	        if (this.width !== 0 && this.height !== 0) {
+	            var core = enchant.Core.instance;
+	            this.updateBuffer();
+	            ctx.save();
+	            ctx.setTransform(1, 0, 0, 1, 0, 0);
+	            var cvs = this._context.canvas;
+	                ctx.drawImage(cvs, 0, 0, core.width, core.height);
+	            ctx.restore();
+	        }
 	    },
-	  });
-	
-	});
-	
-	phina.namespace(function() {
-	  /**
-	   * @class phina.display.RectangleShape
-	   *
-	   */
-	  phina.define('phina.display.RectangleShape', {
-	    superClass: 'phina.display.Shape',
-	    init: function(options) {
-	      options = ({}).$safe(options, {
-	        backgroundColor: 'transparent',
-	        fill: 'blue',
-	        stroke: '#aaa',
-	        strokeWidth: 4,
-	
-	        cornerRadius: 0,
-	      });
-	      this.superInit(options);
-	
-	      this.cornerRadius = options.cornerRadius;
-	    },
-	
-	    prerender: function(canvas) {
-	      canvas.roundRect(-this.width/2, -this.height/2, this.width, this.height, this.cornerRadius);
-	    },
-	
-	    _defined: function() {
-	      phina.display.Shape.watchRenderProperty.call(this, 'cornerRadius');
-	    },
-	  });
-	});
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.display.CircleShape
-	   *
-	   */
-	  phina.define('phina.display.CircleShape', {
-	    superClass: 'phina.display.Shape',
-	
-	    init: function(options) {
-	      options = ({}).$safe(options, {
-	        backgroundColor: 'transparent',
-	        fill: 'red',
-	        stroke: '#aaa',
-	        strokeWidth: 4,
-	        radius: 32,
-	      });
-	      this.superInit(options);
-	
-	      this.setBoundingType('circle');
-	    },
-	
-	    prerender: function(canvas) {
-	      canvas.circle(0, 0, this.radius);
-	    },
-	  });
-	});
-	
-	phina.namespace(function() {
-	  /**
-	   * @class phina.display.TriangleShape
-	   *
-	   */
-	  phina.define('phina.display.TriangleShape', {
-	    superClass: 'phina.display.Shape',
-	
-	    init: function(options) {
-	      options = ({}).$safe(options, {
-	        backgroundColor: 'transparent',
-	        fill: 'green',
-	        stroke: '#aaa',
-	        strokeWidth: 4,
-	
-	        radius: 32,
-	      });
-	      this.superInit(options);
-	
-	      this.setBoundingType('circle');
-	    },
-	
-	    prerender: function(canvas) {
-	      canvas.polygon(0, 0, this.radius, 3);
-	    },
-	
-	  });
-	
-	});
-	
-	phina.namespace(function() {
-	  /**
-	   * @class phina.display.StarShape
-	   *
-	   */
-	  phina.define('phina.display.StarShape', {
-	    superClass: 'phina.display.Shape',
-	    init: function(options) {
-	      options = ({}).$safe(options, {
-	        backgroundColor: 'transparent',
-	        fill: 'yellow',
-	        stroke: '#aaa',
-	        strokeWidth: 4,
-	
-	        radius: 32,
-	        sides: 5,
-	        sideIndent: 0.38,
-	      });
-	      this.superInit(options);
-	
-	      this.setBoundingType('circle');
-	      this.sides = options.sides;
-	      this.sideIndent = options.sideIndent;
-	    },
-	
-	    prerender: function(canvas) {
-	      canvas.star(0, 0, this.radius, this.sides, this.sideIndent);
-	    },
-	
-	    _defined: function() {
-	      phina.display.Shape.watchRenderProperty.call(this, 'sides');
-	      phina.display.Shape.watchRenderProperty.call(this, 'sideIndent');
-	    },
-	  });
-	
-	});
-	
-	phina.namespace(function() {
-	  /**
-	   * @class phina.display.PolygonShape
-	   *
-	   */
-	  phina.define('phina.display.PolygonShape', {
-	    superClass: 'phina.display.Shape',
-	    init: function(options) {
-	      options = ({}).$safe(options, {
-	        backgroundColor: 'transparent',
-	        fill: 'cyan',
-	        stroke: '#aaa',
-	        strokeWidth: 4,
-	
-	        radius: 32,
-	        sides: 5,
-	      });
-	      this.superInit(options);
-	
-	      this.setBoundingType('circle');
-	      this.sides = options.sides;
-	    },
-	
-	    prerender: function(canvas) {
-	      canvas.polygon(0, 0, this.radius, this.sides);
-	    },
-	
-	    _defined: function() {
-	      phina.display.Shape.watchRenderProperty.call(this, 'sides');
-	    },
-	  });
-	
+	    domRender: function(element) {
+	        if (this._image) {
+	            this.updateBuffer();
+	            this._style['background-image'] = this._surface._css;
+	            // bad performance
+	            this._style[enchant.ENV.VENDOR_PREFIX + 'Transform'] = 'matrix(1, 0, 0, 1, 0, 0)';
+	        }
+	    }
 	});
 	
 	
-	phina.namespace(function() {
-	  /**
-	   * @class phina.display.HeartShape
-	   *
-	   */
-	  phina.define('phina.display.HeartShape', {
-	    superClass: 'phina.display.Shape',
-	    init: function(options) {
-	      options = ({}).$safe(options, {
-	        backgroundColor: 'transparent',
-	        fill: 'pink',
-	        stroke: '#aaa',
-	        strokeWidth: 4,
+	/**
+	 * @scope enchant.Group.prototype
+	 */
+	enchant.Group = enchant.Class.create(enchant.Node, {
+	    /**
+	     * @name enchant.Group
+	     * @class
+	     * A class that can hold multiple {@link enchant.Node}.
+	     *
+	     * @example
+	     * var stage = new Group();
+	     * stage.addChild(player);
+	     * stage.addChild(enemy);
+	     * stage.addChild(map);
+	     * stage.addEventListener('enterframe', function() {
+	     *     // Moves the entire frame in according to the player's coordinates.
+	     *     if (this.x > 64 - player.x) {
+	     *         this.x = 64 - player.x;
+	     *     }
+	     * });
+	     * @constructs
+	     * @extends enchant.Node
+	     */
+	    initialize: function() {
+	        /**
+	         * Child Nodes.
+	         * @type enchant.Node[]
+	         */
+	        this.childNodes = [];
 	
-	        radius: 32,
-	        cornerAngle: 45,
-	      });
-	      this.superInit(options);
+	        enchant.Node.call(this);
 	
-	      this.setBoundingType('circle');
-	      this.cornerAngle = options.cornerAngle;
+	        this._rotation = 0;
+	        this._scaleX = 1;
+	        this._scaleY = 1;
+	
+	        this._originX = null;
+	        this._originY = null;
+	
+	        this.__dirty = false;
+	
+	        [enchant.Event.ADDED_TO_SCENE, enchant.Event.REMOVED_FROM_SCENE]
+	            .forEach(function(event) {
+	                this.addEventListener(event, function(e) {
+	                    this.childNodes.forEach(function(child) {
+	                        child.scene = this.scene;
+	                        child.dispatchEvent(e);
+	                    }, this);
+	                });
+	            }, this);
 	    },
-	
-	    prerender: function(canvas) {
-	      canvas.heart(0, 0, this.radius, this.cornerAngle);
+	    /**
+	     * Adds a Node to the Group.
+	     * @param {enchant.Node} node Node to be added.
+	     */
+	    addChild: function(node) {
+	        if (node.parentNode) {
+	            node.parentNode.removeChild(node);
+	        }
+	        this.childNodes.push(node);
+	        node.parentNode = this;
+	        var childAdded = new enchant.Event('childadded');
+	        childAdded.node = node;
+	        childAdded.next = null;
+	        this.dispatchEvent(childAdded);
+	        node.dispatchEvent(new enchant.Event('added'));
+	        if (this.scene) {
+	            node.scene = this.scene;
+	            var addedToScene = new enchant.Event('addedtoscene');
+	            node.dispatchEvent(addedToScene);
+	        }
 	    },
-	
-	    _defined: function() {
-	      phina.display.Shape.watchRenderProperty.call(this, 'cornerAngle');
+	    /**
+	     * Incorporates Node into Group.
+	     * @param {enchant.Node} node Node to be incorporated.
+	     * @param {enchant.Node} reference Node in position before insertion.
+	     */
+	    insertBefore: function(node, reference) {
+	        if (node.parentNode) {
+	            node.parentNode.removeChild(node);
+	        }
+	        var i = this.childNodes.indexOf(reference);
+	        if (i !== -1) {
+	            this.childNodes.splice(i, 0, node);
+	            node.parentNode = this;
+	            var childAdded = new enchant.Event('childadded');
+	            childAdded.node = node;
+	            childAdded.next = reference;
+	            this.dispatchEvent(childAdded);
+	            node.dispatchEvent(new enchant.Event('added'));
+	            if (this.scene) {
+	                node.scene = this.scene;
+	                var addedToScene = new enchant.Event('addedtoscene');
+	                node.dispatchEvent(addedToScene);
+	            }
+	        } else {
+	            this.addChild(node);
+	        }
 	    },
-	  });
-	
+	    /**
+	     * Remove a Node from the Group.
+	     * @param {enchant.Node} node Node to be deleted.
+	     */
+	    removeChild: function(node) {
+	        var i;
+	        if ((i = this.childNodes.indexOf(node)) !== -1) {
+	            this.childNodes.splice(i, 1);
+	            node.parentNode = null;
+	            var childRemoved = new enchant.Event('childremoved');
+	            childRemoved.node = node;
+	            this.dispatchEvent(childRemoved);
+	            node.dispatchEvent(new enchant.Event('removed'));
+	            if (this.scene) {
+	                node.scene = null;
+	                var removedFromScene = new enchant.Event('removedfromscene');
+	                node.dispatchEvent(removedFromScene);
+	            }
+	        }
+	    },
+	    /**
+	     * The Node which is the first child.
+	     * @type enchant.Node
+	     */
+	    firstChild: {
+	        get: function() {
+	            return this.childNodes[0];
+	        }
+	    },
+	    /**
+	     * The Node which is the last child.
+	     * @type enchant.Node
+	     */
+	    lastChild: {
+	        get: function() {
+	            return this.childNodes[this.childNodes.length - 1];
+	        }
+	    },
+	    /**
+	    * Group rotation angle (degree).
+	    * @type Number
+	    */
+	    rotation: {
+	        get: function() {
+	            return this._rotation;
+	        },
+	        set: function(rotation) {
+	            if(this._rotation !== rotation) {
+	                this._rotation = rotation;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**
+	    * Scaling factor on the x axis of the Group.
+	    * @type Number
+	    * @see enchant.Group#originX
+	    * @see enchant.Group#originY
+	    */
+	    scaleX: {
+	        get: function() {
+	            return this._scaleX;
+	        },
+	        set: function(scale) {
+	            if(this._scaleX !== scale) {
+	                this._scaleX = scale;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**
+	    * Scaling factor on the y axis of the Group.
+	    * @type Number
+	    * @see enchant.Group#originX
+	    * @see enchant.Group#originY
+	    */
+	    scaleY: {
+	        get: function() {
+	            return this._scaleY;
+	        },
+	        set: function(scale) {
+	            if(this._scaleY !== scale) {
+	                this._scaleY = scale;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**
+	    * origin point of rotation, scaling
+	    * @type Number
+	    */
+	    originX: {
+	        get: function() {
+	            return this._originX;
+	        },
+	        set: function(originX) {
+	            if(this._originX !== originX) {
+	                this._originX = originX;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**
+	    * origin point of rotation, scaling
+	    * @type Number
+	    */
+	    originY: {
+	        get: function() {
+	            return this._originY;
+	        },
+	        set: function(originY) {
+	            if(this._originY !== originY) {
+	                this._originY = originY;
+	                this._dirty = true;
+	            }
+	        }
+	    },
+	    /**#nocode+*/
+	    _dirty: {
+	        get: function() {
+	            return this.__dirty;
+	        },
+	        set: function(dirty) {
+	            dirty = !!dirty;
+	            this.__dirty = dirty;
+	            if (dirty) {
+	                for (var i = 0, l = this.childNodes.length; i < l; i++) {
+	                    this.childNodes[i]._dirty = true;
+	                }
+	            }
+	        }
+	    }
+	    /**#nocode-*/
 	});
 	
-	phina.namespace(function () {
-	
-	  var PathShape = phina.define('phina.display.PathShape', {
-	    superClass: 'phina.display.Shape',
-	    paths: null,
-	
-	    init: function (options) {
-	      options = ({}).$safe(options || {}, PathShape.defaults);
-	
-	      this.superInit(options);
-	      this.paths = options.paths || [];
-	      this.lineJoin = options.lineJoin;
-	      this.lineCap = options.lineCap;
+	enchant.Matrix = enchant.Class.create({
+	    initialize: function() {
+	        this.reset();
 	    },
-	    
-	    setPaths: function (paths) {
-	      this.paths = paths;
-	      this._dirtyDraw = true;
-	      return this;
+	    reset: function() {
+	        this.stack = [];
+	        this.stack.push([ 1, 0, 0, 1, 0, 0 ]);
 	    },
-	
-	    clear: function () {
-	      this.paths.length = 0;
-	      this._dirtyDraw = true;
-	      return this;
+	    makeTransformMatrix: function(node, dest) {
+	        var x = node._x;
+	        var y = node._y;
+	        var width = node.width || 0;
+	        var height = node.height || 0;
+	        var rotation = node._rotation || 0;
+	        var scaleX = (typeof node._scaleX === 'number') ? node._scaleX : 1;
+	        var scaleY = (typeof node._scaleY === 'number') ? node._scaleY : 1;
+	        var theta = rotation * Math.PI / 180;
+	        var tmpcos = Math.cos(theta);
+	        var tmpsin = Math.sin(theta);
+	        var w = (typeof node._originX === 'number') ? node._originX : width / 2;
+	        var h = (typeof node._originY === 'number') ? node._originY : height / 2;
+	        var a = scaleX * tmpcos;
+	        var b = scaleX * tmpsin;
+	        var c = scaleY * tmpsin;
+	        var d = scaleY * tmpcos;
+	        dest[0] = a;
+	        dest[1] = b;
+	        dest[2] = -c;
+	        dest[3] = d;
+	        dest[4] = (-a * w + c * h + x + w);
+	        dest[5] = (-b * w - d * h + y + h);
 	    },
+	    multiply: function(m1, m2, dest) {
+	        var a11 = m1[0], a21 = m1[2], adx = m1[4],
+	            a12 = m1[1], a22 = m1[3], ady = m1[5];
+	        var b11 = m2[0], b21 = m2[2], bdx = m2[4],
+	            b12 = m2[1], b22 = m2[3], bdy = m2[5];
 	
-	    addPaths: function (paths) {
-	      [].push.apply(this.paths, paths);
-	      this._dirtyDraw = true;
-	      return this;
+	        dest[0] = a11 * b11 + a21 * b12;
+	        dest[1] = a12 * b11 + a22 * b12;
+	        dest[2] = a11 * b21 + a21 * b22;
+	        dest[3] = a12 * b21 + a22 * b22;
+	        dest[4] = a11 * bdx + a21 * bdy + adx;
+	        dest[5] = a12 * bdx + a22 * bdy + ady;
 	    },
+	    multiplyVec: function(mat, vec, dest) {
+	        var x = vec[0], y = vec[1];
+	        var m11 = mat[0], m21 = mat[2], mdx = mat[4],
+	            m12 = mat[1], m22 = mat[3], mdy = mat[5];
+	        dest[0] = m11 * x + m21 * y + mdx;
+	        dest[1] = m12 * x + m22 * y + mdy;
+	    }
+	});
+	enchant.Matrix.instance = new enchant.Matrix();
 	
-	    addPath: function (x, y) {
-	      this.paths.push(phina.geom.Vector2(x, y));
-	      this._dirtyDraw = true;
-	      return this;
+	enchant.DetectColorManager = enchant.Class.create({
+	    initialize: function(reso, max) {
+	        this.reference = [];
+	        this.colorResolution = reso || 16;
+	        this.max = max || 1;
+	        this.capacity = Math.pow(this.colorResolution, 3);
+	        for (var i = 1, l = this.capacity; i < l; i++) {
+	            this.reference[i] = null;
+	        }
 	    },
-	
-	    getPath: function (i) {
-	      return this.paths[i];
+	    attachDetectColor: function(sprite) {
+	        var i = this.reference.indexOf(null);
+	        if (i === -1) {
+	            i = 1;
+	        }
+	        this.reference[i] = sprite;
+	        return this._getColor(i);
 	    },
-	
-	    getPaths: function () {
-	      return this.paths;
+	    detachDetectColor: function(sprite) {
+	        var i = this.reference.indexOf(sprite);
+	        if (i !== -1) {
+	            this.reference[i] = null;
+	        }
 	    },
-	
-	    changePath: function (i, x, y) {
-	      this.paths[i].set(x, y);
-	      this._dirtyDraw = true;
-	      return this;
+	    _getColor: function(n) {
+	        var C = this.colorResolution;
+	        var d = C / this.max;
+	        return [
+	            parseInt((n / C / C) % C, 10) / d,
+	            parseInt((n / C) % C, 10) / d,
+	            parseInt(n % C, 10) / d,
+	            1.0
+	        ];
 	    },
+	    _decodeDetectColor: function(color, i) {
+	        i = i || 0;
+	        var C = this.colorResolution;
+	        return ~~(color[i] * C * C * C / 256) +
+	            ~~(color[i + 1] * C * C / 256) +
+	            ~~(color[i + 2] * C / 256);
+	    },
+	    getSpriteByColor: function(color) {
+	        return this.reference[this._decodeDetectColor(color)];
+	    },
+	    getSpriteByColors: function(rgba) {
+	        var i, l, id, result,
+	            score = 0,
+	            found = {};
 	
-	    calcCanvasSize: function () {
-	      var paths = this.paths;
-	      if (paths.length === 0) {
-	        return {
-	          width: this.padding * 2,
-	          height:this.padding * 2,
+	        for (i = 0, l = rgba.length; i < l; i+= 4) {
+	            id = this._decodeDetectColor(rgba, i);
+	            found[id] = (found[id] || 0) + 1;
+	        }
+	        for (id in found) {
+	            if (found[id] > score) {
+	                score = found[id];
+	                result = id;
+	            }
+	        }
+	
+	        return this.reference[result];
+	    }
+	});
+	
+	enchant.DomManager = enchant.Class.create({
+	    initialize: function(node, elementDefinition) {
+	        var core = enchant.Core.instance;
+	        this.layer = null;
+	        this.targetNode = node;
+	        if (typeof elementDefinition === 'string') {
+	            this.element = document.createElement(elementDefinition);
+	        } else if (elementDefinition instanceof HTMLElement) {
+	            this.element = elementDefinition;
+	        }
+	        this.style = this.element.style;
+	        this.style.position = 'absolute';
+	        this.style[enchant.ENV.VENDOR_PREFIX + 'TransformOrigin'] = '0px 0px';
+	        if (core._debug) {
+	            this.style.border = '1px solid blue';
+	            this.style.margin = '-1px';
+	        }
+	
+	        var manager = this;
+	        this._setDomTarget = function() {
+	            manager.layer._touchEventTarget = manager.targetNode;
 	        };
-	      }
-	      var maxX = -Infinity;
-	      var maxY = -Infinity;
-	      var minX = Infinity;
-	      var minY = Infinity;
-	
-	      for (var i = 0, len = paths.length; i < len; ++i) {
-	        var path = paths[i];
-	        if (maxX < path.x) { maxX = path.x; }
-	        if (minX > path.x) { minX = path.x; }
-	        if (maxY < path.y) { maxY = path.y; }
-	        if (minY > path.y) { minY = path.y; }
-	      }
-	      return {
-	        width: Math.max(Math.abs(maxX), Math.abs(minX)) * 2 + this.padding * 2,
-	        height: Math.max(Math.abs(maxY), Math.abs(minY)) * 2 + this.padding * 2,
-	      };
+	        this._attachEvent();
 	    },
-	
-	    calcCanvasWidth: function () {
-	      return this.calcCanvasSize().width;
+	    getDomElement: function() {
+	        return this.element;
 	    },
-	
-	    calcCanvasHeight: function () {
-	      return this.calcCanvasSize().height;
+	    getDomElementAsNext: function() {
+	        return this.element;
 	    },
-	
-	    prerender: function (canvas) {
-	      canvas.lineCap = this.lineCap;
-	      canvas.lineJoin = this.lineJoin;
-	      var paths = this.paths;
-	      if (paths.length > 1) {
-	        var c = canvas.context;
-	        var p = paths[0];
-	        c.beginPath();
-	        c.moveTo(p.x, p.y);
-	        for (var i = 1, len = paths.length; i < len; ++i) {
-	          p = paths[i];
-	          c.lineTo(p.x, p.y);
+	    getNextManager: function(manager) {
+	        var i = this.targetNode.parentNode.childNodes.indexOf(manager.targetNode);
+	        if (i !== this.targetNode.parentNode.childNodes.length - 1) {
+	            return this.targetNode.parentNode.childNodes[i + 1]._domManager;
+	        } else {
+	            return null;
 	        }
-	      }
 	    },
-	
-	    _defined: function () {
-	      phina.display.Shape.watchRenderProperties.call(this, [
-	        'lineCap',
-	        'lineJoin'
-	      ]);
+	    addManager: function(childManager, nextManager) {
+	        var nextElement;
+	        if (nextManager) {
+	            nextElement = nextManager.getDomElementAsNext();
+	        }
+	        var element = childManager.getDomElement();
+	        if (element instanceof Array) {
+	            element.forEach(function(child) {
+	                if (nextElement) {
+	                    this.element.insertBefore(child, nextElement);
+	                } else {
+	                    this.element.appendChild(child);
+	                }
+	            }, this);
+	        } else {
+	            if (nextElement) {
+	                this.element.insertBefore(element, nextElement);
+	            } else {
+	                this.element.appendChild(element);
+	            }
+	        }
+	        this.setLayer(this.layer);
 	    },
+	    removeManager: function(childManager) {
+	        if (childManager instanceof enchant.DomlessManager) {
+	            childManager._domRef.forEach(function(element) {
+	                this.element.removeChild(element);
+	            }, this);
+	        } else {
+	            this.element.removeChild(childManager.element);
+	        }
+	        this.setLayer(this.layer);
+	    },
+	    setLayer: function(layer) {
+	        this.layer = layer;
+	        var node = this.targetNode;
+	        var manager;
+	        if (node.childNodes) {
+	            for (var i = 0, l = node.childNodes.length; i < l; i++) {
+	                manager = node.childNodes[i]._domManager;
+	                if (manager) {
+	                    manager.setLayer(layer);
+	                }
+	            }
+	        }
+	    },
+	    render: function(inheritMat) {
+	        var node = this.targetNode;
+	        var matrix = enchant.Matrix.instance;
+	        var stack = matrix.stack;
+	        var dest = [];
+	        matrix.makeTransformMatrix(node, dest);
+	        matrix.multiply(stack[stack.length - 1], dest, dest);
+	        matrix.multiply(inheritMat, dest, inheritMat);
+	        node._matrix = inheritMat;
+	        var ox = (typeof node._originX === 'number') ? node._originX : node.width / 2 || 0;
+	        var oy = (typeof node._originY === 'number') ? node._originY : node.height / 2 || 0;
+	        var vec = [ ox, oy ];
+	        matrix.multiplyVec(dest, vec, vec);
 	
-	    _static: {
-	      defaults: {
-	        fill: false,
-	        backgroundColor: 'transparent',
-	        lineCap: 'round',
-	        lineJoin:'round',
-	      },
+	        node._offsetX = vec[0] - ox;
+	        node._offsetY = vec[1] - oy;
+	        if(node.parentNode && !(node.parentNode instanceof enchant.Group)) {
+	            node._offsetX += node.parentNode._offsetX;
+	            node._offsetY += node.parentNode._offsetY;
+	        }
+	        if (node._dirty) {
+	            this.style[enchant.ENV.VENDOR_PREFIX + 'Transform'] = 'matrix(' +
+	                dest[0].toFixed(10) + ',' +
+	                dest[1].toFixed(10) + ',' +
+	                dest[2].toFixed(10) + ',' +
+	                dest[3].toFixed(10) + ',' +
+	                dest[4].toFixed(10) + ',' +
+	                dest[5].toFixed(10) +
+	            ')';
+	        }
+	        this.domRender();
+	    },
+	    domRender: function() {
+	        var node = this.targetNode;
+	        if(!node._style) {
+	            node._style = {};
+	        }
+	        if(!node.__styleStatus) {
+	            node.__styleStatus = {};
+	        }
+	        if (node.width !== null) {
+	            node._style.width = node.width + 'px';
+	        }
+	        if (node.height !== null) {
+	            node._style.height = node.height + 'px';
+	        }
+	        node._style.opacity = node._opacity;
+	        node._style['background-color'] = node._backgroundColor;
+	        if (typeof node._visible !== 'undefined') {
+	            node._style.display = node._visible ? 'block' : 'none';
+	        }
+	        if (typeof node.domRender === 'function') {
+	            node.domRender(this.element);
+	        }
+	        var value;
+	        for (var prop in node._style) {
+	            value = node._style[prop];
+	            if(node.__styleStatus[prop] !== value && value != null) {
+	                this.style.setProperty(prop, '' + value);
+	                node.__styleStatus[prop] = value;
+	            }
+	        }
+	    },
+	    _attachEvent: function() {
+	        if (enchant.ENV.TOUCH_ENABLED) {
+	            this.element.addEventListener('touchstart', this._setDomTarget, true);
+	        }
+	        this.element.addEventListener('mousedown', this._setDomTarget, true);
+	    },
+	    _detachEvent: function() {
+	        if (enchant.ENV.TOUCH_ENABLED) {
+	            this.element.removeEventListener('touchstart', this._setDomTarget, true);
+	        }
+	        this.element.removeEventListener('mousedown', this._setDomTarget, true);
+	    },
+	    remove: function() {
+	        this._detachEvent();
+	        this.element = this.style = this.targetNode = null;
 	    }
-	
-	  });
-	
 	});
 	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.display.Sprite
-	   * 
-	   */
-	  phina.define('phina.display.Sprite', {
-	    superClass: 'phina.display.DisplayElement',
-	
-	    init: function(image, width, height) {
-	      this.superInit();
-	
-	      this.srcRect = phina.geom.Rect();
-	      this.setImage(image, width, height);
+	enchant.DomlessManager = enchant.Class.create({
+	    initialize: function(node) {
+	        this._domRef = [];
+	        this.targetNode = node;
 	    },
-	
-	    draw: function(canvas) {
-	      var image = this.image.domElement;
-	
-	      // canvas.context.drawImage(image,
-	      //   0, 0, image.width, image.height,
-	      //   -this.width*this.origin.x, -this.height*this.origin.y, this.width, this.height
-	      //   );
-	
-	      var srcRect = this.srcRect;
-	      canvas.context.drawImage(image,
-	        srcRect.x, srcRect.y, srcRect.width, srcRect.height,
-	        -this._width*this.originX, -this._height*this.originY, this._width, this._height
-	        );
-	    },
-	
-	    setImage: function(image, width, height) {
-	      if (typeof image === 'string') {
-	        image = phina.asset.AssetManager.get('image', image);
-	      }
-	      this._image = image;
-	      this.width = this._image.domElement.width;
-	      this.height = this._image.domElement.height;
-	
-	      this.frameIndex = 0;
-	
-	      if (width) { this.width = width; }
-	      if (height) { this.height = height; }
-	
-	      return this;
-	    },
-	
-	    setFrameIndex: function(index, width, height) {
-	      var tw  = width || this._width;      // tw
-	      var th  = height || this._height;    // th
-	      var row = ~~(this.image.domElement.width / tw);
-	      var col = ~~(this.image.domElement.height / th);
-	      var maxIndex = row*col;
-	      index = index%maxIndex;
-	      
-	      var x = index%row;
-	      var y = ~~(index/row);
-	      this.srcRect.x = x*tw;
-	      this.srcRect.y = y*th;
-	      this.srcRect.width  = tw;
-	      this.srcRect.height = th;
-	
-	      this._frameIndex = index;
-	
-	      return this;
-	    },
-	
-	    _accessor: {
-	      image: {
-	        get: function() {return this._image;},
-	        set: function(v) {
-	          this.setImage(v);
-	          return this;
+	    _register: function(element, nextElement) {
+	        var i = this._domRef.indexOf(nextElement);
+	        if (element instanceof Array) {
+	            if (i === -1) {
+	                Array.prototype.push.apply(this._domRef, element);
+	            } else {
+	                Array.prototype.splice.apply(this._domRef, [i, 0].concat(element));
+	            }
+	        } else {
+	            if (i === -1) {
+	                this._domRef.push(element);
+	            } else {
+	                this._domRef.splice(i, 0, element);
+	            }
 	        }
-	      },
-	      frameIndex: {
-	        get: function() {return this._frameIndex;},
-	        set: function(idx) {
-	          this.setFrameIndex(idx);
-	          return this;
+	    },
+	    getNextManager: function(manager) {
+	        var i = this.targetNode.parentNode.childNodes.indexOf(manager.targetNode);
+	        if (i !== this.targetNode.parentNode.childNodes.length - 1) {
+	            return this.targetNode.parentNode.childNodes[i + 1]._domManager;
+	        } else {
+	            return null;
 	        }
-	      },
 	    },
-	  });
-	
-	});
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.display.Label
-	   * 
-	   */
-	  phina.define('phina.display.Label', {
-	    superClass: 'phina.display.Shape',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(options) {
-	      if (typeof arguments[0] !== 'object') {
-	        options = { text: arguments[0], };
-	      }
-	      else {
-	        options = arguments[0];
-	      }
-	
-	      options = ({}).$safe(options, phina.display.Label.defaults);
-	
-	      this.superInit(options);
-	
-	      this.text = options.text;
-	      this.fontSize = options.fontSize;
-	      this.fontWeight = options.fontWeight;
-	      this.fontFamily = options.fontFamily;
-	      this.align = options.align;
-	      this.baseline = options.baseline;
-	      this.lineHeight = options.lineHeight;
+	    getDomElement: function() {
+	        var ret = [];
+	        this.targetNode.childNodes.forEach(function(child) {
+	            ret = ret.concat(child._domManager.getDomElement());
+	        });
+	        return ret;
 	    },
-	
-	    calcCanvasWidth: function() {
-	      var width = 0;
-	      var canvas = this.canvas;
-	      canvas.context.font = this.font;
-	      this._lines.forEach(function(line) {
-	        var w = canvas.context.measureText(line).width;
-	        if (width < w) {
-	          width = w;
+	    getDomElementAsNext: function() {
+	        if (this._domRef.length) {
+	            return this._domRef[0];
+	        } else {
+	            var nextManager = this.getNextManager(this);
+	            if (nextManager) {
+	                return nextManager.element;
+	            } else {
+	                return null;
+	            }
 	        }
-	      }, this);
-	      if (this.align !== 'center') width*=2;
-	
-	      return width + this.padding*2;
 	    },
-	
-	    calcCanvasHeight: function() {
-	      var height = this.fontSize * this._lines.length;
-	      if (this.baseline !== 'middle') height*=2;
-	      return height*this.lineHeight + this.padding*2;
+	    addManager: function(childManager, nextManager) {
+	        var parentNode = this.targetNode.parentNode;
+	        if (parentNode) {
+	            if (nextManager === null) {
+	                nextManager = this.getNextManager(this);
+	            }
+	            if (parentNode instanceof enchant.Scene) {
+	                parentNode._layers.Dom._domManager.addManager(childManager, nextManager);
+	            } else {
+	                parentNode._domManager.addManager(childManager, nextManager);
+	            }
+	        }
+	        var nextElement = nextManager ? nextManager.getDomElementAsNext() : null;
+	        this._register(childManager.getDomElement(), nextElement);
+	        this.setLayer(this.layer);
 	    },
-	
-	    prerender: function(canvas) {
-	      var context = canvas.context;
-	      context.font = this.font;
-	      context.textAlign = this.align;
-	      context.textBaseline = this.baseline;
-	
-	      var lines = this._lines;
-	      this.lineSize = this.fontSize*this.lineHeight;
-	      this._offset = -Math.floor(lines.length/2)*this.lineSize;
-	      this._offset += ((lines.length+1)%2) * (this.lineSize/2);
+	    removeManager: function(childManager) {
+	        var dom;
+	        var i = this._domRef.indexOf(childManager.element);
+	        if (i !== -1) {
+	            dom = this._domRef[i];
+	            dom.parentNode.removeChild(dom);
+	            this._domRef.splice(i, 1);
+	        }
+	        this.setLayer(this.layer);
 	    },
-	
-	    renderFill: function(canvas) {
-	      var context = canvas.context;
-	      this._lines.forEach(function(line, i) {
-	        context.fillText(line, 0, i*this.lineSize+this._offset);
-	      }, this);
+	    setLayer: function(layer) {
+	        this.layer = layer;
+	        var node = this.targetNode;
+	        var manager;
+	        if (node.childNodes) {
+	            for (var i = 0, l = node.childNodes.length; i < l; i++) {
+	                manager = node.childNodes[i]._domManager;
+	                if (manager) {
+	                    manager.setLayer(layer);
+	                }
+	            }
+	        }
 	    },
-	
-	    renderStroke: function(canvas) {
-	      var context = canvas.context;
-	      this._lines.forEach(function(line, i) {
-	        context.strokeText(line, 0, i*this.lineSize+this._offset);
-	      }, this);
+	    render: function(inheritMat) {
+	        var matrix = enchant.Matrix.instance;
+	        var stack = matrix.stack;
+	        var node = this.targetNode;
+	        var dest = [];
+	        matrix.makeTransformMatrix(node, dest);
+	        matrix.multiply(stack[stack.length - 1], dest, dest);
+	        matrix.multiply(inheritMat, dest, inheritMat);
+	        node._matrix = inheritMat;
+	        var ox = (typeof node._originX === 'number') ? node._originX : node.width / 2 || 0;
+	        var oy = (typeof node._originY === 'number') ? node._originY : node.height / 2 || 0;
+	        var vec = [ ox, oy ];
+	        matrix.multiplyVec(dest, vec, vec);
+	        node._offsetX = vec[0] - ox;
+	        node._offsetY = vec[1] - oy;
+	        stack.push(dest);
 	    },
-	
-	    _accessor: {
-	      /**
-	       * text
-	       */
-	      text: {
-	        get: function() { return this._text; },
-	        set: function(v) {
-	          this._text = v;
-	          this._lines = (this.text + '').split('\n');
-	        },
-	      },
-	
-	      font: {
-	        get: function() {
-	          return "{fontWeight} {fontSize}px {fontFamily}".format(this);
-	        },
-	      }
-	    },
-	
-	    _static: {
-	      defaults: {
-	        backgroundColor: 'transparent',
-	
-	        fill: 'black',
-	        stroke: null,
-	        strokeWidth: 2,
-	
-	        // 
-	        text: 'Hello, world!',
-	        // 
-	        fontSize: 32,
-	        fontWeight: '',
-	        fontFamily: "'HiraKakuProN-W3'", // Hiragino or Helvetica,
-	        // 
-	        align: 'center',
-	        baseline: 'middle',
-	        lineHeight: 1.2,
-	      },
-	    },
-	
-	    _defined: function() {
-	      var Shape = phina.display.Shape;
-	      Shape.watchRenderProperty.call(this, 'text');
-	      Shape.watchRenderProperty.call(this, 'fontSize');
-	      Shape.watchRenderProperty.call(this, 'fontWeight');
-	      Shape.watchRenderProperty.call(this, 'fontFamily');
-	      Shape.watchRenderProperty.call(this, 'align');
-	      Shape.watchRenderProperty.call(this, 'baseline');
-	      Shape.watchRenderProperty.call(this, 'lineHeight');
-	    },
-	  });
-	
-	});
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class
-	   */
-	  phina.define('phina.display.DisplayScene', {
-	    superClass: 'phina.app.Scene',
-	
-	    init: function(params) {
-	      this.superInit();
-	
-	      params = ({}).$safe(params, phina.display.DisplayScene.default);
-	
-	      this.canvas = phina.graphics.Canvas();
-	      this.canvas.setSize(params.width, params.height);
-	      this.renderer = phina.display.CanvasRenderer(this.canvas);
-	      this.backgroundColor = (params.backgroundColor) ? params.backgroundColor : null;
-	      
-	      this.width = params.width;
-	      this.height = params.height;
-	      this.gridX = phina.util.Grid(params.width, 16);
-	      this.gridY = phina.util.Grid(params.height, 16);
-	
-	      // TODO: 一旦むりやり対応
-	      this.interactive = true;
-	      this.setInteractive = function(flag) {
-	        this.interactive = flag;
-	      };
-	      this._overFlags = {};
-	      this._touchFlags = {};
-	    },
-	
-	    hitTest: function() {
-	      return true;
-	    },
-	
-	    _update: function() {
-	      if (this.update) {
-	        this.update();
-	      }
-	    },
-	
-	    _render: function() {
-	      this.renderer.render(this);
-	    },
-	
-	    _static: {
-	      default: {
-	        width: 640,
-	        height: 960,
-	      },
+	    remove: function() {
+	        this._domRef = [];
+	        this.targetNode = null;
 	    }
-	
-	  });
-	
-	
 	});
 	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.display.Layer
-	   */
-	  phina.define('phina.display.Layer', {
-	    superClass: 'phina.display.DisplayElement',
-	
-	    /** 子供を 自分の CanvasRenderer で描画するか */
-	    renderChildBySelf: true,
-	
-	    init: function(options) {
-	      options = ({}).$safe(options, {
-	        width: 640,
-	        height: 960,
-	      });
-	      this.superInit(options);
-	      this.width = options.width;
-	      this.height = options.height;
-	      this.gridX = phina.util.Grid(options.width, 16);
-	      this.gridY = phina.util.Grid(options.height, 16);
-	    },
-	
-	    draw: function(canvas) {
-	      if (!this.domElement) return ;
-	
-	      var image = this.domElement;
-	      canvas.context.drawImage(image,
-	        0, 0, image.width, image.height,
-	        -this.width*this.originX, -this.height*this.originY, this.width, this.height
-	        );
-	    },
-	  });
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.display.Layer
-	   */
-	  phina.define('phina.display.CanvasLayer', {
-	    superClass: 'phina.display.Layer',
-	
-	    init: function(options) {
-	      this.superInit(options);
-	      this.canvas = phina.graphics.Canvas();
-	      this.canvas.width  = this.width;
-	      this.canvas.height = this.height;
-	
-	      this.renderer = phina.display.CanvasRenderer(this.canvas);
-	      this.domElement = this.canvas.domElement;
-	
-	      this.on('enterframe', function() {
-	        var temp = this._worldMatrix;
-	        this._worldMatrix = null;
-	        this.renderer.render(this);
-	        this._worldMatrix = temp;
-	      });
-	    },
-	
-	    draw: function(canvas) {
-	      var image = this.domElement;
-	      canvas.context.drawImage(image,
-	        0, 0, image.width, image.height,
-	        -this.width*this.originX, -this.height*this.originY, this.width, this.height
-	        );
-	    },
-	  });
-	});
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class
-	   */
-	  phina.define('phina.display.ThreeLayer', {
-	    superClass: 'phina.display.Layer',
-	
-	    scene: null,
-	    camera: null,
-	    light: null,
-	    renderer: null,
-	
-	    init: function(options) {
-	      this.superInit(options);
-	
-	      this.scene = new THREE.Scene();
-	
-	      this.camera = new THREE.PerspectiveCamera( 75, options.width / options.height, 1, 10000 );
-	      this.camera.position.z = 1000;
-	
-	      this.light = new THREE.DirectionalLight( 0xffffff, 1 );
-	      this.light.position.set( 1, 1, 1 ).normalize();
-	      this.scene.add( this.light );
-	
-	      this.renderer = new THREE.WebGLRenderer();
-	      this.renderer.setClearColor( 0xf0f0f0 );
-	      this.renderer.setSize( options.width, options.height );
-	
-	      this.on('enterframe', function() {
-	        this.renderer.render( this.scene, this.camera );
-	      });
-	
-	      this.domElement = this.renderer.domElement;
-	    },
-	  });
-	});
-	
-	
-	
-	
-	phina.namespace(function() {
-	  
-	  phina.define('phina.display.CanvasRenderer', {
-	
-	    init: function(canvas) {
-	      this.canvas = canvas;
-	      this._context = this.canvas.context;
-	    },
-	    render: function(scene) {
-	      this.canvas.clear();
-	      if (scene.backgroundColor) {
-	        this.canvas.clearColor(scene.backgroundColor);
-	      }
-	      
-	      this._context.save();
-	      this.renderChildren(scene);
-	      this._context.restore();
-	    },
-	    
-	    renderChildren: function(obj) {
-	      // 子供たちも実行
-	      if (obj.children.length > 0) {
-	        var tempChildren = obj.children.slice();
-	        for (var i=0,len=tempChildren.length; i<len; ++i) {
-	          this.renderObject(tempChildren[i]);
-	        }
-	      }
-	    },
-	
-	    renderObject: function(obj) {
-	      if (obj.visible === false) return ;
-	
-	      obj._calcWorldMatrix && obj._calcWorldMatrix();
-	      obj._calcWorldAlpha && obj._calcWorldAlpha();
-	
-	      var context = this.canvas.context;
-	
-	      context.globalAlpha = obj._worldAlpha;
-	      context.globalCompositeOperation = obj.blendMode;
-	
-	      if (obj._worldMatrix) {
-	        // 行列をセット
-	        var m = obj._worldMatrix;
-	        context.setTransform( m.m00, m.m10, m.m01, m.m11, m.m02, m.m12 );
-	      }
-	
-	      if (obj.clip) {
-	
-	        context.save();
-	
-	        obj.clip(this.canvas);
-	        context.clip();
-	
-	        if (obj.draw) obj.draw(this.canvas);
-	
-	        // 子供たちも実行
-	        if (obj.renderChildBySelf === false && obj.children.length > 0) {
-	            var tempChildren = obj.children.slice();
-	            for (var i=0,len=tempChildren.length; i<len; ++i) {
-	                this.renderObject(tempChildren[i]);
-	            }
-	        }
-	
-	        context.restore();
-	      }
-	      else {
-	        if (obj.draw) obj.draw(this.canvas);
-	
-	        // 子供たちも実行
-	        if (obj.renderChildBySelf === false && obj.children.length > 0) {
-	          var tempChildren = obj.children.slice();
-	          for (var i=0,len=tempChildren.length; i<len; ++i) {
-	            this.renderObject(tempChildren[i]);
-	          }
-	        }
-	
-	      }
-	    },
-	
-	  });
-	
-	});
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.display.DomApp
-	   * @extends phina.app.BaseApp
-	   */
-	  phina.define('phina.display.DomApp', {
-	    superClass: 'phina.app.BaseApp',
-	
-	    domElement: null,
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(options) {
-	      this.superInit(options);
-	
-	      if (options.domElement) {
-	        this.domElement = options.domElement;
-	      }
-	      else {
-	        if (options.query) {
-	          this.domElement = document.querySelector(options.query);
-	        }
-	        else {
-	          console.assert('error');
-	        }
-	      }
-	
-	      if (options.fps !== undefined) {
-	        this.fps = options.fps;
-	      }
-	
-	      this.mouse = phina.input.Mouse(this.domElement);
-	      this.touch = phina.input.Touch(this.domElement);
-	      this.touchList = phina.input.TouchList(this.domElement, 5);
-	      this.keyboard = phina.input.Keyboard(document);
-	      // 加速度センサーを生成
-	      this.accelerometer = phina.input.Accelerometer();
-	
-	      // ポインタをセット(PC では Mouse, Mobile では Touch)
-	      this.pointer = this.touch;
-	      this.pointers = this.touchList.touches;
-	
-	      this.domElement.addEventListener("touchstart", function () {
-	        this.pointer = this.touch;
-	        this.pointers = this.touchList.touches;
-	      }.bind(this));
-	      this.domElement.addEventListener("mouseover", function () {
-	        this.pointer = this.mouse;
-	        this.pointers = [this.mouse];
-	      }.bind(this));
-	
-	      // keyboard event
-	      this.keyboard.on('keydown', function(e) {
-	        this.currentScene && this.currentScene.flare('keydown', {
-	          keyCode: e.keyCode,
-	        });
-	      }.bind(this));
-	      this.keyboard.on('keyup', function(e) {
-	        this.currentScene && this.currentScene.flare('keyup', {
-	          keyCode: e.keyCode,
-	        });
-	      }.bind(this));
-	      this.keyboard.on('keypress', function(e) {
-	        this.currentScene && this.currentScene.flare('keypress', {
-	          keyCode: e.keyCode,
-	        });
-	      }.bind(this));
-	
-	      // click 対応
-	      var eventName = phina.isMobile() ? 'touchend' : 'mouseup';
-	      this.domElement.addEventListener(eventName, this._checkClick.bind(this));
-	
-	      // 決定時の処理をオフにする(iPhone 時のちらつき対策)
-	      this.domElement.addEventListener("touchstart", function(e) { e.stop(); });
-	      this.domElement.addEventListener("touchmove", function(e) { e.stop(); });
-	
-	      // ウィンドウフォーカス時イベントリスナを登録
-	      phina.global.addEventListener('focus', function() {
-	        this.flare('focus');
-	        this.currentScene.flare('focus');
-	      }.bind(this), false);
-	      // ウィンドウブラー時イベントリスナを登録
-	      phina.global.addEventListener('blur', function() {
-	        this.flare('blur');
-	        this.currentScene.flare('blur');
-	      }.bind(this), false);
-	
-	      // 更新関数を登録
-	      this.on('enterframe', function() {
-	        this.mouse.update();
-	        this.touch.update();
-	        this.touchList.update();
-	        this.keyboard.update();
-	      });
-	    },
-	
-	    _checkClick: function(e) {
-	      var _check = function(element) {
-	        if (element.children.length > 0) {
-	          element.children.each(function(child) {
-	            _check(child);
-	          });
-	        }
-	        if (element._clicked && element.has('click')) {
-	          element.flare('click');
-	        }
-	        element._clicked = false;
-	      };
-	
-	      _check(this.currentScene);
-	    },
-	
-	  });
-	
-	  
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.display.CanvasApp
-	   * 
-	   */
-	  phina.define('phina.display.CanvasApp', {
-	    superClass: 'phina.display.DomApp',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(options) {
-	      options = (options || {}).$safe(phina.display.CanvasApp.defaults);
-	      
-	      if (!options.query && !options.domElement) {
-	        options.domElement = document.createElement('canvas');
-	        if (options.append) {
-	          document.body.appendChild(options.domElement);
-	        }
-	      }
-	      this.superInit(options);
-	
-	
-	      this.gridX = phina.util.Grid({
-	        width: options.width,
-	        columns: options.columns,
-	      });
-	      this.gridY = phina.util.Grid({
-	        width: options.height,
-	        columns: options.columns,
-	      });
-	
-	      this.canvas = phina.graphics.Canvas(this.domElement);
-	      this.canvas.setSize(options.width, options.height);
-	
-	      this.backgroundColor = (options.backgroundColor !== undefined) ? options.backgroundColor : 'white';
-	
-	      this.replaceScene(phina.display.DisplayScene({
-	        width: options.width,
-	        height: options.height,
-	      }));
-	
-	      if (options.fit) {
-	        this.fitScreen();
-	      }
-	
-	      if (options.pixelated) {
-	        // チラつき防止
-	        // https://drafts.csswg.org/css-images/#the-image-rendering
-	        this.domElement.style.imageRendering = 'pixelated';
-	      }
-	
-	      // pushScene, popScene 対策
-	      this.on('push', function() {
-	        // onenter 対策で描画しておく
-	        this._draw();
-	      });
-	    },
-	
-	    _draw: function() {
-	      if (this.backgroundColor) {
-	        this.canvas.clearColor(this.backgroundColor);
-	      } else {
-	        this.canvas.clear();
-	      }
-	
-	      if (this.currentScene.canvas) {
-	        this.currentScene._render();
-	
-	        this._scenes.each(function(scene) {
-	          var c = scene.canvas;
-	          if (c) {
-	            this.canvas.context.drawImage(c.domElement, 0, 0, c.width, c.height);
-	          }
+	enchant.DomLayer = enchant.Class.create(enchant.Group, {
+	    initialize: function() {
+	        var core = enchant.Core.instance;
+	        enchant.Group.call(this);
+	
+	        this._touchEventTarget = null;
+	
+	        this._element = document.createElement('div');
+	        this._element.style.position = 'absolute';
+	
+	        this._domManager = new enchant.DomManager(this, this._element);
+	        this._domManager.layer = this;
+	
+	        this.width = core.width;
+	        this.height = core.height;
+	
+	        var touch = [
+	            enchant.Event.TOUCH_START,
+	            enchant.Event.TOUCH_MOVE,
+	            enchant.Event.TOUCH_END
+	        ];
+	
+	        touch.forEach(function(type) {
+	            this.addEventListener(type, function(e) {
+	                if (this._scene) {
+	                    this._scene.dispatchEvent(e);
+	                }
+	            });
 	        }, this);
-	      }
+	
+	        var __onchildadded = function(e) {
+	            var child = e.node;
+	            var next = e.next;
+	            var self = e.target;
+	            var nextManager = next ? next._domManager : null;
+	            enchant.DomLayer._attachDomManager(child, __onchildadded, __onchildremoved);
+	            self._domManager.addManager(child._domManager, nextManager);
+	            var render = new enchant.Event(enchant.Event.RENDER);
+	            child._dirty = true;
+	            self._domManager.layer._rendering(child, render);
+	        };
+	
+	        var __onchildremoved = function(e) {
+	            var child = e.node;
+	            var self = e.target;
+	            self._domManager.removeManager(child._domManager);
+	            enchant.DomLayer._detachDomManager(child, __onchildadded, __onchildremoved);
+	        };
+	
+	        this.addEventListener('childremoved', __onchildremoved);
+	        this.addEventListener('childadded', __onchildadded);
+	
 	    },
-	
-	    fitScreen: function() {
-	      this.canvas.fitScreen();
-	    },
-	
-	    _static: {
-	      defaults: {
-	        width: 640,
-	        height: 960,
-	        columns: 12,
-	        fit: true,
-	        append: true,
-	      },
-	    },
-	
-	  });
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.effect.Wave
-	   * Button
-	   */
-	  phina.define('phina.effect.Wave', {
-	    superClass: 'phina.display.CircleShape',
-	    /**
-	     * @constructor
-	     */
-	    init: function(options) {
-	      options = (options || {}).$safe({
-	        fill: 'white',
-	        stroke: false,
-	      });
-	
-	      this.superInit(options);
-	
-	      var tweener = phina.accessory.Tweener().attachTo(this);
-	      tweener
-	        .to({scaleX:2, scaleY:2, alpha:0}, 500)
-	        .call(function() {
-	          this.remove();
-	        }, this);
-	    },
-	  });
-	
-	});
-	
-	
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.ui.Button
-	   * Button
-	   */
-	  phina.define('phina.ui.Button', {
-	    superClass: 'phina.display.Shape',
-	    /**
-	     * @constructor
-	     */
-	    init: function(options) {
-	      options = (options || {}).$safe(phina.ui.Button.defaults);
-	      this.superInit(options);
-	
-	      this.cornerRadius = options.cornerRadius;
-	      this.text         = options.text;
-	      this.fontColor    = options.fontColor;
-	      this.fontSize     = options.fontSize;
-	      this.fontWeight     = options.fontWeight;
-	      this.fontFamily   = options.fontFamily;
-	
-	      this.setInteractive(true);
-	      this.on('pointend', function() {
-	        this.flare('push');
-	      });
-	    },
-	    prerender: function(canvas) {
-	      canvas.roundRect(-this.width/2, -this.height/2, this.width, this.height, this.cornerRadius);
-	    },
-	
-	    postrender: function(canvas) {
-	      var context = canvas.context;
-	      // text
-	      var font = "{fontWeight} {fontSize}px {fontFamily}".format(this);
-	      context.font = font;
-	      context.textAlign = 'center';
-	      context.textBaseline = 'middle';
-	      context.fillStyle = this.fontColor;
-	      context.fillText(this.text, 0, 0);
-	    },
-	
-	    _static: {
-	      defaults: {
-	        width: 200,
-	        height: 80,
-	        backgroundColor: 'transparent',
-	        fill: 'hsl(200, 80%, 60%)',
-	        stroke: null,
-	
-	        cornerRadius: 8,
-	        text: 'Hello',
-	        fontColor: 'white',
-	        fontSize: 32,
-	        fontWeight: '',
-	        fontFamily: "'HiraKakuProN-W3'", // Hiragino or Helvetica,
-	      },
-	    },
-	
-	    _defined: function() {
-	      phina.display.Shape.watchRenderProperty.call(this, 'cornerRadius');
-	      phina.display.Shape.watchRenderProperty.call(this, 'text');
-	      phina.display.Shape.watchRenderProperty.call(this, 'fontColor');
-	      phina.display.Shape.watchRenderProperty.call(this, 'fontSize');
-	      phina.display.Shape.watchRenderProperty.call(this, 'fontFamily');
-	    },
-	
-	  });
-	
-	});
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.ui.Gauge
-	   * 
-	   */
-	  phina.define('phina.ui.Gauge', {
-	    superClass: 'phina.display.Shape',
-	
-	    init: function(options) {
-	      options = ({}).$safe(options, {
-	        width: 256,
-	        height: 32,
-	        backgroundColor: 'transparent',
-	        fill: 'white',
-	        stroke: '#aaa',
-	        strokeWidth: 4,
-	
-	        value: 100,
-	        maxValue: 100,
-	        gaugeColor: '#44f',
-	        cornerRadius: 0,
-	      });
-	
-	      this.superInit(options);
-	
-	      this._value = options.value;
-	      this.maxValue = options.maxValue;
-	      this.gaugeColor = options.gaugeColor;
-	      this.cornerRadius = options.cornerRadius;
-	
-	      this.visualValue = options.value;
-	      this.animation = true;
-	      this.animationTime = 1*1000;
-	    },
-	
-	    /**
-	     * 満タンかをチェック
-	     */
-	    isFull: function() {
-	      return this.value === this.maxValue;
-	    },
-	
-	    /**
-	     * 空っぽかをチェック
-	     */
-	    isEmpty: function() {
-	      return this.value === 0;
-	    },
-	
-	    setValue: function(value) {
-	      value = Math.clamp(value, 0, this._maxValue);
-	
-	      // end when now value equal value of argument
-	      if (this.value === value) return ;
-	
-	      // fire value change event
-	      this.flare('change');
-	
-	      this._value = value;
-	
-	      if (this.animation) {
-	        var range = Math.abs(this.visualValue-value);
-	        var time = (range/this.maxValue)*this.animationTime;
-	
-	        this.tweener.ontween = function() {
-	          this._dirtyDraw = true;
-	        }.bind(this);
-	        this.tweener
-	          .clear()
-	          .to({'visualValue': value}, time)
-	          .call(function() {
-	            this.flare('changed');
-	            if (this.isEmpty()) {
-	              this.flare('empty');
-	            }
-	            else if (this.isFull()) {
-	              this.flare('full');
-	            }
-	          }, this);
-	      }
-	      else {
-	        this.visualValue = value;
-	        this.flare('changed');
-	        if (this.isEmpty()) {
-	          this.flare('empty');
-	        }
-	        else if (this.isFull()) {
-	          this.flare('full');
-	        }
-	      }
-	    },
-	
-	    getRate: function() {
-	      var rate = this.visualValue/this.maxValue;
-	      return rate;
-	    },
-	
-	    prerender: function(canvas) {
-	      canvas.roundRect(-this.width/2, -this.height/2, this.width, this.height, this.cornerRadius);
-	    },
-	
-	    postrender: function(canvas) {
-	      var rate = this.getRate();
-	      canvas.context.fillStyle = this.gaugeColor;
-	      canvas.context.save();
-	      canvas.context.clip();
-	      canvas.fillRect(-this.width/2, -this.height/2, this.width*rate, this.height);
-	      canvas.context.restore();
-	    },
-	
-	    _accessor: {
-	      value: {
+	    width: {
 	        get: function() {
-	          return this._value;
+	            return this._width;
 	        },
-	        set: function(v) {
-	          this.setValue(v);
+	        set: function(width) {
+	            this._width = width;
+	            this._element.style.width = width + 'px';
+	        }
+	    },
+	    height: {
+	        get: function() {
+	            return this._height;
 	        },
-	      },
+	        set: function(height) {
+	            this._height = height;
+	            this._element.style.height = height + 'px';
+	        }
 	    },
-	
-	    _defined: function() {
-	      phina.display.Shape.watchRenderProperty.call(this, 'value');
-	      phina.display.Shape.watchRenderProperty.call(this, 'maxValue');
-	      phina.display.Shape.watchRenderProperty.call(this, 'gaugeColor');
-	      phina.display.Shape.watchRenderProperty.call(this, 'cornerRadius');
+	    addChild: function(node) {
+	        this.childNodes.push(node);
+	        node.parentNode = this;
+	        var childAdded = new enchant.Event('childadded');
+	        childAdded.node = node;
+	        childAdded.next = null;
+	        this.dispatchEvent(childAdded);
+	        node.dispatchEvent(new enchant.Event('added'));
+	        if (this.scene) {
+	            node.scene = this.scene;
+	            var addedToScene = new enchant.Event('addedtoscene');
+	            node.dispatchEvent(addedToScene);
+	        }
 	    },
-	  });
-	
+	    insertBefore: function(node, reference) {
+	        var i = this.childNodes.indexOf(reference);
+	        if (i !== -1) {
+	            this.childNodes.splice(i, 0, node);
+	            node.parentNode = this;
+	            var childAdded = new enchant.Event('childadded');
+	            childAdded.node = node;
+	            childAdded.next = reference;
+	            this.dispatchEvent(childAdded);
+	            node.dispatchEvent(new enchant.Event('added'));
+	            if (this.scene) {
+	                node.scene = this.scene;
+	                var addedToScene = new enchant.Event('addedtoscene');
+	                node.dispatchEvent(addedToScene);
+	            }
+	        } else {
+	            this.addChild(node);
+	        }
+	    },
+	    _startRendering: function() {
+	        this.addEventListener('exitframe', this._onexitframe);
+	        this._onexitframe();
+	    },
+	    _stopRendering: function() {
+	        this.removeEventListener('exitframe', this._onexitframe);
+	        this._onexitframe();
+	    },
+	    _onexitframe: function() {
+	        this._rendering(this, new enchant.Event(enchant.Event.RENDER));
+	    },
+	    _rendering: function(node, e, inheritMat) {
+	        var child;
+	        if (!inheritMat) {
+	            inheritMat = [ 1, 0, 0, 1, 0, 0 ];
+	        }
+	        node.dispatchEvent(e);
+	        node._domManager.render(inheritMat);
+	        if (node.childNodes) {
+	            for (var i = 0, l = node.childNodes.length; i < l; i++) {
+	                child = node.childNodes[i];
+	                this._rendering(child, e, inheritMat.slice());
+	            }
+	        }
+	        if (node._domManager instanceof enchant.DomlessManager) {
+	            enchant.Matrix.instance.stack.pop();
+	        }
+	        node._dirty = false;
+	    },
+	    _determineEventTarget: function() {
+	        var target = this._touchEventTarget;
+	        this._touchEventTarget = null;
+	        return (target === this) ? null : target;
+	    }
 	});
 	
+	enchant.DomLayer._attachDomManager = function(node, onchildadded, onchildremoved) {
+	    var child;
+	    if (!node._domManager) {
+	        node.addEventListener('childadded', onchildadded);
+	        node.addEventListener('childremoved', onchildremoved);
+	        if (node instanceof enchant.Group) {
+	            node._domManager = new enchant.DomlessManager(node);
+	        } else {
+	            if (node._element) {
+	                node._domManager = new enchant.DomManager(node, node._element);
+	            } else {
+	                node._domManager = new enchant.DomManager(node, 'div');
+	            }
+	        }
+	    }
+	    if (node.childNodes) {
+	        for (var i = 0, l = node.childNodes.length; i < l; i++) {
+	            child = node.childNodes[i];
+	            enchant.DomLayer._attachDomManager(child, onchildadded, onchildremoved);
+	            node._domManager.addManager(child._domManager, null);
+	        }
+	    }
+	};
 	
-	phina.namespace(function() {
+	enchant.DomLayer._detachDomManager = function(node, onchildadded, onchildremoved) {
+	    var child;
+	    node.removeEventListener('childadded', onchildadded);
+	    node.removeEventListener('childremoved', onchildremoved);
+	    if (node.childNodes) {
+	        for (var i = 0, l = node.childNodes.length; i < l; i++) {
+	            child = node.childNodes[i];
+	            node._domManager.removeManager(child._domManager, null);
+	            enchant.DomLayer._detachDomManager(child, onchildadded, onchildremoved);
+	        }
+	    }
+	    node._domManager.remove();
+	    delete node._domManager;
+	};
 	
-	  /**
-	   * @class phina.ui.CircleGauge
-	   * 
-	   */
-	  phina.define('phina.ui.CircleGauge', {
-	    superClass: 'phina.ui.Gauge',
+	/**
+	 * @scope enchant.CanvasLayer.prototype
+	 */
+	enchant.CanvasLayer = enchant.Class.create(enchant.Group, {
+	    /**
+	     * @name enchant.CanvasLayer
+	     * @class
+	     * Class that uses the HTML Canvas for rendering.
+	     * The rendering of children will be replaced by the Canvas rendering.
+	     * @constructs
+	     * @extends enchant.Group
+	     */
+	    initialize: function() {
+	        var core = enchant.Core.instance;
 	
-	    init: function(options) {
-	      options = (options || {}).$safe({
-	        backgroundColor: 'transparent',
-	        fill: '#aaa',
-	        stroke: '#222',
+	        enchant.Group.call(this);
 	
-	        radius: 64,
-	        anticlockwise: true,
-	        showPercentage: false, // TODO
-	      });
+	        this._cvsCache = {
+	            matrix: [1, 0, 0, 1, 0, 0],
+	            detectColor: '#000000'
+	        };
+	        this._cvsCache.layer = this;
 	
-	      this.superInit(options);
+	        this._element = document.createElement('canvas');
+	        this._element.style.position = 'absolute';
+	        // issue 179
+	        this._element.style.left = this._element.style.top = '0px';
 	
-	      this.setBoundingType('circle');
+	        this._detect = document.createElement('canvas');
+	        this._detect.style.position = 'absolute';
+	        this._lastDetected = 0;
 	
-	      this.radius = options.radius;
-	      this.anticlockwise = options.anticlockwise;
-	      this.showPercentage = options.showPercentage;
+	        this.context = this._element.getContext('2d');
+	        this._dctx = this._detect.getContext('2d');
+	        this._setImageSmoothingEnable();
+	
+	        this._colorManager = new enchant.DetectColorManager(16, 256);
+	
+	        this.width = core.width;
+	        this.height = core.height;
+	
+	        var touch = [
+	            enchant.Event.TOUCH_START,
+	            enchant.Event.TOUCH_MOVE,
+	            enchant.Event.TOUCH_END
+	        ];
+	
+	        touch.forEach(function(type) {
+	            this.addEventListener(type, function(e) {
+	                if (this._scene) {
+	                    this._scene.dispatchEvent(e);
+	                }
+	            });
+	        }, this);
+	
+	        var __onchildadded = function(e) {
+	            var child = e.node;
+	            var self = e.target;
+	            var layer;
+	            if (self instanceof enchant.CanvasLayer) {
+	                layer = self._scene._layers.Canvas;
+	            } else {
+	                layer = self.scene._layers.Canvas;
+	            }
+	            enchant.CanvasLayer._attachCache(child, layer, __onchildadded, __onchildremoved);
+	            var render = new enchant.Event(enchant.Event.RENDER);
+	            if (self._dirty) {
+	                self._updateCoordinate();
+	            }
+	            child._dirty = true;
+	            enchant.Matrix.instance.stack.push(self._matrix);
+	            enchant.CanvasRenderer.instance.render(layer.context, child, render);
+	            enchant.Matrix.instance.stack.pop(self._matrix);
+	        };
+	
+	        var __onchildremoved = function(e) {
+	            var child = e.node;
+	            var self = e.target;
+	            var layer;
+	            if (self instanceof enchant.CanvasLayer) {
+	                layer = self._scene._layers.Canvas;
+	            } else {
+	                layer = self.scene._layers.Canvas;
+	            }
+	            enchant.CanvasLayer._detachCache(child, layer, __onchildadded, __onchildremoved);
+	        };
+	
+	        this.addEventListener('childremoved', __onchildremoved);
+	        this.addEventListener('childadded', __onchildadded);
+	
 	    },
-	
-	    prerender: function(canvas) {
-	      var rate = this.getRate();
-	      var end = (Math.PI*2)*rate;
-	      this.startAngle = 0;
-	      this.endAngle = end;
-	      
-	      this.canvas.rotate(-Math.PI*0.5);
-	      this.canvas.scale(1, -1);
+	    /**
+	     * The width of the CanvasLayer.
+	     * @type Number
+	     */
+	    width: {
+	        get: function() {
+	            return this._width;
+	        },
+	        set: function(width) {
+	            this._width = width;
+	            this._element.width = this._detect.width = width;
+	            this._setImageSmoothingEnable();
+	        }
 	    },
-	
-	    renderFill: function(canvas) {
-	      canvas.fillPie(0, 0, this.radius, this.startAngle, this.endAngle);
+	    /**
+	     * The height of the CanvasLayer.
+	     * @type Number
+	     */
+	    height: {
+	        get: function() {
+	            return this._height;
+	        },
+	        set: function(height) {
+	            this._height = height;
+	            this._element.height = this._detect.height = height;
+	            this._setImageSmoothingEnable();
+	        }
 	    },
-	
-	    renderStroke: function(canvas) {
-	      canvas.strokeArc(0, 0, this.radius, this.startAngle, this.endAngle);
+	    addChild: function(node) {
+	        this.childNodes.push(node);
+	        node.parentNode = this;
+	        var childAdded = new enchant.Event('childadded');
+	        childAdded.node = node;
+	        childAdded.next = null;
+	        this.dispatchEvent(childAdded);
+	        node.dispatchEvent(new enchant.Event('added'));
 	    },
-	
-	    postrender: function() {
-	      // if (this.showPercentage) {
-	      //   // TODO:
-	      //   var left = Math.max(0, this.limit-this.time);
-	      //   this.label.text = Math.ceil(left/1000)+'';
-	      // }
+	    insertBefore: function(node, reference) {
+	        var i = this.childNodes.indexOf(reference);
+	        if (i !== -1) {
+	            this.childNodes.splice(i, 0, node);
+	            node.parentNode = this;
+	            var childAdded = new enchant.Event('childadded');
+	            childAdded.node = node;
+	            childAdded.next = reference;
+	            this.dispatchEvent(childAdded);
+	            node.dispatchEvent(new enchant.Event('added'));
+	        } else {
+	            this.addChild(node);
+	        }
 	    },
-	
-	  });
-	
-	
-	
+	    /**
+	     * @private
+	     */
+	    _startRendering: function() {
+	        this.addEventListener('exitframe', this._onexitframe);
+	        this._onexitframe();
+	    },
+	    /**
+	     * @private
+	     */
+	    _stopRendering: function() {
+	        this.removeEventListener('exitframe', this._onexitframe);
+	        this._onexitframe();
+	    },
+	    _onexitframe: function() {
+	        var core = enchant.Core.instance;
+	        var ctx = this.context;
+	        ctx.clearRect(0, 0, core.width, core.height);
+	        var render = new enchant.Event(enchant.Event.RENDER);
+	        enchant.CanvasRenderer.instance.render(ctx, this, render);
+	    },
+	    _determineEventTarget: function(e) {
+	        return this._getEntityByPosition(e.x, e.y);
+	    },
+	    _getEntityByPosition: function(x, y) {
+	        var core = enchant.Core.instance;
+	        var ctx = this._dctx;
+	        if (this._lastDetected < core.frame) {
+	            ctx.clearRect(0, 0, this.width, this.height);
+	            enchant.CanvasRenderer.instance.detectRender(ctx, this);
+	            this._lastDetected = core.frame;
+	        }
+	        var extra = enchant.ENV.COLOR_DETECTION_LEVEL - 1;
+	        var rgba = ctx.getImageData(x - extra, y - extra, 1 + extra * 2, 1 + extra * 2).data;
+	        return this._colorManager.getSpriteByColors(rgba);
+	    },
+	    _setImageSmoothingEnable: function() {
+	        this._dctx.imageSmoothingEnabled =
+	                this._dctx.msImageSmoothingEnabled =
+	                this._dctx.mozImageSmoothingEnabled =
+	                this._dctx.webkitImageSmoothingEnabled = false;
+	    }
 	});
 	
+	enchant.CanvasLayer._attachCache = function(node, layer, onchildadded, onchildremoved) {
+	    var child;
+	    if (!node._cvsCache) {
+	        node._cvsCache = {};
+	        node._cvsCache.matrix = [ 1, 0, 0, 1, 0, 0 ];
+	        node._cvsCache.detectColor = 'rgba(' + layer._colorManager.attachDetectColor(node) + ')';
+	        node.addEventListener('childadded', onchildadded);
+	        node.addEventListener('childremoved', onchildremoved);
+	    }
+	    if (node.childNodes) {
+	        for (var i = 0, l = node.childNodes.length; i < l; i++) {
+	            child = node.childNodes[i];
+	            enchant.CanvasLayer._attachCache(child, layer, onchildadded, onchildremoved);
+	        }
+	    }
+	};
 	
+	enchant.CanvasLayer._detachCache = function(node, layer, onchildadded, onchildremoved) {
+	    var child;
+	    if (node._cvsCache) {
+	        layer._colorManager.detachDetectColor(node);
+	        node.removeEventListener('childadded', onchildadded);
+	        node.removeEventListener('childremoved', onchildremoved);
+	        delete node._cvsCache;
+	    }
+	    if (node.childNodes) {
+	        for (var i = 0, l = node.childNodes.length; i < l; i++) {
+	            child = node.childNodes[i];
+	            enchant.CanvasLayer._detachCache(child, layer, onchildadded, onchildremoved);
+	        }
+	    }
+	};
 	
-	phina.namespace(function() {
+	enchant.CanvasRenderer = enchant.Class.create({
+	    render: function(ctx, node, e) {
+	        var width, height, child;
+	        ctx.save();
+	        node.dispatchEvent(e);
+	        // transform
+	        this.transform(ctx, node);
+	        if (typeof node._visible === 'undefined' || node._visible) {
+	            width = node.width;
+	            height = node.height;
+	            // composite
+	            if (node.compositeOperation) {
+	                ctx.globalCompositeOperation = node.compositeOperation;
+	            }
+	            ctx.globalAlpha = (typeof node._opacity === 'number') ? node._opacity : 1.0;
+	            // render
+	            if (node._backgroundColor) {
+	                ctx.fillStyle = node._backgroundColor;
+	                ctx.fillRect(0, 0, width, height);
+	            }
 	
-	  var textWidthCache = {};
+	            if (node.cvsRender) {
+	                node.cvsRender(ctx);
+	            }
 	
-	  var LabelArea = phina.define('phina.ui.LabelArea', {
-	    superClass: 'phina.display.Label',
-	
-	    _lineUpdate: true,
-	
-	    init: function(options) {
-	      options = {}.$safe(options, LabelArea.defaults);
-	      this.superInit(options);
-	
-	      this.verticalAlign = options.verticalAlign;
-	      this.scroll = options.scroll || phina.geom.Vector2();
-	      this.scrollX = options.scrollX;
-	      this.scrollY = options.scrollY;
+	            if (enchant.Core.instance._debug && node._debugColor) {
+	                ctx.strokeStyle = node._debugColor;
+	                ctx.strokeRect(0, 0, width, height);
+	            }
+	            if (node._clipping) {
+	                ctx.beginPath();
+	                ctx.rect(0, 0, width, height);
+	                ctx.clip();
+	            }
+	            if (node.childNodes) {
+	                for (var i = 0, l = node.childNodes.length; i < l; i++) {
+	                    child = node.childNodes[i];
+	                    this.render(ctx, child, e);
+	                }
+	            }
+	        }
+	        ctx.restore();
+	        enchant.Matrix.instance.stack.pop();
 	    },
-	
-	    calcCanvasWidth: function() {
-	      return this.width + this.padding * 2;
+	    detectRender: function(ctx, node) {
+	        var width, height, child;
+	        if (typeof node._visible === 'undefined' || node._visible) {
+	            width = node.width;
+	            height = node.height;
+	            ctx.save();
+	            this.transform(ctx, node);
+	            ctx.fillStyle = node._cvsCache.detectColor;
+	            if (node._touchEnabled) {
+	                if (node.detectRender) {
+	                    node.detectRender(ctx);
+	                } else {
+	                    ctx.fillRect(0, 0, width, height);
+	                }
+	            }
+	            if (node._clipping) {
+	                ctx.beginPath();
+	                ctx.rect(0, 0, width, height);
+	                ctx.clip();
+	            }
+	            if (node.childNodes) {
+	                for (var i = 0, l = node.childNodes.length; i < l; i++) {
+	                    child = node.childNodes[i];
+	                    this.detectRender(ctx, child);
+	                }
+	            }
+	            ctx.restore();
+	            enchant.Matrix.instance.stack.pop();
+	        }
 	    },
+	    transform: function(ctx, node) {
+	        var matrix = enchant.Matrix.instance;
+	        var stack = matrix.stack;
+	        var newmat, ox, oy, vec;
+	        if (node._dirty) {
+	            matrix.makeTransformMatrix(node, node._cvsCache.matrix);
+	            newmat = [];
+	            matrix.multiply(stack[stack.length - 1], node._cvsCache.matrix, newmat);
+	            node._matrix = newmat;
+	            ox = (typeof node._originX === 'number') ? node._originX : node._width / 2 || 0;
+	            oy = (typeof node._originY === 'number') ? node._originY : node._height / 2 || 0;
+	            vec = [ ox, oy ];
+	            matrix.multiplyVec(newmat, vec, vec);
+	            node._offsetX = vec[0] - ox;
+	            node._offsetY = vec[1] - oy;
+	            node._dirty = false;
+	        } else {
+	            newmat = node._matrix;
+	        }
+	        stack.push(newmat);
+	        ctx.setTransform.apply(ctx, newmat);
+	    }
+	});
+	enchant.CanvasRenderer.instance = new enchant.CanvasRenderer();
 	
-	    calcCanvasHeight: function() {
-	      return this.height + this.padding * 2;
+	/**
+	 * @scope enchant.Scene.prototype
+	 */
+	enchant.Scene = enchant.Class.create(enchant.Group, {
+	    /**
+	     * @name enchant.Scene
+	     * @class
+	     * Class that becomes the root of the display object tree.
+	     * Child {@link Entity} objects are distributed to the Scene layer according to the drawing method.
+	     * The DOM of each Scene layer has a ({@link enchant.DOMLayer} and  {@link enchant.CanvasLayer}) and is drawn using the Canvas.
+	     * Scenes are drawn in the order that they are added.
+	     *
+	     * @example
+	     * var scene = new Scene();
+	     * scene.addChild(player);
+	     * scene.addChild(enemy);
+	     * core.pushScene(scene);
+	     *
+	     * @constructs
+	     * @extends enchant.Group
+	     */
+	    initialize: function() {
+	        var core = enchant.Core.instance;
+	
+	        // Call initialize method of enchant.Group
+	        enchant.Group.call(this);
+	
+	        // All nodes (entities, groups, scenes) have reference to the scene that it belongs to.
+	        this.scene = this;
+	
+	        this._backgroundColor = null;
+	
+	        // Create div tag which possesses its layers
+	        this._element = document.createElement('div');
+	        this._element.style.position = 'absolute';
+	        this._element.style.overflow = 'hidden';
+	        this._element.style[enchant.ENV.VENDOR_PREFIX + 'TransformOrigin'] = '0 0';
+	
+	        this._layers = {};
+	        this._layerPriority = [];
+	
+	        this.addEventListener(enchant.Event.CHILD_ADDED, this._onchildadded);
+	        this.addEventListener(enchant.Event.CHILD_REMOVED, this._onchildremoved);
+	        this.addEventListener(enchant.Event.ENTER, this._onenter);
+	        this.addEventListener(enchant.Event.EXIT, this._onexit);
+	
+	        var that = this;
+	        this._dispatchExitframe = function() {
+	            var layer;
+	            for (var prop in that._layers) {
+	                layer = that._layers[prop];
+	                layer.dispatchEvent(new enchant.Event(enchant.Event.EXIT_FRAME));
+	            }
+	        };
+	
+	        this.addEventListener(enchant.Event.CORE_RESIZE, this._oncoreresize);
+	
+	        this._oncoreresize(core);
 	    },
-	    getOffsetY: function() {
-	      if (typeof this.verticalAlign === 'number') {
-	        return this.verticalAlign;
-	      }
-	      return LabelArea.verticalAlignToOffsetMap[this.verticalAlign] || 0;
+	    /**#nocode+*/
+	    x: {
+	        get: function() {
+	            return this._x;
+	        },
+	        set: function(x) {
+	            this._x = x;
+	            for (var type in this._layers) {
+	                this._layers[type].x = x;
+	            }
+	        }
 	    },
-	
-	    getOffsetX: function() {
-	      return LabelArea.alignToOffsetMap[this.align] || 0;
+	    y: {
+	        get: function() {
+	            return this._y;
+	        },
+	        set: function(y) {
+	            this._y = y;
+	            for (var type in this._layers) {
+	                this._layers[type].y = y;
+	            }
+	        }
 	    },
-	
-	    getTextWidthCache: function() {
-	      var cache = textWidthCache[this.font];
-	      return cache || (textWidthCache[this.font] = {});
+	    width: {
+	        get: function() {
+	            return this._width;
+	        },
+	        set: function(width) {
+	            this._width = width;
+	            for (var type in this._layers) {
+	                this._layers[type].width = width;
+	            }
+	        }
 	    },
-	    
-	    getLines: function() {
-	      if (this._lineUpdate === false) {
-	        return this._lines;
-	      }
+	    height: {
+	        get: function() {
+	            return this._height;
+	        },
+	        set: function(height) {
+	            this._height = height;
+	            for (var type in this._layers) {
+	                this._layers[type].height = height;
+	            }
+	        }
+	    },
+	    rotation: {
+	        get: function() {
+	            return this._rotation;
+	        },
+	        set: function(rotation) {
+	            this._rotation = rotation;
+	            for (var type in this._layers) {
+	                this._layers[type].rotation = rotation;
+	            }
+	        }
+	    },
+	    scaleX: {
+	        get: function() {
+	            return this._scaleX;
+	        },
+	        set: function(scaleX) {
+	            this._scaleX = scaleX;
+	            for (var type in this._layers) {
+	                this._layers[type].scaleX = scaleX;
+	            }
+	        }
+	    },
+	    scaleY: {
+	        get: function() {
+	            return this._scaleY;
+	        },
+	        set: function(scaleY) {
+	            this._scaleY = scaleY;
+	            for (var type in this._layers) {
+	                this._layers[type].scaleY = scaleY;
+	            }
+	        }
+	    },
+	    backgroundColor: {
+	        get: function() {
+	            return this._backgroundColor;
+	        },
+	        set: function(color) {
+	            this._backgroundColor = this._element.style.backgroundColor = color;
+	        }
+	    },
+	    remove: function() {
+	        this.clearEventListener();
 	
-	      this._lineUpdate = false;
-	      var lines = this._lines = (this.text + '').split('\n');
-	
-	      if (this.width < 1) return lines;
-	
-	      var rowWidth = this.width;
-	
-	      var context = this.canvas.context;
-	      context.font = this.font;
-	      //どのへんで改行されるか目星つけとく
-	      var pos = rowWidth / context.measureText('あ').width | 0;
-	
-	      var cache = this.getTextWidthCache();
-	      for (var i = lines.length - 1; 0 <= i; --i) {
-	        var text = lines[i];
-	        if (text === '') {
-	          continue;
+	        while (this.childNodes.length > 0) {
+	            this.childNodes[0].remove();
 	        }
 	
-	        var j = 0;
-	        var breakFlag = false;
-	        var char;
-	        while (true) {
-	          //if (rowWidth > (cache[text] || (cache[text] = dummyContext.measureText(text).width))) break;
+	        return enchant.Core.instance.removeScene(this);
+	    },
+	    /**#nocode-*/
+	    _oncoreresize: function(e) {
+	        this._element.style.width = e.width + 'px';
+	        this.width = e.width;
+	        this._element.style.height = e.height + 'px';
+	        this.height = e.height;
+	        this._element.style[enchant.ENV.VENDOR_PREFIX + 'Transform'] = 'scale(' + e.scale + ')';
 	
-	          var len = text.length;
-	          if (pos >= len) pos = len - 1;
-	          char = text.substring(0, pos);
-	          if (!cache[char]) {
-	            cache[char] = context.measureText(char).width;
-	          }
-	          var textWidth = cache[char];
-	
-	          if (rowWidth < textWidth) {
-	            do {
-	              char = text[--pos];
-	              if (!cache[char]) {
-	                cache[char] = context.measureText(char).width;
-	              }
-	              textWidth -= cache[char];
-	            } while (rowWidth < textWidth);
-	
-	          } else {
-	
-	            do {
-	              char = text[pos++];
-	              if (pos >= len) {
-	                breakFlag = true;
+	        for (var type in this._layers) {
+	            this._layers[type].dispatchEvent(e);
+	        }
+	    },
+	    addLayer: function(type, i) {
+	        var core = enchant.Core.instance;
+	        if (this._layers[type]) {
+	            return;
+	        }
+	        var layer = new enchant[type + 'Layer']();
+	        if (core.currentScene === this) {
+	            layer._startRendering();
+	        }
+	        this._layers[type] = layer;
+	        var element = layer._element;
+	        if (typeof i === 'number') {
+	            var nextSibling = this._element.childNodes[i];
+	            if (nextSibling) {
+	                this._element.insertBefore(element, nextSibling);
+	            } else {
+	                this._element.appendChild(element);
+	            }
+	            this._layerPriority.splice(i, 0, type);
+	        } else {
+	            this._element.appendChild(element);
+	            this._layerPriority.push(type);
+	        }
+	        layer._scene = this;
+	    },
+	    _determineEventTarget: function(e) {
+	        var layer, target;
+	        for (var i = this._layerPriority.length - 1; i >= 0; i--) {
+	            layer = this._layers[this._layerPriority[i]];
+	            target = layer._determineEventTarget(e);
+	            if (target) {
 	                break;
-	              }
-	              if (!cache[char]) {
-	                cache[char] = context.measureText(char).width;
-	              }
-	              textWidth += cache[char];
-	            } while (rowWidth >= textWidth);
-	
-	            --pos;
-	          }
-	          if (breakFlag) {
-	            break;
-	          }
-	          //0 のときは無限ループになるので、1にしとく
-	          if (pos === 0) pos = 1;
-	
-	          lines.splice(i + j, 1, text.substring(0, pos), text = text.substring(pos, len));
-	          ++j;
-	        }
-	
-	      }
-	
-	      return lines;
-	
-	    },
-	
-	    prerender: function(canvas) {
-	      var context = canvas.context;
-	      context.font = this.font;
-	      context.textAlign = this.align;
-	      context.textBaseline = this.baseline;
-	
-	      var text = this.text + '';
-	      var lines = this.getLines();
-	      var length = lines.length;
-	      var width = this.width;
-	      var height = this.height;
-	
-	      var fontSize = this.fontSize;
-	      var lineSize = fontSize * this.lineHeight;
-	      var offsetX = this.getOffsetX() * width;
-	      var offsetY = this.getOffsetY();
-	      if (offsetY === 0) {
-	        offsetY = -Math.floor(length / 2) * lineSize;
-	        offsetY += ((length + 1) % 2) * (lineSize / 2);
-	      }
-	      else if (offsetY < 0) {
-	        offsetY *= height;
-	      }
-	      else {
-	        offsetY = offsetY * height - length * lineSize + lineSize;
-	      }
-	
-	      offsetY -= this.scrollY;
-	      offsetX -= this.scrollX;
-	      var start = (offsetY + height / 2) / -lineSize | 0;
-	      if (start < 0) { start = 0; }
-	
-	      var end = (height / 2 - offsetY + lineSize * 2) / lineSize | 0;
-	      lines = lines.filter(function(line, i) {
-	        return start <= i && end > i;
-	      });
-	
-	      this.lines = lines;
-	      this.offsetX = offsetX;
-	      this.offsetY = offsetY;
-	      this.lineSize = lineSize;
-	      this.start = start;
-	    },
-	
-	    renderFill: function(canvas) {
-	      var context = canvas.context;
-	      var offsetX = this.offsetX;
-	      var offsetY = this.offsetY;
-	      var lineSize = this.lineSize;
-	      var start = this.start;
-	      this.lines.forEach(function(line, i) {
-	        context.fillText(line, offsetX, (start + i) * lineSize + offsetY);
-	      }, this);
-	    },
-	
-	    renderStroke: function(canvas) {
-	      var context = canvas.context;
-	      var offsetX = this.offsetX;
-	      var offsetY = this.offsetY;
-	      var lineSize = this.lineSize;
-	      var start = this.start;
-	      this.lines.forEach(function(line, i) {
-	        context.strokeText(line, offsetX, (start + i) * lineSize + offsetY);
-	      }, this);
-	    },
-	
-	    _accessor: {
-	      text: {
-	        get: function() {
-	          return this._text;
-	        },
-	        set: function(v) {
-	          this._text = v;
-	        }
-	      },
-	
-	      scrollX: {
-	        get: function() {
-	          return this.scroll.x;
-	        },
-	        set: function(v) {
-	          this.scroll.x = v;
-	        },
-	      },
-	
-	      scrollY: {
-	        get: function() {
-	          return this.scroll.y;
-	        },
-	        set: function(v) {
-	          this.scroll.y = v;
-	        },
-	      },
-	    },
-	    _static: {
-	      defaults: {
-	        verticalAlign: 'top',
-	        align: 'left',
-	        baseline: 'top',
-	        width: 320,
-	        height: 320,
-	        scrollX: 0,
-	        scrollY: 0,
-	      },
-	      alignToOffsetMap: {
-	        start: -0.5,
-	        left: -0.5,
-	        center: 0,
-	        end: 0.5,
-	        right: 0.5,
-	      },
-	
-	      verticalAlignToOffsetMap: {
-	        top: -0.5,
-	        center: 0,
-	        middle: 0,
-	        bottom: 0.5,
-	      },
-	    },
-	
-	    _defined: function() {
-	      var func = function(newVal, oldVal) {
-	        if((this._lineUpdate === false) && (newVal !== oldVal)){
-	          this._lineUpdate = true;
-	        }
-	      };
-	
-	      [
-	        'text',
-	        'width',
-	        'fontSize',
-	        'fontWeight',
-	        'fontFamily'
-	      ].forEach(function(key) {
-	        this.$watch(key, func);
-	      }, this.prototype);
-	
-	      phina.display.Shape.watchRenderProperties.call(this ,[
-	        'verticalAlign',
-	        'text',
-	        'scroll',
-	        'scrollX',
-	        'scrollY'
-	      ]);
-	    },
-	
-	
-	    enableScroll: function() {
-	      //   this.setInteractive(true);
-	      //   var physical = phina.accessory.Physical();
-	      //   physical.attachTo(this);
-	      //   physical.friction = 0.8;
-	      //   var lastForce = 0;
-	      //   var lastMove = 0;
-	      //   this.on('pointstart', function(e){
-	      //     lastForce = physical.velocity.y;
-	      //     lastMove = 0;
-	      //     physical.force(0, 0);
-	      //   });
-	      //   this.on('pointmove', function(e){
-	      //     var p = e.pointer.deltaPosition;
-	      //     lastMove = p.y;
-	      //     this.scrollY += lastMove;
-	      //   });
-	
-	      //   this.on('pointend', function(e){
-	      //     physical.force(0, lastForce + lastMove);
-	      //   });
-	
-	      return this;
-	    },
-	
-	  });
-	
-	});
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.game.ManagerScene
-	   * 
-	   */
-	  phina.define('phina.game.ManagerScene', {
-	    superClass: 'phina.app.Scene',
-	    /**
-	     * @constructor
-	     */
-	    init: function(params) {
-	      this.superInit();
-	
-	      this.setScenes(params.scenes);
-	
-	      this.on("enter", function() {
-	        this.gotoScene(params.startLabel || 0);
-	      }.bind(this));
-	
-	      this.on("resume", this.onnext.bind(this));
-	
-	      this.commonArguments = {};
-	    },
-	
-	
-	    /**
-	     * scenes をセット
-	     */
-	    setScenes: function(scenes) {
-	      this.scenes = scenes;
-	      this.sceneIndex = 0;
-	
-	      return this;
-	    },
-	
-	
-	    replaceScene: function(label, args) {
-	      var index = (typeof label == 'string') ? this.labelToIndex(label) : label||0;
-	
-	      var data = this.scenes[index];
-	
-	      if (!data) {
-	        console.error('phina.js error: `{0}` に対応するシーンがありません.'.format(label));
-	      }
-	
-	      var klass = phina.using(data.className);
-	      if (typeof klass !== 'function') {
-	        klass = phina.using('phina.game.' + data.className);
-	      }
-	
-	      var initArguments = {}.$extend(data.arguments, args);
-	      var scene = klass.call(null, initArguments);
-	      if (!scene.nextLabel) {
-	          scene.nextLabel = data.nextLabel;
-	      }
-	      if (!scene.nextArguments) {
-	          scene.nextArguments = data.nextArguments;
-	      }
-	      this.app.replaceScene(scene);
-	
-	      this.sceneIndex = index;
-	
-	      return this;
-	    },
-	
-	
-	    /**
-	     * index(or label) のシーンへ飛ぶ
-	     */
-	    gotoScene: function(label, args) {
-	      var index = (typeof label == 'string') ? this.labelToIndex(label) : label||0;
-	
-	      var data = this.scenes[index];
-	
-	      if (!data) {
-	        console.error('phina.js error: `{0}` に対応するシーンがありません.'.format(label));
-	      }
-	
-	      var klass = phina.using(data.className);
-	      if (typeof klass !== 'function') {
-	        klass = phina.using('phina.game.' + data.className);
-	      }
-	
-	      var initArguments = {}.$extend(data.arguments, args);
-	      var scene = klass.call(null, initArguments);
-	      if (!scene.nextLabel) {
-	          scene.nextLabel = data.nextLabel;
-	      }
-	      if (!scene.nextArguments) {
-	          scene.nextArguments = data.nextArguments;
-	      }
-	      this.app.pushScene(scene);
-	
-	      this.sceneIndex = index;
-	
-	      return this;
-	    },
-	
-	    /**
-	     * 次のシーンへ飛ぶ
-	     */
-	    gotoNext: function(args) {
-	      var data = this.scenes[this.sceneIndex];
-	      var nextIndex = null;
-	
-	      // 次のラベルが設定されていた場合
-	      if (data.nextLabel) {
-	          nextIndex = this.labelToIndex(data.nextLabel);
-	      }
-	      // 次のシーンに遷移
-	      else if (this.sceneIndex+1 < this.scenes.length) {
-	          nextIndex = this.sceneIndex+1;
-	      }
-	
-	      if (nextIndex !== null) {
-	          this.gotoScene(nextIndex, args);
-	      }
-	      else {
-	          this.flare("finish");
-	      }
-	
-	      return this;
-	    },
-	
-	    /**
-	     * シーンインデックスを取得
-	     */
-	    getCurrentIndex: function() {
-	      return this.sceneIndex;
-	    },
-	
-	    /**
-	     * シーンラベルを取得
-	     */
-	    getCurrentLabel: function() {
-	      return this.scenes[this.sceneIndex].label;
-	    },
-	
-	    /**
-	     * ラベルからインデックスに変換
-	     */
-	    labelToIndex: function(label) {
-	      var data = this.scenes.filter(function(data) {
-	        return data.label == label;
-	      })[0];
-	
-	      return this.scenes.indexOf(data);
-	    },
-	
-	    /**
-	     * インデックスからラベルに変換
-	     */
-	    indexToLabel: function(index) {
-	      return this.scenes[index].label;
-	    },
-	
-	    onnext: function(e) {
-	      var nextLabel = e.prevScene.nextLabel;
-	      var nextArguments = e.prevScene.nextArguments;
-	      if (nextLabel) {
-	        this.gotoScene(nextLabel, nextArguments);
-	      }
-	      else {
-	        this.gotoNext(nextArguments);
-	      }
-	    },
-	
-	  });
-	
-	});
-	
-	/*
-	 *
-	 */
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.game.SplashScene
-	   * 
-	   */
-	  phina.define('phina.game.SplashScene', {
-	    superClass: 'phina.display.DisplayScene',
-	
-	    init: function(options) {
-	      this.superInit(options);
-	
-	      var defaults = phina.game.SplashScene.defaults;
-	
-	      var texture = phina.asset.Texture();
-	      texture.load(defaults.imageURL).then(function() {
-	        this._init();
-	      }.bind(this));
-	      this.texture = texture;
-	    },
-	
-	    _init: function() {
-	      this.sprite = phina.display.Sprite(this.texture).addChildTo(this);
-	
-	      this.sprite.setPosition(this.gridX.center(), this.gridY.center());
-	      this.sprite.alpha = 0;
-	
-	      this.sprite.tweener
-	        .clear()
-	        .to({alpha:1}, 500, 'easeOutCubic')
-	        .wait(1000)
-	        .to({alpha:0}, 500, 'easeOutCubic')
-	        .wait(250)
-	        .call(function() {
-	          this.exit();
-	        }, this)
-	        ;
-	    },
-	
-	    _static: {
-	      defaults: {
-	        imageURL: 'http://cdn.rawgit.com/phi-jp/phina.js/develop/logo.png',
-	      },
-	    },
-	  });
-	
-	});
-	
-	/*
-	 * TitleScene
-	 */
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.game.TitleScene
-	   * 
-	   */
-	  phina.define('phina.game.TitleScene', {
-	    superClass: 'phina.display.DisplayScene',
-	    /**
-	     * @constructor
-	     */
-	    init: function(params) {
-	      this.superInit(params);
-	
-	      params = ({}).$safe(params, phina.game.TitleScene.defaults);
-	
-	      this.backgroundColor = params.backgroundColor;
-	
-	      this.fromJSON({
-	        children: {
-	          titleLabel: {
-	            className: 'phina.display.Label',
-	            arguments: {
-	              text: params.title,
-	              fill: params.fontColor,
-	              stroke: false,
-	              fontSize: 64,
-	            },
-	            x: this.gridX.center(),
-	            y: this.gridY.span(4),
-	          }
-	        }
-	      });
-	
-	      if (params.exitType === 'touch') {
-	        this.fromJSON({
-	          children: {
-	            touchLabel: {
-	              className: 'phina.display.Label',
-	              arguments: {
-	                text: "TOUCH START",
-	                fill: params.fontColor,
-	                stroke: false,
-	                fontSize: 32,
-	              },
-	              x: this.gridX.center(),
-	              y: this.gridY.span(12),
-	            },
-	          },
-	        });
-	
-	        this.on('pointend', function() {
-	          this.exit();
-	        });
-	      }
-	    },
-	
-	    _static: {
-	      defaults: {
-	        title: 'phina.js games',
-	        message: '',
-	        width: 640,
-	        height: 960,
-	
-	        fontColor: 'white',
-	        backgroundColor: 'hsl(200, 80%, 64%)',
-	        backgroundImage: '',
-	
-	        exitType: 'touch',
-	      },
-	    },
-	
-	  });
-	
-	});
-	
-	/*
-	 * ResultScene
-	 */
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.game.ResultScene
-	   *
-	   */
-	  phina.define('phina.game.ResultScene', {
-	    superClass: 'phina.display.DisplayScene',
-	    /**
-	     * @constructor
-	     */
-	    init: function(params) {
-	      this.superInit(params);
-	
-	      params = ({}).$safe(params, phina.game.ResultScene.defaults);
-	
-	      var message = params.message.format(params);
-	
-	      this.backgroundColor = params.backgroundColor;
-	
-	      this.fromJSON({
-	        children: {
-	          scoreText: {
-	            className: 'phina.display.Label',
-	            arguments: {
-	              text: 'score',
-	              fill: params.fontColor,
-	              stroke: null,
-	              fontSize: 48,
-	            },
-	            x: this.gridX.span(8),
-	            y: this.gridY.span(4),
-	          },
-	          scoreLabel: {
-	            className: 'phina.display.Label',
-	            arguments: {
-	              text: params.score+'',
-	              fill: params.fontColor,
-	              stroke: null,
-	              fontSize: 72,
-	            },
-	            x: this.gridX.span(8),
-	            y: this.gridY.span(6),
-	          },
-	
-	          messageLabel: {
-	            className: 'phina.display.Label',
-	            arguments: {
-	              text: message,
-	              fill: params.fontColor,
-	              stroke: null,
-	              fontSize: 32,
-	            },
-	            x: this.gridX.center(),
-	            y: this.gridY.span(9),
-	          },
-	
-	          shareButton: {
-	            className: 'phina.ui.Button',
-	            arguments: [{
-	              text: '★',
-	              width: 128,
-	              height: 128,
-	              fontColor: params.fontColor,
-	              fontSize: 50,
-	              cornerRadius: 64,
-	              fill: 'rgba(240, 240, 240, 0.5)',
-	              // stroke: '#aaa',
-	              // strokeWidth: 2,
-	            }],
-	            x: this.gridX.center(-3),
-	            y: this.gridY.span(12),
-	          },
-	          playButton: {
-	            className: 'phina.ui.Button',
-	            arguments: [{
-	              text: '▶',
-	              width: 128,
-	              height: 128,
-	              fontColor: params.fontColor,
-	              fontSize: 50,
-	              cornerRadius: 64,
-	              fill: 'rgba(240, 240, 240, 0.5)',
-	              // stroke: '#aaa',
-	              // strokeWidth: 2,
-	            }],
-	            x: this.gridX.center(3),
-	            y: this.gridY.span(12),
-	
-	            interactive: true,
-	            onpush: function() {
-	              this.exit();
-	            }.bind(this),
-	          },
-	        }
-	      });
-	
-	      if (params.exitType === 'touch') {
-	        this.on('pointend', function() {
-	          this.exit();
-	        });
-	      }
-	
-	      this.shareButton.onclick = function() {
-	        var text = 'Score: {0}\n{1}'.format(params.score, message);
-	        var url = phina.social.Twitter.createURL({
-	          text: text,
-	          hashtags: params.hashtags,
-	          url: params.url,
-	        });
-	        window.open(url, 'share window', 'width=480, height=320');
-	      };
-	    },
-	
-	    _static: {
-	      defaults: {
-	        score: 16,
-	
-	        message: 'this is phina.js project.',
-	        hashtags: 'phina_js,game,javascript',
-	        url: phina.global.location && phina.global.location.href,
-	
-	        width: 640,
-	        height: 960,
-	
-	        fontColor: 'white',
-	        backgroundColor: 'hsl(200, 80%, 64%)',
-	        backgroundImage: '',
-	      },
-	    },
-	
-	  });
-	
-	});
-	
-	/*
-	 * LoadingScene
-	 */
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.game.LoadingScene
-	   * 
-	   */
-	  phina.define('phina.game.LoadingScene', {
-	    superClass: 'phina.display.DisplayScene',
-	
-	    /**
-	     * @constructor
-	     */
-	    init: function(options) {
-	      options = ({}).$safe(options, phina.game.LoadingScene.defaults);
-	      this.superInit(options);
-	
-	      this.fromJSON({
-	        children: {
-	          gauge: {
-	            className: 'phina.ui.Gauge',
-	            arguments: {
-	              value: 0,
-	              width: this.width,
-	              height: 12,
-	              fill: '#aaa',
-	              stroke: false,
-	              gaugeColor: 'hsla(200, 100%, 80%, 0.8)',
-	              padding: 0,
-	            },
-	            x: this.gridX.center(),
-	            y: 0,
-	            originY: 0,
-	          }
-	        }
-	      });
-	
-	      var loader = phina.asset.AssetLoader();
-	
-	      if (options.lie) {
-	        this.gauge.animationTime = 10*1000;
-	        this.gauge.value = 90;
-	
-	        loader.onload = function() {
-	          this.gauge.animationTime = 0;
-	          this.gauge.value = 100;
-	        }.bind(this);
-	      }
-	      else {
-	        this.gauge.animationTime = 100;
-	        loader.onprogress = function(e) {
-	          this.gauge.value = e.progress * 100;
-	        }.bind(this);
-	      }
-	
-	      this.gauge.onfull = function() {
-	        if (options.exitType === 'auto') {
-	          this.app.popScene();
-	        }
-	        this.flare('loaded');
-	      }.bind(this);
-	
-	      loader.load(options.assets);
-	    },
-	
-	    _static: {
-	      defaults: {
-	        width: 640,
-	        height: 960,
-	
-	        exitType: 'auto',
-	
-	        lie: false,
-	      },
-	    },
-	
-	  });
-	
-	});
-	
-	/*
-	 * CountScene
-	 */
-	
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.game.CountScene
-	   * 
-	   */
-	  phina.define('phina.game.CountScene', {
-	    superClass: 'phina.display.DisplayScene',
-	    /**
-	     * @constructor
-	     */
-	    init: function(options) {
-	      this.superInit(options);
-	
-	      options = (options || {}).$safe(phina.game.CountScene.defaults);
-	
-	      this.backgroundColor = options.backgroundColor;
-	
-	      this.fromJSON({
-	        children: {
-	          label: {
-	            className: 'phina.display.Label',
-	            arguments: {
-	              fill: options.fontColor,
-	              fontSize: options.fontSize,
-	              stroke: false,
-	            },
-	            x: this.gridX.center(),
-	            y: this.gridY.center(),
-	          },
-	        }
-	      });
-	
-	      if (options.count instanceof Array) {
-	        this.countList = options.count.reverse();
-	      }
-	      else {
-	        this.countList = Array.range(1, options.count+1);
-	      }
-	      this.counter = this.countList.length;
-	      this.exitType = options.exitType;
-	
-	      this._updateCount();
-	    },
-	
-	    _updateCount: function() {
-	      var endFlag = this.counter <= 0;
-	      var index = --this.counter;
-	
-	      this.label.text = this.countList[index];
-	
-	      this.label.scale.set(1, 1);
-	      this.label.tweener
-	        .clear()
-	        .to({
-	          scaleX: 1,
-	          scaleY: 1,
-	          alpha: 1,
-	        }, 250)
-	        .wait(500)
-	        .to({
-	          scaleX: 1.5,
-	          scaleY: 1.5,
-	          alpha: 0.0
-	        }, 250)
-	        .call(function() {
-	          if (this.counter <= 0) {
-	            this.flare('finish');
-	            if (this.exitType === 'auto') {
-	              this.app.popScene();
 	            }
-	          }
-	          else {
-	            this._updateCount();
-	          }
-	        }, this);
+	        }
+	        if (!target) {
+	            target = this;
+	        }
+	        return target;
 	    },
-	
-	
-	    _static: {
-	      defaults: {
-	        count: 3,
-	
-	        width: 640,
-	        height: 960,
-	
-	        fontColor: 'white',
-	        fontSize: 164,
-	        backgroundColor: 'rgba(50, 50, 50, 1)',
-	
-	        exitType: 'auto',
-	      },
+	    _onchildadded: function(e) {
+	        var child = e.node;
+	        var next = e.next;
+	        var target, i;
+	        if (child._element) {
+	            target = 'Dom';
+	            i = 1;
+	        } else {
+	            target = 'Canvas';
+	            i = 0;
+	        }
+	        if (!this._layers[target]) {
+	            this.addLayer(target, i);
+	        }
+	        child._layer = this._layers[target];
+	        this._layers[target].insertBefore(child, next);
+	        child.parentNode = this;
 	    },
-	
-	  });
-	
+	    _onchildremoved: function(e) {
+	        var child = e.node;
+	        child._layer.removeChild(child);
+	        child._layer = null;
+	    },
+	    _onenter: function() {
+	        for (var type in this._layers) {
+	            this._layers[type]._startRendering();
+	        }
+	        enchant.Core.instance.addEventListener('exitframe', this._dispatchExitframe);
+	    },
+	    _onexit: function() {
+	        for (var type in this._layers) {
+	            this._layers[type]._stopRendering();
+	        }
+	        enchant.Core.instance.removeEventListener('exitframe', this._dispatchExitframe);
+	    }
 	});
+	
+	/**
+	 * @scope enchant.LoadingScene.prototype
+	 */
+	enchant.LoadingScene = enchant.Class.create(enchant.Scene, {
+	    /**
+	     * @name enchant.LoadingScene
+	     * @class
+	     * Default loading scene. If you want to use your own loading animation, overwrite (don't inherit) this class.
+	     * Referred from enchant.Core in default, as `new enchant.LoadingScene` etc.
+	     *
+	     * @example
+	     * enchant.LoadingScene = enchant.Class.create(enchant.Scene, {
+	     *     initialize: function() {
+	     *         enchant.Scene.call(this);
+	     *         this.backgroundColor = 'red';
+	     *         // ...
+	     *         this.addEventListener('progress', function(e) {
+	     *             progress = e.loaded / e.total;
+	     *         });
+	     *         this.addEventListener('enterframe', function() {
+	     *             // animation
+	     *         });
+	     *     }
+	     * });
+	     * @constructs
+	     * @extends enchant.Scene
+	     */
+	    initialize: function() {
+	        enchant.Scene.call(this);
+	        this.backgroundColor = '#000';
+	        var barWidth = this.width * 0.4 | 0;
+	        var barHeight = this.width * 0.05 | 0;
+	        var border = barWidth * 0.03 | 0;
+	        var bar = new enchant.Sprite(barWidth, barHeight);
+	        bar.disableCollection();
+	        bar.x = (this.width - barWidth) / 2;
+	        bar.y = (this.height - barHeight) / 2;
+	        var image = new enchant.Surface(barWidth, barHeight);
+	        image.context.fillStyle = '#fff';
+	        image.context.fillRect(0, 0, barWidth, barHeight);
+	        image.context.fillStyle = '#000';
+	        image.context.fillRect(border, border, barWidth - border * 2, barHeight - border * 2);
+	        bar.image = image;
+	        var progress = 0, _progress = 0;
+	        this.addEventListener('progress', function(e) {
+	            // avoid #167 https://github.com/wise9/enchant.js/issues/177
+	            progress = e.loaded / e.total * 1.0;
+	        });
+	        bar.addEventListener('enterframe', function() {
+	            _progress *= 0.9;
+	            _progress += progress * 0.1;
+	            image.context.fillStyle = '#fff';
+	            image.context.fillRect(border, 0, (barWidth - border * 2) * _progress, barHeight);
+	        });
+	        this.addChild(bar);
+	        this.addEventListener('load', function(e) {
+	            var core = enchant.Core.instance;
+	            core.removeScene(core.loadingScene);
+	            core.dispatchEvent(e);
+	        });
+	    }
+	});
+	
+	/**
+	 * @scope enchant.CanvasScene.prototype
+	 */
+	enchant.CanvasScene = enchant.Class.create(enchant.Scene, {
+	    /**
+	     * @name enchant.CanvasScene
+	     * @class
+	     * Scene to draw by the Canvas all of the children.
+	     * @constructs
+	     * @extends enchant.Scene
+	     */
+	    initialize: function() {
+	        enchant.Scene.call(this);
+	        this.addLayer('Canvas');
+	    },
+	    _determineEventTarget: function(e) {
+	        var target = this._layers.Canvas._determineEventTarget(e);
+	        if (!target) {
+	            target = this;
+	        }
+	        return target;
+	    },
+	    _onchildadded: function(e) {
+	        var child = e.node;
+	        var next = e.next;
+	        child._layer = this._layers.Canvas;
+	        this._layers.Canvas.insertBefore(child, next);
+	    },
+	    _onenter: function() {
+	        this._layers.Canvas._startRendering();
+	        enchant.Core.instance.addEventListener('exitframe', this._dispatchExitframe);
+	    },
+	    _onexit: function() {
+	        this._layers.Canvas._stopRendering();
+	        enchant.Core.instance.removeEventListener('exitframe', this._dispatchExitframe);
+	    }
+	});
+	
+	/**
+	 * @scope enchant.DOMScene.prototype
+	 */
+	enchant.DOMScene = enchant.Class.create(enchant.Scene, {
+	    /**
+	     * @name enchant.DOMScene
+	     * @class
+	     * Scene to draw by the DOM all of the children.
+	     * @constructs
+	     * @extends enchant.Scene
+	     */
+	    initialize: function() {
+	        enchant.Scene.call(this);
+	        this.addLayer('Dom');
+	    },
+	    _determineEventTarget: function(e) {
+	        var target = this._layers.Dom._determineEventTarget(e);
+	        if (!target) {
+	            target = this;
+	        }
+	        return target;
+	    },
+	    _onchildadded: function(e) {
+	        var child = e.node;
+	        var next = e.next;
+	        child._layer = this._layers.Dom;
+	        this._layers.Dom.insertBefore(child, next);
+	    },
+	    _onenter: function() {
+	        this._layers.Dom._startRendering();
+	        enchant.Core.instance.addEventListener('exitframe', this._dispatchExitframe);
+	    },
+	    _onexit: function() {
+	        this._layers.Dom._stopRendering();
+	        enchant.Core.instance.removeEventListener('exitframe', this._dispatchExitframe);
+	    }
+	});
+	
+	/**
+	 * @scope enchant.Surface.prototype
+	 */
+	enchant.Surface = enchant.Class.create(enchant.EventTarget, {
+	    /**
+	     * @name enchant.Surface
+	     * @class
+	     * Class that wraps canvas elements.
+	     *
+	     * Can be used to set the {@link enchant.Sprite} and {@link enchant.Map}'s image properties to be displayed.
+	     * If you wish to access Canvas API use the {@link enchant.Surface#context} property.
+	     *
+	     * @example
+	     * // Creates Sprite that displays a circle.
+	     * var ball = new Sprite(50, 50);
+	     * var surface = new Surface(50, 50);
+	     * surface.context.beginPath();
+	     * surface.context.arc(25, 25, 25, 0, Math.PI*2, true);
+	     * surface.context.fill();
+	     * ball.image = surface;
+	     *
+	     * @param {Number} width Surface width.
+	     * @param {Number} height Surface height.
+	     * @constructs
+	     * @extends enchant.EventTarget
+	     */
+	    initialize: function(width, height) {
+	        enchant.EventTarget.call(this);
+	
+	        var core = enchant.Core.instance;
+	
+	        /**
+	         * Surface width.
+	         * @type Number
+	         */
+	        this.width = Math.ceil(width);
+	        /**
+	         * Surface height.
+	         * @type Number
+	         */
+	        this.height = Math.ceil(height);
+	        /**
+	         * Surface drawing context.
+	         * @type CanvasRenderingContext2D
+	         */
+	        this.context = null;
+	
+	        var id = 'enchant-surface' + core._surfaceID++;
+	        if (document.getCSSCanvasContext) {
+	            this.context = document.getCSSCanvasContext('2d', id, width, height);
+	            this._element = this.context.canvas;
+	            this._css = '-webkit-canvas(' + id + ')';
+	            var context = this.context;
+	        } else if (document.mozSetImageElement) {
+	            this._element = document.createElement('canvas');
+	            this._element.width = width;
+	            this._element.height = height;
+	            this._css = '-moz-element(#' + id + ')';
+	            this.context = this._element.getContext('2d');
+	            document.mozSetImageElement(id, this._element);
+	        } else {
+	            this._element = document.createElement('canvas');
+	            this._element.width = width;
+	            this._element.height = height;
+	            this._element.style.position = 'absolute';
+	            this.context = this._element.getContext('2d');
+	
+	            enchant.ENV.CANVAS_DRAWING_METHODS.forEach(function(name) {
+	                var method = this.context[name];
+	                this.context[name] = function() {
+	                    method.apply(this, arguments);
+	                    this._dirty = true;
+	                };
+	            }, this);
+	        }
+	    },
+	    /**
+	     * Returns 1 pixel from the Surface.
+	     * @param {Number} x The pixel's x coordinates.
+	     * @param {Number} y The pixel's y coordinates.
+	     * @return {Number[]} An array that holds pixel information in [r, g, b, a] format.
+	     */
+	    getPixel: function(x, y) {
+	        return this.context.getImageData(x, y, 1, 1).data;
+	    },
+	    /**
+	     * Sets one pixel within the surface.
+	     * @param {Number} x The pixel's x coordinates.
+	     * @param {Number} y The pixel's y coordinates.
+	     * @param {Number} r The pixel's red level.
+	     * @param {Number} g The pixel's green level.
+	     * @param {Number} b The pixel's blue level.
+	     * @param {Number} a The pixel's transparency.
+	     */
+	    setPixel: function(x, y, r, g, b, a) {
+	        var pixel = this.context.createImageData(1, 1);
+	        pixel.data[0] = r;
+	        pixel.data[1] = g;
+	        pixel.data[2] = b;
+	        pixel.data[3] = a;
+	        this.context.putImageData(pixel, x, y);
+	    },
+	    /**
+	     * Clears all Surface pixels and makes the pixels transparent.
+	     */
+	    clear: function() {
+	        this.context.clearRect(0, 0, this.width, this.height);
+	    },
+	    /**
+	     * Draws the content of the given Surface onto this surface.
+	     *
+	     * Wraps Canvas API drawImage and if multiple arguments are given,
+	     * these are getting applied to the Canvas drawImage method.
+	     *
+	     * @example
+	     * var src = core.assets['src.gif'];
+	     * var dst = new Surface(100, 100);
+	     * dst.draw(src);         // Draws source at (0, 0)
+	     * dst.draw(src, 50, 50); // Draws source at (50, 50)
+	     * // Draws just 30 horizontal and vertical pixels of source at (50, 50)
+	     * dst.draw(src, 50, 50, 30, 30);
+	     * // Takes the image content in src starting at (10,10) with a (Width, Height) of (40,40),
+	     * // scales it and draws it in this surface at (50, 50) with a (Width, Height) of (30,30).
+	     * dst.draw(src, 10, 10, 40, 40, 50, 50, 30, 30);
+	     *
+	     * @param {enchant.Surface} image Surface used in drawing.
+	     */
+	    draw: function(image) {
+	        image = image._element;
+	        if (arguments.length === 1) {
+	            this.context.drawImage(image, 0, 0);
+	        } else {
+	            var args = arguments;
+	            args[0] = image;
+	            this.context.drawImage.apply(this.context, args);
+	        }
+	    },
+	    /**
+	     * Copies Surface.
+	     * @return {enchant.Surface} The copied Surface.
+	     */
+	    clone: function() {
+	        var clone = new enchant.Surface(this.width, this.height);
+	        clone.draw(this);
+	        return clone;
+	    },
+	    /**
+	     * Creates a data URI scheme from this Surface.
+	     * @return {String} The data URI scheme that identifies this Surface and
+	     * can be used to include this Surface into a dom tree.
+	     */
+	    toDataURL: function() {
+	        var src = this._element.src;
+	        if (src) {
+	            if (src.slice(0, 5) === 'data:') {
+	                return src;
+	            } else {
+	                return this.clone().toDataURL();
+	            }
+	        } else {
+	            return this._element.toDataURL();
+	        }
+	    }
+	});
+	
+	/**
+	 * Loads an image and creates a Surface object out of it.
+	 *
+	 * It is not possible to access properties or methods of the {@link enchant.Surface#context}, or to call methods using the Canvas API -
+	 * like {@link enchant.Surface#draw}, {@link enchant.Surface#clear}, {@link enchant.Surface#getPixel}, {@link enchant.Surface#setPixel}.. -
+	 * of the wrapped image created with this method.
+	 * However, it is possible to use this surface to draw it to another surface using the {@link enchant.Surface#draw} method.
+	 * The resulting surface can then be manipulated. (when loading images in a cross-origin resource sharing environment,
+	 * pixel acquisition and other image manipulation might be limited).
+	 *
+	 * @param {String} src The file path of the image to be loaded.
+	 * @param {Function} callback on load callback.
+	 * @param {Function} [onerror] on error callback.
+	 * @static
+	 * @return {enchant.Surface} Surface
+	 */
+	enchant.Surface.load = function(src, callback, onerror) {
+	    var image = new Image();
+	    var surface = Object.create(enchant.Surface.prototype, {
+	        context: { value: null },
+	        _css: { value: 'url(' + src + ')' },
+	        _element: { value: image }
+	    });
+	    enchant.EventTarget.call(surface);
+	    onerror = onerror || function() {};
+	    surface.addEventListener('load', callback);
+	    surface.addEventListener('error', onerror);
+	    image.onerror = function() {
+	        var e = new enchant.Event(enchant.Event.ERROR);
+	        e.message = 'Cannot load an asset: ' + image.src;
+	        enchant.Core.instance.dispatchEvent(e);
+	        surface.dispatchEvent(e);
+	    };
+	    image.onload = function() {
+	        surface.width = image.width;
+	        surface.height = image.height;
+	        surface.dispatchEvent(new enchant.Event('load'));
+	    };
+	    image.src = src;
+	    return surface;
+	};
+	enchant.Surface._staticCanvas2DContext = document.createElement('canvas').getContext('2d');
+	
+	enchant.Surface._getPattern = function(surface, force) {
+	    if (!surface._pattern || force) {
+	        surface._pattern = this._staticCanvas2DContext.createPattern(surface._element, 'repeat');
+	    }
+	    return surface._pattern;
+	};
+	
+	if (window.Deferred) {
+	    enchant.Deferred = window.Deferred;
+	} else {
+	    /**
+	     * @scope enchant.Deferred.prototype
+	     */
+	    enchant.Deferred = enchant.Class.create({
+	        /**
+	         * @name enchant.Deferred
+	         * @class
+	         * <br/>
+	         * See: <a href="http://cho45.stfuawsc.com/jsdeferred/">
+	         * http://cho45.stfuawsc.com/jsdeferred/</a>
+	         *
+	         * @example
+	         * enchant.Deferred
+	         *     .next(function() {
+	         *         return 42;
+	         *     })
+	         *     .next(function(n) {
+	         *         console.log(n); // 42
+	         *     })
+	         *     .next(function() {
+	         *         return core.load('img.png'); // wait loading
+	         *     })
+	         *     .next(function() {
+	         *         var img = core.assets['img.png'];
+	         *         console.log(img instanceof enchant.Surface); // true
+	         *         throw new Error('!!!');
+	         *     })
+	         *     .next(function() {
+	         *         // skip
+	         *     })
+	         *     .error(function(err) {
+	         *          console.log(err.message); // !!!
+	         *     });
+	         *
+	         * @constructs
+	         */
+	        initialize: function() {
+	            this._succ = this._fail = this._next = this._id = null;
+	            this._tail = this;
+	        },
+	        /**
+	         * @param {Function} func
+	         */
+	        next: function(func) {
+	            var q = new enchant.Deferred();
+	            q._succ = func;
+	            return this._add(q);
+	        },
+	        /**
+	         * @param {Function} func
+	         */
+	        error: function(func) {
+	            var q = new enchant.Deferred();
+	            q._fail = func;
+	            return this._add(q);
+	        },
+	        _add: function(queue) {
+	            this._tail._next = queue;
+	            this._tail = queue;
+	            return this;
+	        },
+	        /**
+	         * @param {*} arg
+	         */
+	        call: function(arg) {
+	            var received;
+	            var queue = this;
+	            while (queue && !queue._succ) {
+	                queue = queue._next;
+	            }
+	            if (!(queue instanceof enchant.Deferred)) {
+	                return;
+	            }
+	            try {
+	                received = queue._succ(arg);
+	            } catch (e) {
+	                return queue.fail(e);
+	            }
+	            if (received instanceof enchant.Deferred) {
+	                enchant.Deferred._insert(queue, received);
+	            } else if (queue._next instanceof enchant.Deferred) {
+	                queue._next.call(received);
+	            }
+	        },
+	        /**
+	         * @param {*} arg
+	         */
+	        fail: function(arg) {
+	            var result, err,
+	                queue = this;
+	            while (queue && !queue._fail) {
+	                queue = queue._next;
+	            }
+	            if (queue instanceof enchant.Deferred) {
+	                result = queue._fail(arg);
+	                queue.call(result);
+	            } else if (arg instanceof Error) {
+	                throw arg;
+	            } else {
+	                err = new Error('failed in Deferred');
+	                err.arg = arg;
+	                throw err;
+	            }
+	        }
+	    });
+	    enchant.Deferred._insert = function(queue, ins) {
+	        if (queue._next instanceof enchant.Deferred) {
+	            ins._tail._next = queue._next;
+	        }
+	        queue._next = ins;
+	    };
+	    /**
+	     * @param {Function} func
+	     * @return {enchant.Deferred}
+	     * @static
+	     */
+	    enchant.Deferred.next = function(func) {
+	        var q = new enchant.Deferred().next(func);
+	        q._id = setTimeout(function() { q.call(); }, 0);
+	        return q;
+	    };
+	    /**
+	     * @param {Object|enchant.Deferred[]} arg
+	     * @return {enchant.Deferred}
+	     *
+	     * @example
+	     * // array
+	     * enchant.Deferred
+	     *     .parallel([
+	     *         enchant.Deferred.next(function() {
+	     *             return 24;
+	     *         }),
+	     *         enchant.Deferred.next(function() {
+	     *             return 42;
+	     *         })
+	     *     ])
+	     *     .next(function(arg) {
+	     *         console.log(arg); // [ 24, 42 ]
+	     *     });
+	     * // object
+	     * enchant.Deferred
+	     *     .parallel({
+	     *         foo: enchant.Deferred.next(function() {
+	     *             return 24;
+	     *         }),
+	     *         bar: enchant.Deferred.next(function() {
+	     *             return 42;
+	     *         })
+	     *     })
+	     *     .next(function(arg) {
+	     *         console.log(arg.foo); // 24
+	     *         console.log(arg.bar); // 42
+	     *     });
+	     *
+	     * @static
+	     */
+	    enchant.Deferred.parallel = function(arg) {
+	        var q = new enchant.Deferred();
+	        q._id = setTimeout(function() { q.call(); }, 0);
+	        var progress = 0;
+	        var ret = (arg instanceof Array) ? [] : {};
+	        var p = new enchant.Deferred();
+	        for (var prop in arg) {
+	            if (arg.hasOwnProperty(prop)) {
+	                progress++;
+	                /*jshint loopfunc:true */
+	                (function(queue, name) {
+	                    queue.next(function(arg) {
+	                        progress--;
+	                        ret[name] = arg;
+	                        if (progress <= 0) {
+	                            p.call(ret);
+	                        }
+	                    })
+	                    .error(function(err) { p.fail(err); });
+	                    if (typeof queue._id === 'number') {
+	                        clearTimeout(queue._id);
+	                    }
+	                    queue._id = setTimeout(function() { queue.call(); }, 0);
+	                }(arg[prop], prop));
+	            }
+	        }
+	        if (!progress) {
+	            p._id = setTimeout(function() { p.call(ret); }, 0);
+	        }
+	        return q.next(function() { return p; });
+	    };
+	}
+	
+	/**
+	 * @scope enchant.DOMSound.prototype
+	 */
+	enchant.DOMSound = enchant.Class.create(enchant.EventTarget, {
+	    /**
+	     * @name enchant.DOMSound
+	     * @class
+	     * Class to wrap audio elements.
+	     *
+	     * Safari, Chrome, Firefox, Opera, and IE all play MP3 files
+	     * (Firefox and Opera play via Flash). WAVE files can be played on
+	     * Safari, Chrome, Firefox, and Opera. When the browser is not compatible with
+	     * the used codec the file will not play.
+	     *
+	     * Instances are created not via constructor but via {@link enchant.DOMSound.load}.
+	     * @constructs
+	     * @extends enchant.EventTarget
+	     */
+	    initialize: function() {
+	        enchant.EventTarget.call(this);
+	        /**
+	         * Sound file duration (seconds).
+	         * @type Number
+	         */
+	        this.duration = 0;
+	        throw new Error("Illegal Constructor");
+	    },
+	    /**
+	     * Begin playing.
+	     */
+	    play: function() {
+	        if (this._element) {
+	            this._element.play();
+	        }
+	    },
+	    /**
+	     * Pause playback.
+	     */
+	    pause: function() {
+	        if (this._element) {
+	            this._element.pause();
+	        }
+	    },
+	    /**
+	     * Stop playing.
+	     */
+	    stop: function() {
+	        this.pause();
+	        this.currentTime = 0;
+	    },
+	    /**
+	     * Create a copy of this Sound object.
+	     * @return {enchant.DOMSound} Copied Sound.
+	     */
+	    clone: function() {
+	        var clone;
+	        if (this._element instanceof Audio) {
+	            clone = Object.create(enchant.DOMSound.prototype, {
+	                _element: { value: this._element.cloneNode(false) },
+	                duration: { value: this.duration }
+	            });
+	        } else if (enchant.ENV.USE_FLASH_SOUND) {
+	            return this;
+	        } else {
+	            clone = Object.create(enchant.DOMSound.prototype);
+	        }
+	        enchant.EventTarget.call(clone);
+	        return clone;
+	    },
+	    /**
+	     * Current playback position (seconds).
+	     * @type Number
+	     */
+	    currentTime: {
+	        get: function() {
+	            return this._element ? this._element.currentTime : 0;
+	        },
+	        set: function(time) {
+	            if (this._element) {
+	                this._element.currentTime = time;
+	            }
+	        }
+	    },
+	    /**
+	     * Volume. 0 (muted) ～ 1 (full volume).
+	     * @type Number
+	     */
+	    volume: {
+	        get: function() {
+	            return this._element ? this._element.volume : 1;
+	        },
+	        set: function(volume) {
+	            if (this._element) {
+	                this._element.volume = volume;
+	            }
+	        }
+	    }
+	});
+	
+	/**
+	 * Loads an audio file and creates DOMSound object.
+	 * @param {String} src Path of the audio file to be loaded.
+	 * @param {String} [type] MIME Type of the audio file.
+	 * @param {Function} [callback] on load callback.
+	 * @param {Function} [onerror] on error callback.
+	 * @return {enchant.DOMSound} DOMSound
+	 * @static
+	 */
+	enchant.DOMSound.load = function(src, type, callback, onerror) {
+	    if (type == null) {
+	        var ext = enchant.Core.findExt(src);
+	        if (ext) {
+	            type = 'audio/' + ext;
+	        } else {
+	            type = '';
+	        }
+	    }
+	    type = type.replace('mp3', 'mpeg').replace('m4a', 'mp4');
+	    callback = callback || function() {};
+	    onerror = onerror || function() {};
+	
+	    var sound = Object.create(enchant.DOMSound.prototype);
+	    enchant.EventTarget.call(sound);
+	    sound.addEventListener('load', callback);
+	    sound.addEventListener('error', onerror);
+	    var audio = new Audio();
+	    if (!enchant.ENV.SOUND_ENABLED_ON_MOBILE_SAFARI &&
+	        enchant.ENV.VENDOR_PREFIX === 'webkit' && enchant.ENV.TOUCH_ENABLED) {
+	        window.setTimeout(function() {
+	            sound.dispatchEvent(new enchant.Event('load'));
+	        }, 0);
+	    } else {
+	        if (!enchant.ENV.USE_FLASH_SOUND && audio.canPlayType(type)) {
+	            audio.addEventListener('canplaythrough', function canplay() {
+	                sound.duration = audio.duration;
+	                sound.dispatchEvent(new enchant.Event('load'));
+	                audio.removeEventListener('canplaythrough', canplay);
+	            }, false);
+	            audio.src = src;
+	            audio.load();
+	            audio.autoplay = false;
+	            audio.onerror = function() {
+	                var e = new enchant.Event(enchant.Event.ERROR);
+	                e.message = 'Cannot load an asset: ' + audio.src;
+	                enchant.Core.instance.dispatchEvent(e);
+	                sound.dispatchEvent(e);
+	            };
+	            sound._element = audio;
+	        } else if (type === 'audio/mpeg') {
+	            var embed = document.createElement('embed');
+	            var id = 'enchant-audio' + enchant.Core.instance._soundID++;
+	            embed.width = embed.height = 1;
+	            embed.name = id;
+	            embed.src = 'sound.swf?id=' + id + '&src=' + src;
+	            embed.allowscriptaccess = 'always';
+	            embed.style.position = 'absolute';
+	            embed.style.left = '-1px';
+	            sound.addEventListener('load', function() {
+	                Object.defineProperties(embed, {
+	                    currentTime: {
+	                        get: function() {
+	                            return embed.getCurrentTime();
+	                        },
+	                        set: function(time) {
+	                            embed.setCurrentTime(time);
+	                        }
+	                    },
+	                    volume: {
+	                        get: function() {
+	                            return embed.getVolume();
+	                        },
+	                        set: function(volume) {
+	                            embed.setVolume(volume);
+	                        }
+	                    }
+	                });
+	                sound._element = embed;
+	                sound.duration = embed.getDuration();
+	            });
+	            enchant.Core.instance._element.appendChild(embed);
+	            enchant.DOMSound[id] = sound;
+	        } else {
+	            window.setTimeout(function() {
+	                sound.dispatchEvent(new enchant.Event('load'));
+	            }, 0);
+	        }
+	    }
+	    return sound;
+	};
+	
+	window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext || window.oAudioContext;
+	
+	/**
+	 * @scope enchant.WebAudioSound.prototype
+	 */
+	enchant.WebAudioSound = enchant.Class.create(enchant.EventTarget, {
+	    /**
+	     * @name enchant.WebAudioSound
+	     * @class
+	     * Sound wrapper class for Web Audio API (supported on some webkit-based browsers)
+	     * @constructs
+	     * @extends enchant.EventTarget
+	     */
+	    initialize: function() {
+	        if (!window.AudioContext) {
+	            throw new Error("This browser does not support WebAudio API.");
+	        }
+	        enchant.EventTarget.call(this);
+	        if (!enchant.WebAudioSound.audioContext) {
+	          enchant.WebAudioSound.audioContext = new window.AudioContext();
+	          enchant.WebAudioSound.destination = enchant.WebAudioSound.audioContext.destination;
+	        }
+	        this.context = enchant.WebAudioSound.audioContext;
+	        this.src = this.context.createBufferSource();
+	        this.buffer = null;
+	        this._volume = 1;
+	        this._currentTime = 0;
+	        this._state = 0;
+	        this.connectTarget = enchant.WebAudioSound.destination;
+	    },
+	    /**
+	     * Begin playing.
+	     * @param {Boolean} [dup=false] If true, Object plays new sound while keeps last sound.
+	     */
+	    play: function(dup) {
+	        if (this._state === 1 && !dup) {
+	            this.src.disconnect();
+	        }
+	        if (this._state !== 2) {
+	            this._currentTime = 0;
+	        }
+	        var offset = this._currentTime;
+	        var actx = this.context;
+	        this.src = actx.createBufferSource();
+	        if (actx.createGain != null) {
+	            this._gain = actx.createGain();
+	        } else {
+	            this._gain = actx.createGainNode();
+	        }
+	        this.src.buffer = this.buffer;
+	        this._gain.gain.value = this._volume;
+	
+	        this.src.connect(this._gain);
+	        this._gain.connect(this.connectTarget);
+	        if (this.src.start != null) {
+	            this.src.start(0, offset, this.buffer.duration - offset - 1.192e-7);
+	        } else {
+	            this.src.noteGrainOn(0, offset, this.buffer.duration - offset - 1.192e-7);
+	        }
+	        this._startTime = actx.currentTime - this._currentTime;
+	        this._state = 1;
+	    },
+	    /**
+	     * Pause playback.
+	     */
+	    pause: function() {
+	        var currentTime = this.currentTime;
+	        if (currentTime === this.duration) {
+	            return;
+	        }
+	        if (this.src.stop != null) {
+	            this.src.stop(0);
+	        } else {
+	            this.src.noteOff(0);
+	        }
+	        this._currentTime = currentTime;
+	        this._state = 2;
+	    },
+	    /**
+	     * Stop playing.
+	     */
+	    stop: function() {
+	        if (this.src.stop != null) {
+	            this.src.stop(0);
+	        } else {
+	            this.src.noteOff(0);
+	        }
+	        this._state = 0;
+	    },
+	    /**
+	     * Create a copy of this Sound object.
+	     * @return {enchant.WebAudioSound} Copied Sound.
+	     */
+	    clone: function() {
+	        var sound = new enchant.WebAudioSound();
+	        sound.buffer = this.buffer;
+	        return sound;
+	    },
+	    /**
+	     * Sound file duration (seconds).
+	     * @type Number
+	     */
+	    duration: {
+	        get: function() {
+	            if (this.buffer) {
+	                return this.buffer.duration;
+	            } else {
+	                return 0;
+	            }
+	        }
+	    },
+	    /**
+	     * Current playback position (seconds).
+	     * @type Number
+	     */
+	    volume: {
+	        get: function() {
+	            return this._volume;
+	        },
+	        set: function(volume) {
+	            volume = Math.max(0, Math.min(1, volume));
+	            this._volume = volume;
+	            if (this.src) {
+	                this._gain.gain.value = volume;
+	            }
+	        }
+	    },
+	    /**
+	     * Volume. 0 (muted) ～ 1 (full volume).
+	     * @type Number
+	     */
+	    currentTime: {
+	        get: function() {
+	            return Math.max(0, Math.min(this.duration, this.src.context.currentTime - this._startTime));
+	        },
+	        set: function(time) {
+	            this._currentTime = time;
+	            if (this._state !== 2) {
+	                this.play(false);
+	            }
+	        }
+	    }
+	});
+	
+	/**
+	 * Loads an audio file and creates WebAudioSound object.
+	 * @param {String} src Path of the audio file to be loaded.
+	 * @param {String} [type] MIME Type of the audio file.
+	 * @param {Function} [callback] on load callback.
+	 * @param {Function} [onerror] on error callback.
+	 * @return {enchant.WebAudioSound} WebAudioSound
+	 * @static
+	 */
+	enchant.WebAudioSound.load = function(src, type, callback, onerror) {
+	    var canPlay = (new Audio()).canPlayType(type);
+	    var sound = new enchant.WebAudioSound();
+	    callback = callback || function() {};
+	    onerror = onerror || function() {};
+	    sound.addEventListener(enchant.Event.LOAD, callback);
+	    sound.addEventListener(enchant.Event.ERROR, onerror);
+	    function dispatchErrorEvent() {
+	        var e = new enchant.Event(enchant.Event.ERROR);
+	        e.message = 'Cannot load an asset: ' + src;
+	        enchant.Core.instance.dispatchEvent(e);
+	        sound.dispatchEvent(e);
+	    }
+	    var actx, xhr;
+	    if (canPlay === 'maybe' || canPlay === 'probably') {
+	        actx = enchant.WebAudioSound.audioContext;
+	        xhr = new XMLHttpRequest();
+	        xhr.open('GET', src, true);
+	        xhr.responseType = 'arraybuffer';
+	        xhr.onload = function() {
+	            actx.decodeAudioData(xhr.response, function(buffer) {
+	                sound.buffer = buffer;
+	                sound.dispatchEvent(new enchant.Event(enchant.Event.LOAD));
+	            }, dispatchErrorEvent);
+	        };
+	        xhr.onerror = dispatchErrorEvent;
+	        xhr.send(null);
+	    } else {
+	        setTimeout(dispatchErrorEvent,  50);
+	    }
+	    return sound;
+	};
+	
+	enchant.Sound = window.AudioContext && enchant.ENV.USE_WEBAUDIO ? enchant.WebAudioSound : enchant.DOMSound;
 	
 	/*
-	 * PauseScene
+	 * ============================================================================================
+	 * Easing Equations v2.0
+	 * September 1, 2003
+	 * (c) 2003 Robert Penner, all rights reserved.
+	 * This work is subject to the terms in http://www.robertpenner.com/easing_terms_of_use.html.
+	 * ============================================================================================
 	 */
 	
+	/**
+	 * @namespace
+	 * JavaScript translation of Robert Penner's "Easing Equations" library which is widely used in ActionScript.
+	 * 
+	 * @param [t] the current time
+	 * @param [b] the property's initial value
+	 * @param [c] how much the value should change
+	 * @param [d] how much time should elapse before value is changed
+	 * 
+	 * @return {Number}
+	 * <br/>
+	 * See: <a href="http://www.robertpenner.com/easing/">
+	 * http://www.robertpenner.com/easing/</a>
+	 * <br/>
+	 * See: <a href="http://www.robertpenner.com/easing/penner_chapter7_tweening.pdf">
+	 * http://www.robertpenner.com/easing/penner_chapter7_tweening.pdf</a>
+	 */
+	enchant.Easing = {
+	    LINEAR: function(t, b, c, d) {
+	        return c * t / d + b;
+	    },
 	
-	phina.namespace(function() {
+	    SWING: function(t, b, c, d) {
+	        return c * (0.5 - Math.cos(((t / d) * Math.PI)) / 2) + b;
+	    },
 	
-	  /**
-	   * @class phina.game.PauseScene
-	   *
-	   */
-	  phina.define('phina.game.PauseScene', {
-	    superClass: 'phina.display.DisplayScene',
+	    // *** quad
+	    QUAD_EASEIN: function(t, b, c, d) {
+	        return c * (t /= d) * t + b;
+	    },
+	
+	    QUAD_EASEOUT: function(t, b, c, d) {
+	        return -c * (t /= d) * (t - 2) + b;
+	    },
+	
+	    QUAD_EASEINOUT: function(t, b, c, d) {
+	        if ((t /= d / 2) < 1) {
+	            return c / 2 * t * t + b;
+	        }
+	        return -c / 2 * ((--t) * (t - 2) - 1) + b;
+	    },
+	
+	    // *** cubic
+	    CUBIC_EASEIN: function(t, b, c, d) {
+	        return c * (t /= d) * t * t + b;
+	    },
+	
+	    CUBIC_EASEOUT: function(t, b, c, d) {
+	        return c * ((t = t / d - 1) * t * t + 1) + b;
+	    },
+	
+	    CUBIC_EASEINOUT: function(t, b, c, d) {
+	        if ((t /= d / 2) < 1) {
+	            return c / 2 * t * t * t + b;
+	        }
+	        return c / 2 * ((t -= 2) * t * t + 2) + b;
+	    },
+	
+	    // *** quart
+	    QUART_EASEIN: function(t, b, c, d) {
+	        return c * (t /= d) * t * t * t + b;
+	    },
+	
+	    QUART_EASEOUT: function(t, b, c, d) {
+	        return -c * ((t = t / d - 1) * t * t * t - 1) + b;
+	    },
+	
+	    QUART_EASEINOUT: function(t, b, c, d) {
+	        if ((t /= d / 2) < 1) {
+	            return c / 2 * t * t * t * t + b;
+	        }
+	        return -c / 2 * ((t -= 2) * t * t * t - 2) + b;
+	    },
+	
+	    // *** quint
+	    QUINT_EASEIN: function(t, b, c, d) {
+	        return c * (t /= d) * t * t * t * t + b;
+	    },
+	
+	    QUINT_EASEOUT: function(t, b, c, d) {
+	        return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
+	    },
+	
+	    QUINT_EASEINOUT: function(t, b, c, d) {
+	        if ((t /= d / 2) < 1) {
+	            return c / 2 * t * t * t * t * t + b;
+	        }
+	        return c / 2 * ((t -= 2) * t * t * t * t + 2) + b;
+	    },
+	
+	    // *** sin
+	    SIN_EASEIN: function(t, b, c, d) {
+	        return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
+	    },
+	
+	    SIN_EASEOUT: function(t, b, c, d) {
+	        return c * Math.sin(t / d * (Math.PI / 2)) + b;
+	    },
+	
+	    SIN_EASEINOUT: function(t, b, c, d) {
+	        return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;
+	    },
+	
+	    // *** circ
+	    CIRC_EASEIN: function(t, b, c, d) {
+	        return -c * (Math.sqrt(1 - (t /= d) * t) - 1) + b;
+	    },
+	
+	    CIRC_EASEOUT: function(t, b, c, d) {
+	        return c * Math.sqrt(1 - (t = t / d - 1) * t) + b;
+	    },
+	
+	    CIRC_EASEINOUT: function(t, b, c, d) {
+	        if ((t /= d / 2) < 1) {
+	            return -c / 2 * (Math.sqrt(1 - t * t) - 1) + b;
+	        }
+	        return c / 2 * (Math.sqrt(1 - (t -= 2) * t) + 1) + b;
+	    },
+	
+	    // *** elastic
+	    ELASTIC_EASEIN: function(t, b, c, d, a, p) {
+	        if (t === 0) {
+	            return b;
+	        }
+	        if ((t /= d) === 1) {
+	            return b + c;
+	        }
+	
+	        if (!p) {
+	            p = d * 0.3;
+	        }
+	
+	        var s;
+	        if (!a || a < Math.abs(c)) {
+	            a = c;
+	            s = p / 4;
+	        } else {
+	            s = p / (2 * Math.PI) * Math.asin(c / a);
+	        }
+	        return -(a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
+	    },
+	
+	    ELASTIC_EASEOUT: function(t, b, c, d, a, p) {
+	        if (t === 0) {
+	            return b;
+	        }
+	        if ((t /= d) === 1) {
+	            return b + c;
+	        }
+	        if (!p) {
+	            p = d * 0.3;
+	        }
+	        var s;
+	        if (!a || a < Math.abs(c)) {
+	            a = c;
+	            s = p / 4;
+	        } else {
+	            s = p / (2 * Math.PI) * Math.asin(c / a);
+	        }
+	        return (a * Math.pow(2, -10 * t) * Math.sin((t * d - s) * (2 * Math.PI) / p) + c + b);
+	    },
+	
+	    ELASTIC_EASEINOUT: function(t, b, c, d, a, p) {
+	        if (t === 0) {
+	            return b;
+	        }
+	        if ((t /= d / 2) === 2) {
+	            return b + c;
+	        }
+	        if (!p) {
+	            p = d * (0.3 * 1.5);
+	        }
+	        var s;
+	        if (!a || a < Math.abs(c)) {
+	            a = c;
+	            s = p / 4;
+	        } else {
+	            s = p / (2 * Math.PI) * Math.asin(c / a);
+	        }
+	        if (t < 1) {
+	            return -0.5 * (a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
+	        }
+	        return a * Math.pow(2, -10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p) * 0.5 + c + b;
+	    },
+	
+	    // *** bounce
+	    BOUNCE_EASEOUT: function(t, b, c, d) {
+	        if ((t /= d) < (1 / 2.75)) {
+	            return c * (7.5625 * t * t) + b;
+	        } else if (t < (2 / 2.75)) {
+	            return c * (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) + b;
+	        } else if (t < (2.5 / 2.75)) {
+	            return c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + b;
+	        } else {
+	            return c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
+	        }
+	    },
+	
+	    BOUNCE_EASEIN: function(t, b, c, d) {
+	        return c - enchant.Easing.BOUNCE_EASEOUT(d - t, 0, c, d) + b;
+	    },
+	
+	    BOUNCE_EASEINOUT: function(t, b, c, d) {
+	        if (t < d / 2) {
+	            return enchant.Easing.BOUNCE_EASEIN(t * 2, 0, c, d) * 0.5 + b;
+	        } else {
+	            return enchant.Easing.BOUNCE_EASEOUT(t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b;
+	        }
+	
+	    },
+	
+	    // *** back
+	    BACK_EASEIN: function(t, b, c, d, s) {
+	        if (s === undefined) {
+	            s = 1.70158;
+	        }
+	        return c * (t /= d) * t * ((s + 1) * t - s) + b;
+	    },
+	
+	    BACK_EASEOUT: function(t, b, c, d, s) {
+	        if (s === undefined) {
+	            s = 1.70158;
+	        }
+	        return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
+	    },
+	
+	    BACK_EASEINOUT: function(t, b, c, d, s) {
+	        if (s === undefined) {
+	            s = 1.70158;
+	        }
+	        if ((t /= d / 2) < 1) {
+	            return c / 2 * (t * t * (((s *= (1.525)) + 1) * t - s)) + b;
+	        }
+	        return c / 2 * ((t -= 2) * t * (((s *= (1.525)) + 1) * t + s) + 2) + b;
+	    },
+	
+	    // *** expo
+	    EXPO_EASEIN: function(t, b, c, d) {
+	        return (t === 0) ? b : c * Math.pow(2, 10 * (t / d - 1)) + b;
+	    },
+	
+	    EXPO_EASEOUT: function(t, b, c, d) {
+	        return (t === d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b;
+	    },
+	
+	    EXPO_EASEINOUT: function(t, b, c, d) {
+	        if (t === 0) {
+	            return b;
+	        }
+	        if (t === d) {
+	            return b + c;
+	        }
+	        if ((t /= d / 2) < 1) {
+	            return c / 2 * Math.pow(2, 10 * (t - 1)) + b;
+	        }
+	        return c / 2 * (-Math.pow(2, -10 * --t) + 2) + b;
+	    }
+	};
+	
+	/**
+	 * @scope enchant.ActionEventTarget.prototype
+	 */
+	enchant.ActionEventTarget = enchant.Class.create(enchant.EventTarget, {
 	    /**
-	     * @constructor
+	     * @name enchant.ActionEventTarget
+	     * @class
+	     * EventTarget which can change the context of event listeners.
+	     * @constructs
+	     * @extends enchant.EventTarget
 	     */
-	    init: function(params) {
-	      this.superInit(params);
+	    initialize: function() {
+	        enchant.EventTarget.apply(this, arguments);
+	    },
+	    dispatchEvent: function(e) {
+	        var target = this.node ? this.node : this;
 	
-	      params = ({}).$safe(params, phina.game.PauseScene.defaults);
+	        e.target = target;
+	        e.localX = e.x - target._offsetX;
+	        e.localY = e.y - target._offsetY;
 	
-	      this.backgroundColor = params.backgroundColor;
+	        if (this['on' + e.type] != null) {
+	            this['on' + e.type].call(target, e);
+	        }
+	        var listeners = this._listeners[e.type];
+	        if (listeners != null) {
+	            listeners = listeners.slice();
+	            for (var i = 0, len = listeners.length; i < len; i++) {
+	                listeners[i].call(target, e);
+	            }
+	        }
+	    }
+	});
 	
-	      this.fromJSON({
-	        children: {
-	          text: {
-	            className: 'phina.display.Label',
-	            arguments: {
-	              text: 'Pause',
-	              fill: params.fontColor,
-	              stroke: null,
-	              fontSize: 48,
+	/**
+	 * @scope enchant.Timeline.prototype
+	 */
+	enchant.Timeline = enchant.Class.create(enchant.EventTarget, {
+	    /**
+	     * @name enchant.Timeline
+	     * @class
+	     * Time-line class.
+	     * Class for managing the action.
+	     *
+	     * For one node to manipulate the timeline of one must correspond.
+	     * Time-line class has a method to add a variety of actions to himself,
+	     * entities can be animated and various operations by using these briefly.
+	     * You can choose time based and frame based(default) animation.
+	     * @param {enchant.Node} node target node.
+	     * @constructs
+	     * @extends enchant.EventTarget
+	     */
+	    initialize: function(node) {
+	        enchant.EventTarget.call(this);
+	        this.node = node;
+	        this.queue = [];
+	        this.paused = false;
+	        this.looped = false;
+	        this.isFrameBased = true;
+	        this._parallel = null;
+	        this._activated = false;
+	        this.addEventListener(enchant.Event.ENTER_FRAME, this._onenterframe);
+	
+	        var tl = this;
+	        this._nodeEventListener = function(e) {
+	            tl.dispatchEvent(e);
+	        };
+	    },
+	    /**
+	     * @private
+	     */
+	    _deactivateTimeline: function() {
+	        if (this._activated) {
+	            this._activated = false;
+	            this.node.removeEventListener('enterframe', this._nodeEventListener);
+	        }
+	    },
+	    /**
+	     * @private
+	     */
+	    _activateTimeline: function() {
+	        if (!this._activated && !this.paused) {
+	            this.node.addEventListener("enterframe", this._nodeEventListener);
+	            this._activated = true;
+	        }
+	    },
+	    /**
+	     * @private
+	     */
+	    _onenterframe: function(evt) {
+	        if (this.paused) {
+	            return;
+	        }
+	
+	        this.tick(this.isFrameBased ? 1 : evt.elapsed);
+	    },
+	    /**
+	     */
+	    setFrameBased: function() {
+	        this.isFrameBased = true;
+	    },
+	    /**
+	     */
+	    setTimeBased: function() {
+	        this.isFrameBased = false;
+	    },
+	    /**
+	     */
+	    next: function(remainingTime) {
+	        var e, action = this.queue.shift();
+	
+	        if (action) {
+	            e = new enchant.Event("actionend");
+	            e.timeline = this;
+	            action.dispatchEvent(e);
+	
+	            e = new enchant.Event("removedfromtimeline");
+	            e.timeline = this;
+	            action.dispatchEvent(e);
+	
+	            if (this.looped) {
+	                this.add(action);
+	            }
+	        }
+	
+	        if (this.queue.length === 0) {
+	            this._deactivateTimeline();
+	            return;
+	        }
+	
+	        if (remainingTime > 0 || (this.queue[0] && this.queue[0].time === 0)) {
+	            var event = new enchant.Event("actiontick");
+	            event.elapsed = remainingTime;
+	            event.timeline = this;
+	            this.queue[0].dispatchEvent(event);
+	        }
+	    },
+	    /**
+	     * @param {Number} elapsed
+	     */
+	    tick: function(elapsed) {
+	        if (this.queue.length > 0) {
+	            var action = this.queue[0];
+	            if (action.frame === 0) {
+	                var f;
+	                f = new enchant.Event("actionstart");
+	                f.timeline = this;
+	                action.dispatchEvent(f);
+	            }
+	
+	            var e = new enchant.Event("actiontick");
+	            e.timeline = this;
+	            e.elapsed = elapsed;
+	            action.dispatchEvent(e);
+	        }
+	    },
+	    /**
+	     * @param {enchant.Action} action
+	     * @return {enchant.Timeline}
+	     */
+	    add: function(action) {
+	        this._activateTimeline();
+	        if (this._parallel) {
+	            this._parallel.actions.push(action);
+	            this._parallel = null;
+	        } else {
+	            this.queue.push(action);
+	        }
+	        action.frame = 0;
+	
+	        var e = new enchant.Event("addedtotimeline");
+	        e.timeline = this;
+	        action.dispatchEvent(e);
+	
+	        e = new enchant.Event("actionadded");
+	        e.action = action;
+	        this.dispatchEvent(e);
+	
+	        return this;
+	    },
+	    /**
+	     * @param {Object} params
+	     * @return {enchant.Timeline}
+	     */
+	    action: function(params) {
+	        return this.add(new enchant.Action(params));
+	    },
+	    /**
+	     * @param {Object} params
+	     * @return {enchant.Timeline}
+	     */
+	    tween: function(params) {
+	        return this.add(new enchant.Tween(params));
+	    },
+	    /**
+	     * @return {enchant.Timeline}
+	     */
+	    clear: function() {
+	        var e = new enchant.Event("removedfromtimeline");
+	        e.timeline = this;
+	
+	        for (var i = 0, len = this.queue.length; i < len; i++) {
+	            this.queue[i].dispatchEvent(e);
+	        }
+	        this.queue = [];
+	        this._deactivateTimeline();
+	        return this;
+	    },
+	    /**
+	     * @param {Number} frames
+	     * @return {enchant.Timeline}
+	     */
+	    skip: function(frames) {
+	        var event = new enchant.Event("enterframe");
+	        if (this.isFrameBased) {
+	            event.elapsed = 1;
+	        } else {
+	            event.elapsed = frames;
+	            frames = 1;
+	        }
+	        while (frames--) {
+	            this.dispatchEvent(event);
+	        }
+	        return this;
+	    },
+	    /**
+	     * @return {enchant.Timeline}
+	     */
+	    pause: function() {
+	        if (!this.paused) {
+	            this.paused = true;
+	            this._deactivateTimeline();
+	        }
+	        return this;
+	    },
+	    /**
+	     * @return {enchant.Timeline}
+	     */
+	    resume: function() {
+	        if (this.paused) {
+	            this.paused = false;
+	            this._activateTimeline();
+	        }
+	        return this;
+	    },
+	    /**
+	     * @return {enchant.Timeline}
+	     */
+	    loop: function() {
+	        this.looped = true;
+	        return this;
+	    },
+	    /**
+	     * @return {enchant.Timeline}
+	     */
+	    unloop: function() {
+	        this.looped = false;
+	        return this;
+	    },
+	    /**
+	     * @param {Number} time
+	     * @return {enchant.Timeline}
+	     */
+	    delay: function(time) {
+	        return this.action({
+	            time: time
+	        });
+	    },
+	    /**
+	     * @ignore
+	     * @param {Number} time
+	     */
+	    wait: function(time) {
+	        // reserved
+	        return this;
+	    },
+	    /**
+	     * @param {Function} func
+	     * @return {enchant.Timeline}
+	     */
+	    then: function(func) {
+	        return this.action({
+	            onactiontick: function(evt) {
+	                func.call(this);
 	            },
-	            x: this.gridX.center(),
-	            y: this.gridY.center(),
-	          },
-	        }
-	      });
-	
-	      if (params.exitType === 'touch') {
-	        this.on('pointend', function() {
-	          this.exit();
+	            // if time is 0, next action will be immediately executed
+	            time: 0
 	        });
-	      }
 	    },
-	
-	    _static: {
-	      defaults: {
-	        width: 640,
-	        height: 960,
-	
-	        fontColor: 'white',
-	        backgroundColor: 'hsla(0, 0%, 0%, 0.85)',
-	
-	        exitType: 'touch',
-	      },
-	    },
-	
-	  });
-	
-	});
-	
-	phina.namespace(function() {
-	
-	  /**
-	   * @class phina.game.GameApp
-	   * 
-	   */
-	  phina.define('phina.game.GameApp', {
-	    superClass: 'phina.display.CanvasApp',
-	
-	    init: function(options) {
-	
-	      options = (options || {}).$safe({
-	        startLabel: 'title',
-	      });
-	      this.superInit(options);
-	
-	      var startLabel = options.startLabel || 'title';
-	
-	      var scenes = options.scenes || [
-	        {
-	          className: 'SplashScene',
-	          label: 'splash',
-	          nextLabel: 'title',
-	        },
-	
-	        {
-	          className: 'TitleScene',
-	          label: 'title',
-	          nextLabel: 'main',
-	        },
-	        {
-	          className: 'MainScene',
-	          label: 'main',
-	          nextLabel: 'result',
-	        },
-	        {
-	          className: 'ResultScene',
-	          label: 'result',
-	          nextLabel: 'title',
-	        },
-	      ];
-	
-	      scenes = scenes.each(function(s) {
-	        s.arguments = s.arguments || options;
-	      });
-	
-	      var scene = phina.game.ManagerScene({
-	        startLabel: startLabel,
-	        scenes: scenes,
-	      });
-	
-	      if (options.assets) {
-	        var loadingOptions = ({}).$extend(options, {
-	          exitType: '',
-	        });
-	        var loadingClass = phina.global.LoadingScene || phina.game.LoadingScene;
-	        var loading = loadingClass(loadingOptions);
-	        this.replaceScene(loading);
-	
-	        loading.onloaded = function() {
-	          this.replaceScene(scene);
-	          if (options.debug) {
-	            this._enableDebugger();
-	          }
-	        }.bind(this);
-	
-	      }
-	      else {
-	        this.replaceScene(scene);
-	        if (options.debug) {
-	          this._enableDebugger();
-	        }
-	      }
-	
-	      // 自動でポーズする
-	      if (options.autoPause) {
-	        this.on('blur', function() {
-	          var pauseScene = phina.game.PauseScene();
-	          this.pushScene(pauseScene);
-	        });
-	      }
-	    },
-	
-	    _enableDebugger: function() {
-	      if (this.gui) return ;
-	
-	      this.enableDatGUI(function(gui) {
-	        var f = gui.addFolder('scenes');
-	        var funcs = {};
-	        this.rootScene.scenes.each(function(scene) {
-	          funcs[scene.label] = function() {
-	            this.rootScene.replaceScene(scene.label);
-	            console.log(this._scenes.length);
-	          }.bind(this);
-	          return scene;
-	        }, this);
-	
-	        funcs.forIn(function(key, value) {
-	          f.add(funcs, key);
-	        });
-	        f.open();
-	
-	        this.gui = gui;
-	      }.bind(this));
-	    },
-	  });
-	
-	});
-	
-	
-	phina.namespace(function() {
-	
-	  var BASE_URL = 'http://';
-	
-	  /**
-	   * @class phina.social.Twitter
-	   * 
-	   */
-	  phina.define('phina.social.Twitter', {
 	    /**
-	     * @constructor
+	     * @param {Function} func
+	     * @return {enchant.Timeline}
 	     */
-	    init: function(options) {
+	    exec: function(func) {
+	        return this.then(func);
 	    },
+	    /**
+	     * @param {Object} cue
+	     * @return {enchant.Timeline}
+	     */
+	    cue: function(cue) {
+	        var ptr = 0;
+	        for (var frame in cue) {
+	            if (cue.hasOwnProperty(frame)) {
+	                this.delay(frame - ptr);
+	                this.then(cue[frame]);
+	                ptr = frame;
+	            }
+	        }
+	        return this;
+	    },
+	    /**
+	     * @param {Function} func
+	     * @param {Number} time
+	     * @return {enchant.Timeline}
+	     */
+	    repeat: function(func, time) {
+	        return this.action({
+	            onactiontick: function(evt) {
+	                func.call(this);
+	            },
+	            time: time
+	        });
+	    },
+	    /**
+	     * @return {enchant.Timeline}
+	     */
+	    and: function() {
+	        var last = this.queue.pop();
+	        if (last instanceof enchant.ParallelAction) {
+	            this._parallel = last;
+	            this.queue.push(last);
+	        } else {
+	            var parallel = new enchant.ParallelAction();
+	            parallel.actions.push(last);
+	            this.queue.push(parallel);
+	            this._parallel = parallel;
+	        }
+	        return this;
+	    },
+	    /**
+	     * @ignore
+	     */
+	    or: function() {
+	        return this;
+	    },
+	    /**
+	     * @ignore
+	     */
+	    doAll: function(children) {
+	        return this;
+	    },
+	    /**
+	     * @ignore
+	     */
+	    waitAll: function() {
+	        return this;
+	    },
+	    /**
+	     * @param {Function} func
+	     * @return {enchant.Timeline}
+	     */
+	    waitUntil: function(func) {
+	        return this.action({
+	            onactiontick: function(evt) {
+	                if (func.call(this)) {
+	                    evt.timeline.next();
+	                }
+	            }
+	        });
+	    },
+	    /**
+	     * @param {Number} opacity
+	     * @param {Number} time
+	     * @param {Function} [easing=enchant.Easing.LINEAR]
+	     * @return {enchant.Timeline}
+	     */
+	    fadeTo: function(opacity, time, easing) {
+	        return this.tween({
+	            opacity: opacity,
+	            time: time,
+	            easing: easing
+	        });
+	    },
+	    /**
+	     * @param {Number} time
+	     * @param {Function} [easing=enchant.Easing.LINEAR]
+	     * @return {enchant.Timeline}
+	     */
+	    fadeIn: function(time, easing) {
+	        return this.fadeTo(1, time, easing);
+	    },
+	    /**
+	     * @param {Number} time
+	     * @param {Function} [easing=enchant.Easing.LINEAR]
+	     * @return {enchant.Timeline}
+	     */
+	    fadeOut: function(time, easing) {
+	        return this.fadeTo(0, time, easing);
+	    },
+	    /**
+	     * @param {Number} x
+	     * @param {Number} y
+	     * @param {Number} time
+	     * @param {Function} [easing=enchant.Easing.LINEAR]
+	     * @return {enchant.Timeline}
+	     */
+	    moveTo: function(x, y, time, easing) {
+	        return this.tween({
+	            x: x,
+	            y: y,
+	            time: time,
+	            easing: easing
+	        });
+	    },
+	    /**
+	     * @param {Number} x
+	     * @param {Number} time
+	     * @param {Function} [easing=enchant.Easing.LINEAR]
+	     * @return {enchant.Timeline}
+	     */
+	    moveX: function(x, time, easing) {
+	        return this.tween({
+	            x: x,
+	            time: time,
+	            easing: easing
+	        });
+	    },
+	    /**
+	     * @param {Number} y
+	     * @param {Number} time
+	     * @param {Function} [easing=enchant.Easing.LINEAR]
+	     * @return {enchant.Timeline}
+	     */
+	    moveY: function(y, time, easing) {
+	        return this.tween({
+	            y: y,
+	            time: time,
+	            easing: easing
+	        });
+	    },
+	    /**
+	     * @param {Number} x
+	     * @param {Number} y
+	     * @param {Number} time
+	     * @param {Function} [easing=enchant.Easing.LINEAR]
+	     * @return {enchant.Timeline}
+	     */
+	    moveBy: function(x, y, time, easing) {
+	        return this.tween({
+	            x: function() {
+	                return this.x + x;
+	            },
+	            y: function() {
+	                return this.y + y;
+	            },
+	            time: time,
+	            easing: easing
+	        });
+	    },
+	    /**
+	     * @return {enchant.Timeline}
+	     */
+	    hide: function() {
+	        return this.then(function() {
+	            this.opacity = 0;
+	        });
+	    },
+	    /**
+	     * @return {enchant.Timeline}
+	     */
+	    show: function() {
+	        return this.then(function() {
+	            this.opacity = 1;
+	        });
+	    },
+	    /**
+	     * @return {enchant.Timeline}
+	     */
+	    removeFromScene: function() {
+	        return this.then(function() {
+	            this.parentNode.removeChild(this);
+	        });
+	    },
+	    /**
+	     * @param {Number} scaleX
+	     * @param {Number} [scaleY]
+	     * @param {Number} time
+	     * @param {Function} [easing=enchant.Easing.LINEAR]
+	     * @return {enchant.Timeline}
+	     */
+	    scaleTo: function(scale, time, easing) {
+	        var scaleX, scaleY;
 	
-	    _static: {
-	      baseURL: 'http://twitter.com/intent',
-	      defaults: {
-	        // type: 'tweet',
-	        text: 'Hello, world!',
-	        // screen_name: 'phi_jp',
-	        hashtags: 'javascript,phina',
-	        // url: 'http://github.com/phi-jp/phina.js',
-	        url: phina.global.location && phina.global.location.href,
-	        // via: 'phi_jp',
-	      },
+	        if (typeof easing === "number") {
+	            scaleX = arguments[0];
+	            scaleY = arguments[1];
+	            time = arguments[2];
+	            easing = arguments[3];
+	        } else {
+	            scaleX = scaleY = scale;
+	        }
 	
-	      createURL: function(options) {
-	        options = (options || {}).$safe(this.defaults);
+	        return this.tween({
+	            scaleX: scaleX,
+	            scaleY: scaleY,
+	            time: time,
+	            easing: easing
+	        });
+	    },
+	    /**
+	     * @param {Number} scaleX
+	     * @param {Number} [scaleY]
+	     * @param {Number} time
+	     * @param {Function} [easing=enchant.Easing.LINEAR]
+	     * @return {enchant.Timeline}
+	     */
+	    scaleBy: function(scale, time, easing) {
+	        var scaleX, scaleY;
 	
-	        var queries = [];
-	        var euc = encodeURIComponent;
-	        options.forIn(function(key, value) {
-	          var str = key + '=' + euc(value);
-	          queries.push(str);
+	        if (typeof easing === "number") {
+	            scaleX = arguments[0];
+	            scaleY = arguments[1];
+	            time = arguments[2];
+	            easing = arguments[3];
+	        } else {
+	            scaleX = scaleY = scale;
+	        }
+	
+	        return this.tween({
+	            scaleX: function() {
+	                return this.scaleX * scaleX;
+	            },
+	            scaleY: function() {
+	                return this.scaleY * scaleY;
+	            },
+	            time: time,
+	            easing: easing
+	        });
+	    },
+	    /**
+	     * @param {Number} deg
+	     * @param {Number} time
+	     * @param {Function} [easing=enchant.Easing.LINEAR]
+	     * @return {enchant.Timeline}
+	     */
+	    rotateTo: function(deg, time, easing) {
+	        return this.tween({
+	            rotation: deg,
+	            time: time,
+	            easing: easing
+	        });
+	    },
+	    /**
+	     * @param {Number} deg
+	     * @param {Number} time
+	     * @param {Function} [easing=enchant.Easing.LINEAR]
+	     * @return {enchant.Timeline}
+	     */
+	    rotateBy: function(deg, time, easing) {
+	        return this.tween({
+	            rotation: function() {
+	                return this.rotation + deg;
+	            },
+	            time: time,
+	            easing: easing
+	        });
+	    }
+	});
+	
+	/**
+	 * @scope enchant.Action.prototype
+	 */
+	enchant.Action = enchant.Class.create(enchant.ActionEventTarget, {
+	    /**
+	     * @name enchant.Action
+	     * @class
+	     * Actions are units that make up the timeline.
+	     * It is a unit used to specify the action you want to perform.
+	     * 
+	     * Actions that have been added to the timeline are performed in sequential order.
+	     * The transition from one action to the next occurs automatically 
+	     * after the number of frames specified by the time parameter have elapsed.
+	     *
+	     * An actionstart event is fired when the action has started.
+	     * An actionend event is fired when the action has stopped.
+	     * For each frame that elapses, an actiontick event is fired.
+	     * 
+	     * You can specify a listener for these events to perform specific events when they occur.
+	     *
+	     * @param {Object} param
+	     * @param {Number} [param.time] The number of frames that the action will persist. For an infinite number set this to null.
+	     * @param {Function} [param.onactionstart] Event listener for when the action is initiated.
+	     * @param {Function} [param.onactiontick] Event listener for when the action has passed one frame.
+	     * @param {Function} [param.onactionend] Event listener for when the action is finished.
+	     * @constructs
+	     * @extends enchant.ActionEventTarget
+	     */
+	    initialize: function(param) {
+	        enchant.ActionEventTarget.call(this);
+	        this.time = null;
+	        this.frame = 0;
+	        for (var key in param) {
+	            if (param.hasOwnProperty(key)) {
+	                if (param[key] != null) {
+	                    this[key] = param[key];
+	                }
+	            }
+	        }
+	        var action = this;
+	
+	        this.timeline = null;
+	        this.node = null;
+	
+	        this.addEventListener(enchant.Event.ADDED_TO_TIMELINE, function(evt) {
+	            action.timeline = evt.timeline;
+	            action.node = evt.timeline.node;
+	            action.frame = 0;
 	        });
 	
-	        var url = '{baseURL}/{type}?{query}'.format({
-	          baseURL: this.baseURL,
-	          // type: options.type,
-	          type: 'tweet',
-	          query: queries.join('&'),
+	        this.addEventListener(enchant.Event.REMOVED_FROM_TIMELINE, function() {
+	            action.timeline = null;
+	            action.node = null;
+	            action.frame = 0;
 	        });
 	
-	        return url;
-	      },
+	        this.addEventListener(enchant.Event.ACTION_TICK, function(evt) {
+	            var remaining = action.time - (action.frame + evt.elapsed);
+	            if (action.time != null && remaining <= 0) {
+	                action.frame = action.time;
+	                evt.timeline.next(-remaining);
+	            } else {
+	                action.frame += evt.elapsed;
+	            }
+	        });
+	
 	    }
-	  });
-	
 	});
 	
+	/**
+	 * @scope enchant.ParallelAction.prototype
+	 */
+	enchant.ParallelAction = enchant.Class.create(enchant.Action, {
+	    /**
+	     * @name enchant.ParallelAction
+	     * @class
+	     * Actions to be executed in parallel.
+	     * It's possible to have more than one child action.
+	     * @constructs
+	     * @extends enchant.Action
+	     */
+	    initialize: function(param) {
+	        enchant.Action.call(this, param);
+	        /**
+	         * Children Actions.
+	         * @type enchant.Action[]
+	         */
+	        this.actions = [];
+	        /**
+	         * Removed actions.
+	         * @type enchant.Action[]
+	         */
+	        this.endedActions = [];
+	        var that = this;
 	
-	phina.namespace(function() {
+	        this.addEventListener(enchant.Event.ACTION_START, function(evt) {
+	            for (var i = 0, len = that.actions.length; i < len; i++) {
+	                that.actions[i].dispatchEvent(evt);
+	            }
+	        });
 	
-	  if (!phina.global.Box2D) {
-	    return ;
-	  }
+	        this.addEventListener(enchant.Event.ACTION_TICK, function(evt) {
+	            var i, len, timeline = {
+	                next: function(remaining) {
+	                    var action = that.actions[i];
+	                    that.actions.splice(i--, 1);
+	                    len = that.actions.length;
+	                    that.endedActions.push(action);
 	
-	  // http://box2dweb-doc.readthedocs.org/ja/latest/00_ready.html#id2
-	  phina.box2d = {
-	    b2: {
-	      Vec2          : Box2D.Common.Math.b2Vec2,
-	      AABB          : Box2D.Collision.b2AABB,
-	      BodyDef       : Box2D.Dynamics.b2BodyDef,
-	      Body          : Box2D.Dynamics.b2Body,
-	      FixtureDef    : Box2D.Dynamics.b2FixtureDef,
-	      Fixture       : Box2D.Dynamics.b2Fixture,
-	      World         : Box2D.Dynamics.b2World,
-	      MassData      : Box2D.Collision.Shapes.b2MassData,
-	      PolygonShape  : Box2D.Collision.Shapes.b2PolygonShape,
-	      CircleShape   : Box2D.Collision.Shapes.b2CircleShape,
-	      DebugDraw     : Box2D.Dynamics.b2DebugDraw,
-	      MouseJointDef : Box2D.Dynamics.Joints.b2MouseJointDef
-	    },
-	  };
+	                    var e = new enchant.Event("actionend");
+	                    e.timeline = this;
+	                    action.dispatchEvent(e);
 	
-	  var b2 = phina.box2d.b2;
+	                    e = new enchant.Event("removedfromtimeline");
+	                    e.timeline = this;
+	                    action.dispatchEvent(e);
+	                }
+	            };
 	
-	  /**
-	   * @class
-	   */
-	  phina.define('phina.box2d.Box2dLayer', {
-	    superClass: 'phina.display.Layer',
+	            var e = new enchant.Event("actiontick");
+	            e.timeline = timeline;
+	            e.elapsed = evt.elapsed;
+	            for (i = 0, len = that.actions.length; i < len; i++) {
+	                that.actions[i].dispatchEvent(e);
+	            }
 	
+	            if (that.actions.length === 0) {
+	                evt.timeline.next();
+	            }
+	        });
 	
-	    init: function(params) {
-	      this.superInit(params);
+	        this.addEventListener(enchant.Event.ADDED_TO_TIMELINE, function(evt) {
+	            for (var i = 0, len = that.actions.length; i < len; i++) {
+	                that.actions[i].dispatchEvent(evt);
+	            }
+	        });
 	
-	      params = (params || {}).$safe({
-	        worldScale: 50, // or 50
-	      });
+	        this.addEventListener(enchant.Event.REMOVED_FROM_TIMELINE, function() {
+	            that.actions = that.endedActions;
+	            that.endedActions = [];
+	        });
 	
-	      // 重力と物理世界の設定
-	      var gravity = new b2.Vec2(0, 9.8);
-	      var world = new b2.World(gravity, true);
-	      
-	      this.world = world;
-	      this.world._scale = params.worldScale;
-	
-	      this._setupDebugDraw();
-	    },
-	
-	    _setupDebugDraw: function() {
-	      // デバッグ用スプライト
-	      var debugDraw = new b2.DebugDraw();
-	      debugDraw.SetSprite(this.canvas.context);
-	      debugDraw.SetDrawScale(this.world._scale);
-	      debugDraw.SetLineThickness(1.0);
-	      debugDraw.SetAlpha(1);
-	      debugDraw.SetFillAlpha(0.4);
-	      debugDraw.SetFlags(b2.DebugDraw.e_shapeBit);
-	      this.world.SetDebugDraw(debugDraw);
-	    },
-	
-	    createBody: function(params) {
-	      params.world = this.world;
-	      var body = phina.box2d.Box2dBody(params);
-	      return body;
-	    },
-	
-	    update: function(app) {
-	      // var timeStep = app.ticker.frameTime/1000;
-	      var timeStep = app.ticker.deltaTime/1000;
-	      var velocityIterations = 10;
-	      var positionIterations = 10;
-	      // 物理空間の更新
-	      this.world.Step(timeStep,velocityIterations,positionIterations);
-	    },
-	
-	    draw: function(canvas) {
-	      // debug画面の更新
-	      this.world.ClearForces();
-	      this.world.DrawDebugData();
-	      var domElement = this.canvas.domElement;
-	      canvas.context.drawImage(domElement, 0, 0, domElement.width, domElement.height);
-	    },
-	  });
-	});
-	
-	
-	
-	
-	phina.namespace(function() {
-	  
-	  if (!phina.global.Box2D) {
-	    return ;
-	  }
-	
-	  var b2 = phina.box2d.b2;
-	
-	  /**
-	   * @class
-	   */
-	  phina.define('phina.box2d.Box2dBody', {
-	    superClass: 'phina.accessory.Accessory',
-	
-	
-	    init: function(params) {
-	      this.superInit();
-	
-	      this.world = params.world;
-	      this.type = params.type;
-	      this.shape = params.shape;
-	
-	      this._init();
-	
-	      this.on('attached', function() {
-	        var target = this.target;
-	
-	        var p = new b2.Vec2(target.x/this.world._scale, target.y/this.world._scale);
-	        this.body.SetPosition(p);
-	        this.body.SetAngle(target.rotation * Math.PI/180);
-	
-	        this._bindFixture(this.target);
-	      });
-	    },
-	
-	    update: function(app) {
-	      var target = this.target;
-	
-	      target.x = this.body.GetPosition().x * this.world._scale;
-	      target.y = this.body.GetPosition().y * this.world._scale;
-	      target.rotation = this.body.GetAngle() * 180/Math.PI;
-	    },
-	
-	    _init: function() {
-	      this._setupBody();
-	      return this;
-	    },
-	
-	    _setupBody: function() {
-	      var self = this;
-	      var world = this.world;
-	      var scale = world._scale;
-	      var bodyDef = new b2.BodyDef();
-	      bodyDef.type = (function() {
-	        return {
-	          'dynamic': b2.Body.b2_dynamicBody, 
-	          'kinematic': b2.Body.b2_kinematicBody, 
-	          'static': b2.Body.b2_staticBody, 
-	        }[self.type || 'dynamic'];
-	      })();
-	      bodyDef.position.Set(0, 0);
-	      var body = world.CreateBody(bodyDef);
-	      this.body = body;
-	
-	      return this;
-	    },
-	
-	    _bindFixture: function() {
-	      var self = this;
-	      var target = this.target;
-	      var fixture = this.body.GetFixtureList();
-	      if (fixture) {
-	        this.body.DestroyFixture(fixture);
-	      }
-	
-	      // 
-	      var world = this.world;
-	      var scale = world._scale;
-	      // shape を取得
-	      var shape = (function() {
-	        var shape = null;
-	        if (self.shape === 'circle') {
-	          shape = new b2.CircleShape(target.radius / scale);
-	        }
-	        else if (self.shape === 'box'){
-	          shape = new b2.PolygonShape();
-	          shape.SetAsBox(target.width / scale / 2, target.height / scale / 2 );
-	        }
-	        else {
-	          shape = new b2.CircleShape(32 / scale);
-	        }
-	        return shape;
-	      })();
-	
-	      var fixture = new b2.FixtureDef();
-	      fixture.shape = shape;
-	      // TODO: このへんは引数で指定できるようにする
-	      fixture.density = 1;
-	      fixture.friction = 0.3;
-	      fixture.restitution = 0.5;
-	      this.body.CreateFixture(fixture);
-	    },
-	  });
-	});
-	
-	
-	
-	
-	phina.namespace(function() {
-	
-	
-	  phina.define('phina.display.CanvasElement', {
-	    superClass: 'phina.display.DisplayElement',
-	
-	    init: function(options) {
-	      this.superInit(options);
-	
-	      console.warn('[phina warn] CanvasElement は非推奨になりました. DisplayElement をお使いください.');
 	    }
-	  });
+	});
 	
+	/**
+	 * @scope enchant.Tween.prototype
+	 */
+	enchant.Tween = enchant.Class.create(enchant.Action, {
+	    /**
+	     * @name enchant.Tween
+	     * @class
+	     * @param {Object} params
+	     * @param {Number} params.time
+	     * @param {Function} [params.easing=enchant.Easing.LINEAR]
+	     * @constructs
+	     * @extends enchant.Action
+	     */
+	    initialize: function(params) {
+	        var origin = {};
+	        var target = {};
+	        enchant.Action.call(this, params);
 	
-	  phina.define('phina.display.CanvasScene', {
-	    superClass: 'phina.display.DisplayScene',
+	        if (this.easing == null) {
+	            this.easing = enchant.Easing.LINEAR;
+	        }
 	
-	    init: function(options) {
-	      this.superInit(options);
+	        var tween = this;
+	        this.addEventListener(enchant.Event.ACTION_START, function() {
+	            // excepted property
+	            var excepted = ["frame", "time", "callback", "onactiontick", "onactionstart", "onactionend"];
+	            for (var prop in params) {
+	                if (params.hasOwnProperty(prop)) {
+	                    // if function is used instead of numerical value, evaluate it
+	                    var target_val;
+	                    if (typeof params[prop] === "function") {
+	                        target_val = params[prop].call(tween.node);
+	                    } else {
+	                        target_val = params[prop];
+	                    }
 	
-	      console.warn('[phina warn] CanvasScene は非推奨になりました. DisplayScene をお使いください.');
+	                    if (excepted.indexOf(prop) === -1) {
+	                        origin[prop] = tween.node[prop];
+	                        target[prop] = target_val;
+	                    }
+	                }
+	            }
+	        });
+	
+	        this.addEventListener(enchant.Event.ACTION_TICK, function(evt) {
+	            // if time is 0, set property to target value immediately
+	            var ratio = tween.time === 0 ? 1 : tween.easing(Math.min(tween.time,tween.frame + evt.elapsed), 0, 1, tween.time) - tween.easing(tween.frame, 0, 1, tween.time);
+	
+	            for (var prop in target){
+	                if (target.hasOwnProperty(prop)) {
+	                    if (typeof this[prop] === "undefined"){
+	                        continue;
+	                    }
+	                    tween.node[prop] += (target[prop] - origin[prop]) * ratio;
+	                    if (Math.abs(tween.node[prop]) < 10e-8){
+	                        tween.node[prop] = 0;
+	                    }
+	                }
+	            }
+	        });
 	    }
-	  });
-	
-	
 	});
 	
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
-
-/***/ },
-/* 2 */
-/*!***************************!*\
-  !*** ./src/main_scene.js ***!
-  \***************************/
-/***/ function(module, exports) {
-
-	// MainScene クラスを定義
-	phina.define('MainScene', {
-	  superClass: 'DisplayScene',
-	
-	  init: function() {
-	    this.superInit();
-	    // 背景色を指定
-	    this.backgroundColor = '#444';
-	    // ラベルを生成
-	    this.label = Label('Hello, phina.js!').addChildTo(this);
-	    this.label.x = this.gridX.center(); // x 座標
-	    this.label.y = this.gridY.center(); // y 座標
-	    this.label.fill = 'white'; // 塗りつぶし色
-	  },
-	});
+	}(window));
 
 
 /***/ }
