@@ -16,6 +16,7 @@
     "bower": "^1.7.9",
     "electron-prebuilt": "^0.37.8",
     "gh-pages": "^0.11.0",
+    "url-loader": "^0.5.7",
     "webpack": "^1.13.0",
     "webpack-dev-server": "^1.14.1"
   },
