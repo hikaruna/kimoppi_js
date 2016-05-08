@@ -47,17 +47,25 @@
   \*********************/
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(/*! enchant.js */ 1);
-	enchant();
+	'use strict';
 	
-	window.onload = function() {
-	  var game = new Core();
-	  game.onload = function () {
-	    game.currentScene.backgroundColor = 'red';
-	  };
-	  game.start();
+	__webpack_require__(/*! enchant.js */ 1);
+	
+	var _main_scene = __webpack_require__(/*! main_scene */ 2);
+	
+	var _main_scene2 = _interopRequireDefault(_main_scene);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	window.onload = function () {
+	  var game = new enchant.Core(320, 320);
+	  game.preload("assets/images/chara1.png");
+	  game.on('load', function () {
+	    game.replaceScene(new _main_scene2.default());
+	  });
+	
+	  game.debug();
 	};
-
 
 /***/ },
 /* 1 */
@@ -7064,6 +7072,128 @@
 	
 	}(window));
 
+
+/***/ },
+/* 2 */
+/*!***************************!*\
+  !*** ./src/main_scene.js ***!
+  \***************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+	
+	__webpack_require__(/*! enchant.js */ 1);
+	
+	var _bear = __webpack_require__(/*! bear */ 3);
+	
+	var _bear2 = _interopRequireDefault(_bear);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var MainScene = function (_enchant$Scene) {
+	  _inherits(MainScene, _enchant$Scene);
+	
+	  function MainScene() {
+	    _classCallCheck(this, MainScene);
+	
+	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(MainScene).call(this));
+	
+	    _this.initialize();
+	    return _this;
+	  }
+	
+	  _createClass(MainScene, [{
+	    key: 'initialize',
+	    value: function initialize() {
+	      _get(Object.getPrototypeOf(MainScene.prototype), 'initialize', this).call(this);
+	      var bear = new _bear2.default();
+	      this.on('touchstart', function (e) {
+	        bear.walkTo(e.x, e.y);
+	      });
+	
+	      this.addChild(bear);
+	    }
+	  }]);
+	
+	  return MainScene;
+	}(enchant.Scene);
+	
+	exports.default = MainScene;
+
+/***/ },
+/* 3 */
+/*!*********************!*\
+  !*** ./src/bear.js ***!
+  \*********************/
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+	
+	__webpack_require__(/*! enchant.js */ 1);
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var Bear = function (_enchant$Sprite) {
+	  _inherits(Bear, _enchant$Sprite);
+	
+	  function Bear() {
+	    _classCallCheck(this, Bear);
+	
+	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Bear).call(this));
+	
+	    _this.initialize();
+	    return _this;
+	  }
+	
+	  _createClass(Bear, [{
+	    key: "initialize",
+	    value: function initialize() {
+	      _get(Object.getPrototypeOf(Bear.prototype), "initialize", this).call(this, 32, 32);
+	      this.image = enchant.Core.instance.assets["assets/images/chara1.png"];
+	      this.x = 0;
+	      this.y = 0;
+	      this.frame = 5;
+	    }
+	  }, {
+	    key: "walkTo",
+	    value: function walkTo(x, y) {
+	      this.tl.clear();
+	      this.tl.repeat(function () {
+	        this.frame = this.age % 2 + 5;
+	      }, 30).and().moveTo(x, y, 30);
+	    }
+	  }]);
+	
+	  return Bear;
+	}(enchant.Sprite);
+	
+	exports.default = Bear;
 
 /***/ }
 /******/ ]);
