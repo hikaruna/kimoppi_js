@@ -1,15 +1,18 @@
-// MainScene クラスを定義
-phina.define('MainScene', {
-  superClass: 'DisplayScene',
+import 'enchant.js'
+import Bear from 'bear'
 
-  init: function() {
-    this.superInit();
-    // 背景色を指定
-    this.backgroundColor = '#444';
-    // ラベルを生成
-    this.label = Label('Hello, phina.js!').addChildTo(this);
-    this.label.x = this.gridX.center(); // x 座標
-    this.label.y = this.gridY.center(); // y 座標
-    this.label.fill = 'white'; // 塗りつぶし色
-  },
-});
+export default class MainScene extends enchant.Scene {
+  constructor() {
+    super();
+    this.initialize();
+  }
+  initialize() {
+    super.initialize();
+    const bear = new Bear();
+    this.on('touchstart', function(e) {
+      bear.walkTo(e.x, e.y);
+    });
+
+    this.addChild(bear);
+  }
+}
